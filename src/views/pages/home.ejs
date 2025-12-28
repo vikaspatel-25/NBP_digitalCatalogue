@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Base Layout</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --orange: #f37021;
+      --orange-dark: #d85f18;
+      --text-dark: #1f1f1f;
+      /* --bg-container: #f4f4f4; */
+      --ui-light: #e2e2e2;
+      --ui-soft: #f1f1f1;
+      --white: #ffffff;
+      --radius: 6px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background: var(--white);
+      color: var(--text-dark);
+    }
+
+    header {
+      width: 100%;
+      background: var(--white);
+      border-bottom: 1px solid var(--ui-light);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      height: 72px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    .brand img {
+      height: 100%;
+      max-height: 100%;
+      width: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .action-btn {
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: var(--radius);
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .action-btn.contact {
+      background: var(--ui-soft);
+      color: var(--text-dark);
+      border-color: var(--ui-light);
+    }
+
+    .action-btn.admin {
+      background: var(--orange);
+      color: var(--white);
+    }
+
+    .action-btn.admin:hover {
+      background: var(--orange-dark);
+    }
+
+    .hamburger {
+      display: none;
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background: rgba(0,0,0,0.25);
+      display: none;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+
+    .drawer {
+      position: fixed;
+      z-index: 1;
+      top: 0;
+      right: -280px;
+      width: 280px;
+      height: 100%;
+      background: var(--white);
+      border-left: 1px solid var(--ui-light);
+      transition: right 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer.open {
+      right: 0;
+    }
+
+    .drawer-header {
+      height: 72px;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--ui-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .drawer-header img {
+      height: 100%;
+      max-height: 100%;
+      width: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    .close-btn {
+      font-size: 18px;
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+
+    .drawer-content {
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .drawer-content a {
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-dark);
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      background: var(--ui-soft);
+    }
+
+    main {
+      width: 100%;
+    }
+
+    .site-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--bg-container);
+      min-height: 100vh;
+    }
+
+    @media (max-width: 768px) {
+      .header-actions {
+        display: none;
+      }
+
+      .hamburger {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--ui-soft);
+      }
+
+      .site-container {
+        max-width: 99%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <img src="https://nirmaanbharatpanels.com/assets/images/WhatsApp%20Image%202023-11-17%20at%204.00.38%20PM.jpeg" alt="Brand Logo"/>
+      </div>
+
+      <div class="header-actions">
+        <button class="action-btn contact" onclick="location.href='/contact'">Contact Us</button>
+        <button class="action-btn admin" onclick="location.href='/admin'">Admin Panel</button>
+      </div>
+
+      <div class="hamburger" onclick="openDrawer()">☰</div>
+    </div>
+  </header>
+
+  <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <img src="https://nirmaanbharatpanels.com/assets/images/WhatsApp%20Image%202023-11-17%20at%204.00.38%20PM.jpeg" alt="Brand Logo"/>
+      <button class="close-btn" onclick="closeDrawer()">×</button>
+    </div>
+
+    <div class="drawer-content">
+      <a href="/contact">Contact Us</a>
+      <a href="/admin">Admin Panel</a>
+    </div>
+  </div>
+
+  <main>
+    <div class="site-container">
+      <% for (const product of products) { %>
+         <%- include('../components/prodCard.ejs', { product }) %>
+      <% } %>        
+    </div>
+  </main>
+
+  <script>
+    function openDrawer() {
+      document.getElementById('drawer').classList.add('open');
+      document.getElementById('overlay').classList.add('active');
+    }
+
+    function closeDrawer() {
+      document.getElementById('drawer').classList.remove('open');
+      document.getElementById('overlay').classList.remove('active');
+    }
+  </script>
+
+</body>
+</html>

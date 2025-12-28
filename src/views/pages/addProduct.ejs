@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Product</title>
+
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --border: #e5e7eb;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --header-bg: #1e3a8a;
+      --header-text: #ffffff;
+      --primary: #2563eb;
+      --primary-hover: #1e4ed8;
+      --danger: #dc2626;
+      --success: #27ae60;
+      --secondary: #7f8c8d;
+      --secondary-hover: #6c7a7d;
+      --input-bg: #f9fafb;
+      --focus: #2563eb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 4vh 1rem;
+    }
+
+    .panel {
+      width: 100%;
+      max-width: 900px;
+      background: var(--panel);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .panel-header {
+      padding: 1.7rem 2.2rem;
+      background: var(--header-bg);
+      color: var(--header-text);
+    }
+
+    .panel-header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .panel-body {
+      padding: 1.8rem 2.2rem 2.2rem;
+    }
+
+    .section {
+      margin-bottom: 1.8rem;
+      padding: 1.2rem 1.5rem;
+      background: #f9fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .section h2 {
+      margin-top: 0;
+      margin-bottom: 0.8rem;
+      font-size: 1rem;
+      color: var(--text);
+      border-bottom: 1px solid #dfe4ea;
+      padding-bottom: 4px;
+    }
+
+    label {
+      display: block;
+      margin-top: 0.9rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    input[type="url"],
+    textarea,
+    select,
+    input[type="file"] {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.9rem;
+      margin-top: 0.3rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="url"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--focus);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+      background: #ffffff;
+    }
+
+    textarea { min-height: 80px; resize: vertical; }
+
+    .dynamic-item {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+
+    .dynamic-item input { flex: 1; }
+
+    #youtubeLinks + button,
+    #articleLinks + button { margin-top: 8px; }
+
+    .preview-container {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .preview-item {
+      width: 90px;
+      font-size: 11px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .preview-item img {
+      width: 90px;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      margin-bottom: 4px;
+    }
+
+    .btn {
+      padding: 0.55rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { opacity: 0.9; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover { opacity: 0.9; }
+    .btn-secondary { background: var(--secondary); color: #fff; }
+    .btn-secondary:hover { background: var(--secondary-hover); }
+
+    .dynamic-item button.remove { background: var(--danger); font-size: 0.75rem; padding: 0.35rem 0.5rem; }
+
+    .submit-section {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2rem;
+      align-items: center;
+    }
+
+    .submit-section button { padding: 0.75rem 1.6rem; font-size: 0.95rem; border-radius: 6px; }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .loading-box {
+      text-align: center;
+      background: #ffffff;
+      padding: 30px 40px;
+      border-radius: 6px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    }
+
+    .spinner {
+      width: 42px;
+      height: 42px;
+      border: 4px solid #e3e3e3;
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      margin: 0 auto 15px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+  </style>
+</head>
+
+<body>
+  <div class="panel">
+    <div class="panel-header">
+      <h1>Add New Product</h1>
+    </div>
+
+    <div class="panel-body">
+      <form method="POST" enctype="multipart/form-data" onsubmit="handleSubmit(event)">
+
+        <div class="section">
+          <h2>Basic Product Info</h2>
+          <label>Product Name</label>
+          <input type="text" name="productName" required>
+          <label style="display: none;">One-line Description(optional)</label>
+          <input style="display: none;" type="text" name="oneLineDescription">
+          <label>Listing Placement</label>
+          <select name="listingPlacement" required>
+            <option value="top">Push to top</option>
+            <option value="bottom">Push to bottom</option>
+          </select>
+        </div>
+
+        <div class="section">
+          <h2>Product Descriptions</h2>
+          <label>Short Description</label>
+          <textarea name="shortDescription" required></textarea>
+          <label>Detailed Description</label>
+          <textarea name="detailedDescription" required></textarea>
+        </div>
+
+        <div class="section">
+          <h2>Product Images</h2>
+          <input type="file" name="images" id="imageInput" multiple accept="image/*" required>
+          <div class="preview-container" id="imagePreview"></div>
+        </div>
+
+        <div class="section">
+          <h2>Product Videos</h2>
+          <input type="file" name="videos" id="videoInput" multiple accept="video/*">
+        </div>
+
+        <div class="section">
+          <h2>YouTube Links (Optional)</h2>
+          <div id="youtubeLinks"></div>
+          <button type="button" class="btn btn-primary" onclick="addLink('youtubeLinks')">Add YouTube Link</button>
+        </div>
+
+        <div class="section">
+          <h2>Article Links (remove if N/A)</h2>
+          <div id="articleLinks"></div>
+          <button type="button" class="btn btn-primary" onclick="addLink('articleLinks')">Add Article Link</button>
+        </div>
+
+        <div class="submit-section">
+          <a href="/admin" class="btn btn-secondary">Back to Admin Panel</a>
+          <button type="submit" class="btn btn-success">Add Product</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <div class="loading-text">
+        Uploading media files.<br>
+        This may take a few moments.<br>
+        Please do not refresh or close the page.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const MAX_IMAGES = 10;
+    const MAX_VIDEOS = 5;
+    const MAX_IMAGE_SIZE = 25 * 1024 * 1024;
+    const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
+
+    function addLink(containerId) {
+      const container = document.getElementById(containerId);
+      const div = document.createElement('div');
+      div.className = 'dynamic-item';
+      div.innerHTML = `
+        <input type="url" name="${containerId}[]" placeholder="Enter URL">
+        <button type="button" class="btn remove" onclick="removeItem(this)">X</button>
+      `;
+      container.appendChild(div);
+    }
+
+    function removeItem(button) { button.parentElement.remove(); }
+
+    function handleSubmit() {
+      document.getElementById('loadingOverlay').style.display = 'flex';
+      const btn = document.querySelector('.submit-section button');
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+    }
+
+    const imageInput = document.getElementById('imageInput');
+    const videoInput = document.getElementById('videoInput');
+    const preview = document.getElementById('imagePreview');
+
+    imageInput.addEventListener('change', function () {
+      preview.innerHTML = '';
+      if (this.files.length > MAX_IMAGES) { alert('Maximum 10 images allowed.'); this.value = ''; return; }
+      for (const file of this.files) {
+        if (file.size > MAX_IMAGE_SIZE) { alert(`Image "${file.name}" exceeds 25MB.`); this.value = ''; return; }
+      }
+      Array.from(this.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const div = document.createElement('div');
+          div.className = 'preview-item';
+          div.innerHTML = `<img src="${e.target.result}"><div>${file.name}</div>`;
+          preview.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    videoInput.addEventListener('change', function () {
+      if (this.files.length > MAX_VIDEOS) { alert('Maximum 5 videos allowed.'); this.value = ''; return; }
+      for (const file of this.files) {
+        if (file.size > MAX_VIDEO_SIZE) { alert(`Video "${file.name}" exceeds 50MB.`); this.value = ''; return; }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reset Password</title>
+
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --border: #e5e7eb;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --header-bg: #1e3a8a;
+      --header-text: #ffffff;
+      --row-hover: #e6ebf4;
+      --row-active: #dbe2f0;
+      --primary: #2563eb;
+      --primary-hover: #1e4ed8;
+      --danger: #dc2626;
+      --input-bg: #f9fafb;
+      --focus: #2563eb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 8vh 1rem;
+    }
+
+    .panel {
+      width: 100%;
+      max-width: 520px;
+      background: var(--panel);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .panel-header {
+      padding: 1.7rem 2.2rem;
+      background: var(--header-bg);
+      color: var(--header-text);
+    }
+
+    .panel-header h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 600;
+    }
+
+    .panel-header p {
+      margin-top: 0.35rem;
+      font-size: 0.85rem;
+      opacity: 0.85;
+    }
+
+    .panel-body { padding: 1.8rem 2.2rem 1.4rem; }
+
+    .field { margin-bottom: 1.3rem; }
+
+    .field label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .input-wrapper { position: relative; }
+
+    .field input {
+      width: 100%;
+      padding: 0.65rem 2.8rem 0.65rem 0.75rem;
+      font-size: 0.9rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .field input:focus {
+      outline: none;
+      border-color: var(--focus);
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+      background: #ffffff;
+    }
+
+    .toggle-visibility {
+      position: absolute;
+      top: 50%;
+      right: 0.6rem;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 0.75rem;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .toggle-visibility:hover { color: var(--text); }
+
+    .error {
+      display: none;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      color: var(--danger);
+    }
+
+    .actions {
+      margin-top: 1.8rem;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .submit-btn {
+      padding: 0.6rem 1.4rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border-radius: 6px;
+      border: none;
+      background: var(--primary);
+      color: #ffffff;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .submit-btn:hover { background: var(--primary-hover); }
+
+    .panel-footer {
+      padding: 0.8rem 2.2rem 1.2rem;
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .back-link {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 0.25rem 0.4rem;
+      border-radius: 4px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .back-link:hover {
+      background: var(--row-hover);
+      color: var(--text);
+    }
+  </style>
+
+  <script>
+    function toggleVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = 'Hide';
+      } else {
+        input.type = 'password';
+        btn.textContent = 'Show';
+      }
+    }
+
+    function validateForm() {
+      const p1 = document.getElementById('password').value;
+      const p2 = document.getElementById('confirmPassword').value;
+      const error = document.getElementById('error');
+
+      if (p1.length < 4) {
+        error.textContent = 'Password must be at least 4 characters';
+        error.style.display = 'block';
+        return false;
+      }
+
+      if (p1 !== p2) {
+        error.textContent = 'Passwords do not match';
+        error.style.display = 'block';
+        return false;
+      }
+
+      error.style.display = 'none';
+      return true;
+    }
+  </script>
+</head>
+
+<body>
+  <div class="panel">
+    <div class="panel-header">
+      <h1>Reset Password</h1>
+      <p>Update administrator credentials</p>
+    </div>
+
+    <div class="panel-body">
+      <div id="error" class="error"></div>
+
+      <form action="/admin/resetPassword" method="POST" onsubmit="return validateForm()">
+        <div class="field">
+          <label for="password">New password</label>
+          <div class="input-wrapper">
+            <input type="password" id="password" name="password" required />
+            <button type="button" class="toggle-visibility" onclick="toggleVisibility('password', this)">Show</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="confirmPassword">Confirm password</label>
+          <div class="input-wrapper">
+            <input type="password" id="confirmPassword" name="confirmPassword" required />
+            <button type="button" class="toggle-visibility" onclick="toggleVisibility('confirmPassword', this)">Show</button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="submit-btn">Update Password</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="panel-footer">
+      <a href="/admin" class="back-link">← Back to Admin Panel</a>
+    </div>
+  </div>
+</body>
+</html>

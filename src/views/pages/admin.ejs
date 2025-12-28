@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel</title>
+
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --border: #e5e7eb;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --header-bg: #1e3a8a;
+      --header-text: #ffffff;
+      --row-hover: #e6ebf4;
+      --row-active: #dbe2f0;
+      --danger: #dc2626;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 8vh 1rem;
+    }
+
+    .panel {
+      width: 100%;
+      max-width: 560px;
+      background: var(--panel);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .panel-header {
+      padding: 1.7rem 2.2rem;
+      background: var(--header-bg);
+      color: var(--header-text);
+    }
+
+    .panel-header h1 { margin: 0; font-size: 1.35rem; font-weight: 600; }
+    .panel-header p { margin: 0.35rem 0 0; font-size: 0.85rem; opacity: 0.85; }
+
+    .section { padding: 1rem 0; }
+
+    .section-title {
+      padding: 0 2.2rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    form { margin: 0; }
+
+    button { all: unset; width: 100%; cursor: pointer; display: block; }
+
+    .row {
+      padding: 1.15rem 2.2rem;
+      transition: background 0.15s ease;
+      position: relative;
+    }
+
+    .row:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      left: 2.2rem;
+      right: 2.2rem;
+      bottom: 0;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .row:hover { background: var(--row-hover); }
+    .row:active { background: var(--row-active); }
+
+    .row-title { font-size: 1rem; font-weight: 500; }
+    .row-desc { margin-top: 0.2rem; font-size: 0.8rem; color: var(--muted); }
+
+    .row.danger .row-title { color: var(--danger); }
+  </style>
+</head>
+
+<body>
+  <div class="panel">
+    <div class="panel-header">
+      <h1>Admin Panel</h1>
+      <p>Manage content and system access</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Content Management</div>
+
+      <form action="/admin/addProduct" method="GET">
+        <button type="submit">
+          <div class="row">
+            <div class="row-title">Create New Product</div>
+            <div class="row-desc">Add and publish a new item to the catalog</div>
+          </div>
+        </button>
+      </form>
+
+      <form action="/" method="GET">
+        <button type="submit">
+          <div class="row">
+            <div class="row-title">Open Storefront</div>
+            <div class="row-desc">View the live public website</div>
+          </div>
+        </button>
+      </form>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Security</div>
+
+      <form action="/admin/resetPassword" method="GET">
+        <button type="submit">
+          <div class="row">
+            <div class="row-title">Change Admin Password</div>
+            <div class="row-desc">Update credentials for this account</div>
+          </div>
+        </button>
+      </form>
+
+      <form action="/logout" method="POST">
+        <button type="submit">
+          <div class="row danger">
+            <div class="row-title">Sign Out</div>
+            <div class="row-desc">End the current admin session</div>
+          </div>
+        </button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
