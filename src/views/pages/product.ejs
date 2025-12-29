@@ -641,7 +641,7 @@
               }
 
               function askQuery() {
-              const productName = "<%= product.productName.replace(/"/g, '\\"') %>";
+              const productName = `<%= product.productName.replace(/"/g, '\\"') %>`;
               const pageUrl = window.location.href;
               const messageText = `Hello, I have a query about the product: ${productName}. Page link: `;
               const whatsappNumber = '919826058300';
