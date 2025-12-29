@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const filePath = path.join(__dirname, "../views/pages/home.ejs?v=2");
+const filePath = path.join(__dirname, "../views/pages/home.ejs");
 
 async function homePageController(req, res) {
   try {

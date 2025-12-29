@@ -5,7 +5,7 @@ import Product from "../models/product.model.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const filePath = path.join(__dirname, "../views/pages/addProduct.ejs?v=2");
+const filePath = path.join(__dirname, "../views/pages/addProduct.ejs");
 
 async function addProductPageController(req, res) {
   try {
