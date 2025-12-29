@@ -6,7 +6,7 @@ import { ObjectId } from "mongodb";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const filePath = path.join(__dirname, "../views/pages/product.ejs?v=2");
+const filePath = path.join(__dirname, "../views/pages/product.ejs");
 
 async function productPageController(req, res) {
   try {
