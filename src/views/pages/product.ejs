@@ -1,470 +1,496 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Base Layout</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Base Layout</title>
 
-    <style>
-      :root {
-        --orange: #f37021;
-        --orange-dark: #d85f18;
-        --text-dark: #1f1f1f;
-        --ui-light: #e2e2e2;
-        --ui-soft: #f1f1f1;
-        --white: #ffffff;
-        --radius: 6px;
-      }
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
-          sans-serif;
-      }
+  <style>
+    :root {
+      --orange: #f37021;
+      --orange-dark: #d85f18;
+      --text-dark: #1f1f1f;
+      --ui-light: #e2e2e2;
+      --ui-soft: #f1f1f1;
+      --white: #ffffff;
+      --radius: 6px;
+    }
 
-      body {
-        background: var(--white);
-        color: var(--text-dark);
-      }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+        sans-serif;
+    }
 
-      header {
-        width: 100%;
-        background: var(--white);
-        border-bottom: 1px solid var(--ui-light);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-      }
+    body {
+      background: var(--white);
+      color: var(--text-dark);
+    }
 
-      .header-inner {
-        max-width: 1400px;
-        margin: 0 auto;
-        height: 72px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
+    header {
+      width: 100%;
+      background: var(--white);
+      border-bottom: 1px solid var(--ui-light);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
 
-      .brand {
-        display: flex;
-        align-items: center;
-        height: 100%;
-      }
+    .header-inner {
+      max-width: 1400px;
+      width: 95%;
+      margin: 0 auto;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-      .brand img {
-        height: 100%;
-        width: auto;
-        object-fit: contain;
-        display: block;
-      }
+    .brand {
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
 
+    .brand img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .action-btn {
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: var(--radius);
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .action-btn.contact {
+      background: var(--ui-soft);
+      color: var(--text-dark);
+      border-color: var(--ui-light);
+    }
+
+    .action-btn.admin {
+      background: var(--orange);
+      color: var(--white);
+    }
+
+    .action-btn.admin:hover {
+      background: var(--orange-dark);
+    }
+
+    .hamburger {
+      display: none;
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background: rgba(0, 0, 0, 0.25);
+      display: none;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+
+    .drawer {
+      position: fixed;
+      z-index: 1;
+      top: 0;
+      right: -280px;
+      width: 280px;
+      height: 100%;
+      background: var(--white);
+      border-left: 1px solid var(--ui-light);
+      transition: right 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer.open {
+      right: 0;
+    }
+
+    .drawer-header {
+      height: 72px;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--ui-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .drawer-header img {
+      height: 100%;
+      max-height: 100%;
+      width: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    .close-btn {
+      font-size: 18px;
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+
+    .drawer-content {
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .drawer-content a {
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-dark);
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      background: var(--ui-soft);
+    }
+
+    /* DRAWER FIXED STYLES END */
+
+    main {
+      width: 100%;
+    }
+
+    .site-container {
+      max-width: 800px;
+      margin: 0 auto;
+      min-height: 100vh;
+    }
+
+    @media (max-width: 768px) {
       .header-actions {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .action-btn {
-        padding: 9px 16px;
-        font-size: 13px;
-        font-weight: 500;
-        border-radius: var(--radius);
-        cursor: pointer;
-        border: 1px solid transparent;
-      }
-
-      .action-btn.contact {
-        background: var(--ui-soft);
-        color: var(--text-dark);
-        border-color: var(--ui-light);
-      }
-
-      .action-btn.admin {
-        background: var(--orange);
-        color: var(--white);
-      }
-
-      .action-btn.admin:hover {
-        background: var(--orange-dark);
+        display: none;
       }
 
       .hamburger {
-        display: none;
-        font-size: 20px;
-        cursor: pointer;
-        line-height: 1;
-      }
-
-      .overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 1;
-        background: rgba(0, 0, 0, 0.25);
-        display: none;
-      }
-
-      .overlay.active {
-        display: block;
-      }
-
-      .drawer {
-        position: fixed;
-        z-index: 1;
-        top: 0;
-        right: -280px;
-        width: 280px;
-        height: 100%;
-        background: var(--white);
-        border-left: 1px solid var(--ui-light);
-        transition: right 0.3s ease;
         display: flex;
-        flex-direction: column;
-      }
-
-      .drawer.open {
-        right: 0;
-      }
-
-      .drawer-header {
-        height: 72px;
-        display: flex;
-        justify-content: space-between;
         align-items: center;
-        padding: 0 20px;
-        border-bottom: 1px solid var(--ui-light);
-      }
-
-      .close-btn {
-        font-size: 18px;
-        cursor: pointer;
-        background: none;
-        border: none;
-      }
-
-      .drawer-content {
-        padding: 28px 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-      }
-
-      .drawer-content a {
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--text-dark);
-        padding: 10px 12px;
-        border-radius: var(--radius);
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
         background: var(--ui-soft);
       }
 
-      main {
-        width: 100%;
-      }
-
       .site-container {
-        max-width: 800px;
-        margin: 0 auto;
-        min-height: 100vh;
-      }
-
-      @media (max-width: 768px) {
-        .header-actions {
-          display: none;
-        }
-
-        .hamburger {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background: var(--ui-soft);
-        }
-
-        .site-container {
-          max-width: 99%;
-        }
-      }
-
-      .product-page {
-        padding: 28px 20px 60px;
-      }
-
-      .section {
-        margin-top: 56px;
-      }
-
-      .section-box {
-        background: #fafafa;
-        border-radius: 12px;
-        padding: 22px;
-      }
-
-      .section-title {
-        font-size: 22px;
-        font-weight: 600;
-        margin-bottom: 16px;
-        position: relative;
-        padding-left: 16px;
-      }
-
-      .section-title::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 4px;
-        width: 4px;
-        height: 22px;
-        background: var(--orange);
-        border-radius: 2px;
-      }
-
-      .media-carousel {
-        position: relative;
-        overflow: hidden;
-        border-radius: 10px;
-        background: #f0f0f0;
-      }
-
-      .carousel-track {
-        display: flex;
-        transition: transform 0.35s ease;
-      }
-
-      .carousel-slide {
-        min-width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        max-width: 99%;
       }
 
       .carousel-slide img,
       .carousel-slide video {
-        width: 100%;
-        height: 420px;
-        object-fit: cover;
-        background: #000;
-        cursor: zoom-in;
-      }
-
-      .carousel-btn {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        border: none;
-        background: rgba(0, 0, 0, 0.45);
-        color: #fff;
-        cursor: pointer;
-        z-index: 2;
-      }
-
-      .carousel-btn.prev {
-        left: 12px;
-      }
-
-      .carousel-btn.next {
-        right: 12px;
+        height: 260px;
       }
 
       .product-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        flex-wrap: wrap;
+        align-items: flex-start;
       }
+    }
 
-      .product-title {
-        font-size: 26px;
-        font-weight: 600;
-        line-height: 1.2;
-      }
+    .product-page {
+      padding: 28px 20px 60px;
+    }
 
-      .product-id-wrapper {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        height: 24px;
-        cursor: pointer;
-        flex-shrink: 0;
-      }
+    .section {
+      margin-top: 56px;
+    }
 
-      .product-id {
-        height: 24px;
-        line-height: 24px;
-        font-size: 12px;
-        color: #555;
-        background: #eaeaea;
-        padding: 0 8px;
-        border-radius: 4px;
-        font-family: monospace;
-        user-select: none;
-      }
+    .section-box {
+      background: #fafafa;
+      border-radius: 12px;
+      padding: 22px;
+    }
 
-      .tooltip {
-        position: absolute;
-        top: -30px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #1f1f1f;
-        color: #fff;
-        font-size: 11px;
-        padding: 4px 8px;
-        border-radius: 4px;
-        white-space: nowrap;
-        opacity: 0;
-        transition: opacity 0.15s ease;
-        pointer-events: none;
-      }
+    .section-title {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      position: relative;
+      padding-left: 16px;
+    }
 
-      .product-id-wrapper:hover .tooltip {
-        opacity: 1;
-      }
+    .section-title::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 4px;
+      width: 4px;
+      height: 22px;
+      background: var(--orange);
+      border-radius: 2px;
+    }
 
-      .tooltip.copied {
-        background: #2e7d32;
-      }
+    .media-carousel {
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px;
+      background: #f0f0f0;
+    }
 
-      .product-description {
-        margin-top: 18px;
-        font-size: 15px;
-        line-height: 1.75;
-        color: #333;
-      }
+    .carousel-track {
+      display: flex;
+      transition: transform 0.35s ease;
+    }
 
-      .youtube-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 20px;
-      }
+    .carousel-slide {
+      min-width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-      .youtube-grid iframe {
-        width: 100%;
-        height: 220px;
-        border-radius: 10px;
-      }
+    .carousel-slide img,
+    .carousel-slide video {
+      width: 100%;
+      height: 420px;
+      object-fit: cover;
+      background: #000;
+      cursor: zoom-in;
+    }
 
-      .article-list {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 14px;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
+    .carousel-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(0, 0, 0, 0.45);
+      color: #fff;
+      cursor: pointer;
+      z-index: 2;
+    }
 
-      .article-item {
-        background: #ffffff;
-        border-radius: 10px;
-        padding: 14px 16px;
-        border: 1px solid #eee;
-      }
+    .carousel-btn.prev {
+      left: 12px;
+    }
 
-      .article-item a {
-        font-size: 15px;
-        font-style: italic;
-        color: #444;
-        text-decoration: none;
-        word-break: break-all;
-      }
+    .carousel-btn.next {
+      right: 12px;
+    }
 
-      .article-item a:hover {
-        color: var(--orange);
-        text-decoration: underline;
-      }
+    .product-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
 
-      .fullscreen-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.92);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-      }
+    .product-title {
+      font-size: 26px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
 
-      .fullscreen-overlay.active {
-        display: flex;
-      }
+    .product-id-wrapper {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
 
-      .fullscreen-overlay img {
-        max-width: 92%;
-        max-height: 92%;
-      }
+    .product-id {
+      height: 24px;
+      line-height: 24px;
+      font-size: 12px;
+      color: #555;
+      background: #eaeaea;
+      padding: 0 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      user-select: none;
+    }
 
-      .fullscreen-close {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        font-size: 28px;
-        color: #fff;
-        background: none;
-        border: none;
-        cursor: pointer;
-      }
+    .tooltip {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1f1f1f;
+      color: #fff;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      pointer-events: none;
+    }
 
-      @media (max-width: 768px) {
-        .carousel-slide img,
-        .carousel-slide video {
-          height: 260px;
-        }
+    .product-id-wrapper:hover .tooltip {
+      opacity: 1;
+    }
 
-        .product-header {
-          align-items: flex-start;
-        }
-      }
+    .tooltip.copied {
+      background: #2e7d32;
+    }
 
-      .ask-query-btn-gallery,
-      .ask-query-btn-articles {
-        background: #25d366;
-        color: #fff;
-        font-weight: 600;
-        border: none;
-        max-height: 35px;
-        border-radius: var(--radius);
-        padding: 8px 16px;
-        cursor: pointer;
-      }
+    .product-description {
+      margin-top: 18px;
+      font-size: 15px;
+      line-height: 1.75;
+      color: #333;
+    }
 
-      .ask-query-btn-gallery:hover,
-      .ask-query-btn-articles:hover {
-        background: #1ebe57;
-      }
+    .youtube-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
 
-      .ask-query-btn-articles {
-        display: block;
-        margin: 24px auto 0;
-      }
-    </style>
-  </head>
+    .youtube-grid iframe {
+      width: 100%;
+      height: 220px;
+      border-radius: 10px;
+    }
 
-  <body>
-    <header>
-      <div class="header-inner">
-        <div
-          class="brand"
-          onclick="window.location.href='/home'"
-          style="cursor: pointer"
-        >
-          <img
-            src="https://nirmaanbharatpanels.com/assets/images/WhatsApp%20Image%202023-11-17%20at%204.00.38%20PM.jpeg"
-            alt="Brand Logo"
-          />
-        </div>
+    .article-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
 
-        <div class="header-actions">
+    .article-item {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 14px 16px;
+      border: 1px solid #eee;
+    }
+
+    .article-item a {
+      font-size: 15px;
+      font-style: italic;
+      color: #444;
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    .article-item a:hover {
+      color: var(--orange);
+      text-decoration: underline;
+    }
+
+    .fullscreen-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.92);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .fullscreen-overlay.active {
+      display: flex;
+    }
+
+    .fullscreen-overlay img {
+      max-width: 92%;
+      max-height: 92%;
+    }
+
+    .fullscreen-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 28px;
+      color: #fff;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .ask-query-btn-gallery,
+    .ask-query-btn-articles {
+      background: #25d366;
+      color: #fff;
+      font-weight: 600;
+      border: none;
+      max-height: 35px;
+      border-radius: var(--radius);
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+
+    .ask-query-btn-gallery:hover,
+    .ask-query-btn-articles:hover {
+      background: #1ebe57;
+    }
+
+    .ask-query-btn-articles {
+      display: block;
+      margin: 24px auto 0;
+    }
+  </style>
+
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand" onclick="window.location.href='/home'" style="cursor: pointer">
+        <img src="https://nirmaanbharatpanels.com/assets/images/WhatsApp%20Image%202023-11-17%20at%204.00.38%20PM.jpeg"
+          alt="Brand Logo" />
+      </div>
+
+      <div class="header-actions">
+        <button class="action-btn contact" onclick="window.open('https://wa.me/919826058300', '_blank')">
+          Contact Us
+        </button>
+
+        <button class="action-btn admin" onclick="location.href='/admin'">
+          Admin Panel
+        </button>
+      </div>
+
+      <div class="hamburger" onclick="openDrawer()">☰</div>
+    </div>
+  </header>
+
+  <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <img src="https://nirmaanbharatpanels.com/assets/images/WhatsApp%20Image%202023-11-17%20at%204.00.38%20PM.jpeg"
+        alt="Brand Logo" />
+      <button class="close-btn" onclick="closeDrawer()">×</button>
+    </div>
+
+    <div class="drawer-content">
+
           <button
             class="action-btn contact"
             onclick="window.open('https://wa.me/919826058300', '_blank')"
@@ -472,198 +498,171 @@
             Contact Us
           </button>
 
-          <button class="action-btn admin" onclick="location.href='/admin'">
-            Admin Panel
-          </button>
-        </div>
-
-        <div class="hamburger" onclick="openDrawer()">☰</div>
-      </div>
-    </header>
-
-    <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
-
-    <div class="drawer" id="drawer">
-      <div class="drawer-header">
-        <img
-          src="https://nirmaanbharatpanels.com/assets/images/WhatsApp%20Image%202023-11-17%20at%204.00.38%20PM.jpeg"
-          alt="Brand Logo"
-        />
-        <button class="close-btn" onclick="closeDrawer()">×</button>
-      </div>
-      <div class="drawer-content">
-        <a href="/contact">Contact Us</a>
-        <a href="/admin">Admin Panel</a>
-      </div>
+      <a href="/admin">Admin Panel</a>
     </div>
+  </div>
 
-    <main>
-      <div class="site-container">
-        <div class="product-page">
-          <!-- Gallery Section -->
-          <div class="section">
-            <div class="section-box">
-              <div
-                class="gallery-header"
-                style="
+  <main>
+    <div class="site-container">
+      <div class="product-page">
+        <!-- Gallery Section -->
+        <div class="section" style="margin-top: 10px;">
+          <div class="section-box">
+            <div class="gallery-header" style="
                   display: flex;
                   flex-direction: row;
                   justify-content: space-between;
-                "
-              >
-                <h2 class="section-title">Gallery</h2>
-                <button class="ask-query-btn-gallery" onclick="askQuery()">
-                  Ask Query
-                </button>
-              </div>
-              <div class="media-carousel">
-                <div class="carousel-track">
-                  <% (product.images || []).forEach(img => { %>
+                ">
+              <h2 class="section-title">Gallery</h2>
+              <button class="ask-query-btn-gallery" onclick="askQuery()">
+                Ask Query
+              </button>
+            </div>
+            <div class="media-carousel">
+              <div class="carousel-track">
+                <% (product.images || []).forEach(img=> { %>
                   <div class="carousel-slide">
                     <img src="<%= img %>" onclick="openFullscreen(this.src)" />
                   </div>
-                  <% }) %> <% (product.videos || []).forEach(video => { %>
-                  <div class="carousel-slide">
-                    <video controls>
-                      <source src="<%= video %>" />
-                    </video>
-                  </div>
                   <% }) %>
-                </div>
-                <% const mediaCount = (product.images?.length || 0) +
-                (product.videos?.length || 0); %> <% if (mediaCount > 1) { %>
-                <button class="carousel-btn prev" onclick="slideCarousel(-1)">
-                  ‹
-                </button>
-                <button class="carousel-btn next" onclick="slideCarousel(1)">
-                  ›
-                </button>
-                <% } %>
+                    <% (product.videos || []).forEach(video=> { %>
+                      <div class="carousel-slide">
+                        <video controls>
+                          <source src="<%= video %>" />
+                        </video>
+                      </div>
+                      <% }) %>
               </div>
+              <% const mediaCount=(product.images?.length || 0) + (product.videos?.length || 0); %>
+                <% if (mediaCount> 1) { %>
+                  <button class="carousel-btn prev" onclick="slideCarousel(-1)">
+                    ‹
+                  </button>
+                  <button class="carousel-btn next" onclick="slideCarousel(1)">
+                    ›
+                  </button>
+                  <% } %>
             </div>
           </div>
+        </div>
 
-          <!-- Product Info Section -->
-          <div class="section">
-            <div class="section-box">
-              <div class="product-header">
-                <h1 class="section-title product-title">
-                  <%= product.productName %>
-                </h1>
-                <div class="product-id-wrapper" onclick="copyProductId()">
-                  <div class="tooltip" id="idTooltip">Copy</div>
-                  <div class="product-id" id="productId">
-                    <%= product._id %>
-                  </div>
+        <!-- Product Info Section -->
+        <div class="section">
+          <div class="section-box">
+            <div class="product-header">
+              <h1 class="section-title product-title">
+                <%= product.productName %>
+              </h1>
+              <div class="product-id-wrapper" onclick="copyProductId()">
+                <div class="tooltip" id="idTooltip">Copy</div>
+                <div class="product-id" id="productId">
+                  <%= product._id %>
                 </div>
               </div>
-              <div class="product-description">
-                <%- product.detailedDescription.replace(/\r?\n/g, '<br /><br />')
-                %>
-              </div>
+            </div>
+            <div class="product-description">
+              <%- product.detailedDescription.replace(/\r?\n/g, '<br /><br />' ) %>
             </div>
           </div>
+        </div>
 
-          <!-- Videos Section -->
-          <% if (product.youtubeLinks?.length) { %>
+        <!-- Videos Section -->
+        <% if (product.youtubeLinks?.length) { %>
           <div class="section">
             <div class="section-box">
               <h2 class="section-title">Videos</h2>
               <div class="youtube-grid">
-                <% product.youtubeLinks.forEach(link => { %>
-                <iframe
-                  src="<%= link.replace('watch?v=', 'embed/').replace('shorts/', 'embed/') %>"
-                  allowfullscreen
-                ></iframe>
-                <% }) %>
+                <% product.youtubeLinks.forEach(link=> { %>
+                  <iframe src="<%= link.replace('watch?v=', 'embed/').replace('shorts/', 'embed/') %>"
+                    allowfullscreen></iframe>
+                  <% }) %>
               </div>
             </div>
           </div>
           <% } %>
 
-          <!-- Articles Section -->
-          <% if (product.articleLinks?.length) { %>
-          <div class="section">
-            <div class="section-box">
-              <h2 class="section-title">Articles</h2>
-              <ul class="article-list">
-                <% product.articleLinks.forEach(link => { %>
-                <li class="article-item">
-                  <a href="<%= link %>" target="_blank"><%= link %></a>
-                </li>
-                <% }) %>
-              </ul>
-              <button class="ask-query-btn-articles" onclick="askQuery()">
-                Ask Query
-              </button>
-            </div>
-          </div>
-          <% } %>
+            <!-- Articles Section -->
+            <% if (product.articleLinks?.length) { %>
+              <div class="section">
+                <div class="section-box">
+                  <h2 class="section-title">Articles</h2>
+                  <ul class="article-list">
+                    <% product.articleLinks.forEach(link=> { %>
+                      <li class="article-item">
+                        <a href="<%= link %>" target="_blank">
+                          <%= link %>
+                        </a>
+                      </li>
+                      <% }) %>
+                  </ul>
+                  <button class="ask-query-btn-articles" onclick="askQuery()">
+                    Ask Query
+                  </button>
+                </div>
+              </div>
+              <% } %>
 
-          <!-- Fullscreen Overlay -->
-          <div
-            class="fullscreen-overlay"
-            id="fullscreenOverlay"
-            onclick="closeFullscreen()"
-          >
-            <button class="fullscreen-close">×</button>
-            <img id="fullscreenImage" />
-          </div>
+                <!-- Fullscreen Overlay -->
+                <div class="fullscreen-overlay" id="fullscreenOverlay" onclick="closeFullscreen()">
+                  <button class="fullscreen-close">×</button>
+                  <img id="fullscreenImage" />
+                </div>
 
-          <script>
-              let currentSlide = 0;
-              function slideCarousel(dir) {
-                const slides = document.querySelectorAll(".carousel-slide");
-                currentSlide = (currentSlide + dir + slides.length) % slides.length;
-                document.querySelector(".carousel-track").style.transform = `translateX(-${currentSlide * 100}%)`;
-              }
+                <script>
+                  let currentSlide = 0;
+                  function slideCarousel(dir) {
+                    const slides = document.querySelectorAll(".carousel-slide");
+                    currentSlide = (currentSlide + dir + slides.length) % slides.length;
+                    document.querySelector(".carousel-track").style.transform = `translateX(-${currentSlide * 100}%)`;
+                  }
 
-              function copyProductId() {
-                const tooltip = document.getElementById("idTooltip");
-                navigator.clipboard.writeText(document.getElementById("productId").innerText);
-                tooltip.textContent = "Copied";
-                tooltip.classList.add("copied");
-                setTimeout(() => {
-                  tooltip.textContent = "Copy";
-                  tooltip.classList.remove("copied");
-                }, 1500);
-              }
+                  function copyProductId() {
+                    const tooltip = document.getElementById("idTooltip");
+                    navigator.clipboard.writeText(document.getElementById("productId").innerText);
+                    tooltip.textContent = "Copied";
+                    tooltip.classList.add("copied");
+                    setTimeout(() => {
+                      tooltip.textContent = "Copy";
+                      tooltip.classList.remove("copied");
+                    }, 1500);
+                  }
 
-              function openFullscreen(src) {
-                document.getElementById("fullscreenImage").src = src;
-                document.getElementById("fullscreenOverlay").classList.add("active");
-                document.body.style.overflow = "hidden";
-              }
+                  function openFullscreen(src) {
+                    document.getElementById("fullscreenImage").src = src;
+                    document.getElementById("fullscreenOverlay").classList.add("active");
+                    document.body.style.overflow = "hidden";
+                  }
 
-              function closeFullscreen() {
-                document.getElementById("fullscreenOverlay").classList.remove("active");
-                document.body.style.overflow = "";
-              }
+                  function closeFullscreen() {
+                    document.getElementById("fullscreenOverlay").classList.remove("active");
+                    document.body.style.overflow = "";
+                  }
 
-              function askQuery() {
-              const productName = `<%= product.productName.replace(/"/g, '\\"') %>`;
-              const pageUrl = window.location.href;
-              const messageText = `Hello, I have a query about the product: ${productName}. Page link: `;
-              const whatsappNumber = '919826058300';
-              const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(messageText)}${pageUrl}`;
-              window.open(whatsappUrl, '_blank');
-            }
+                  function askQuery() {
+                    const productName = `<%= product.productName.replace(/"/g, '\\"') %>`;
+                    const pageUrl = window.location.href;
+                    const messageText = `Hello, I have a query about the product: ${productName}. Page link: `;
+                    const whatsappNumber = '919826058300';
+                    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(messageText)}${pageUrl}`;
+                    window.open(whatsappUrl, '_blank');
+                  }
 
 
-              function openDrawer() {
-                document.getElementById("drawer").classList.add("open");
-                document.getElementById("overlay").classList.add("active");
-              }
+                  function openDrawer() {
+                    document.getElementById("drawer").classList.add("open");
+                    document.getElementById("overlay").classList.add("active");
+                  }
 
-              function closeDrawer() {
-                document.getElementById("drawer").classList.remove("open");
-                document.getElementById("overlay").classList.remove("active");
-              }
-          </script>
-        </div>
+                  function closeDrawer() {
+                    document.getElementById("drawer").classList.remove("open");
+                    document.getElementById("overlay").classList.remove("active");
+                  }
+                </script>
       </div>
+    </div>
 
-      <%- include('../components/footer.ejs') %>
-    </main>
-  </body>
+    <%- include('../components/footer.ejs') %>
+  </main>
+</body>
+
 </html>
