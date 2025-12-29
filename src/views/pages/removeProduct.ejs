@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Panel</title>
+  <title>Remove Product - Admin Panel</title>
 
   <style>
     :root {
@@ -48,19 +48,19 @@
       color: var(--header-text);
     }
 
-    .panel-header h1 { margin: 0; font-size: 1.35rem; font-weight: 600; }
-    .panel-header p { margin: 0.35rem 0 0; font-size: 0.85rem; opacity: 0.85; }
+    .panel-header h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 600;
+    }
+
+    .panel-header p {
+      margin: 0.35rem 0 0;
+      font-size: 0.85rem;
+      opacity: 0.85;
+    }
 
     .section { padding: 1rem 0; }
-
-    .section-title {
-      padding: 0 2.2rem 0.6rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
 
     form { margin: 0; }
 
@@ -89,66 +89,55 @@
     .row-desc { margin-top: 0.2rem; font-size: 0.8rem; color: var(--muted); }
 
     .row.danger .row-title { color: var(--danger); }
+
+    input[type="text"] {
+      width: 100%;
+      margin-top: 0.3rem;
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin: 1rem 0 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 
 <body>
   <div class="panel">
     <div class="panel-header">
-      <h1>Admin Panel</h1>
-      <p>Manage content and system access</p>
+      <h1>Remove Product</h1>
+      <p>Enter the product ID to remove it from the catalog</p>
     </div>
 
     <div class="section">
-      <div class="section-title">Content Management</div>
-
-      <form action="/admin/addProduct" method="GET">
-        <button type="submit">
-          <div class="row">
-            <div class="row-title">Create New Product</div>
-            <div class="row-desc">Add and publish a new item to the catalog</div>
+      <form action="/admin/removeProduct" method="POST">
+        <div class="row">
+          <label class="row-title" for="productId">Product ID</label>
+          <input type="text" id="productId" name="productId" placeholder="Enter the product ID" required />
+          <div class="row-desc">
+            You can copy the ID from the product page. It appears infront of the product name, for example: 695f37d123cf964eba0e48
           </div>
-        </button>
-      </form>
+        </div>
 
-      <form action="/admin/removeProduct" method="GET">
-        <button type="submit">
-          <div class="row ">
-            <div class="row-title">Remove Product</div>
-            <div class="row-desc">Delete an existing item from the catalog</div>
-          </div>
-        </button>
-      </form>
-
-      <form action="/" method="GET">
-        <button type="submit">
-          <div class="row">
-            <div class="row-title">Open Storefront</div>
-            <div class="row-desc">View the live public website</div>
-          </div>
-        </button>
-      </form>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Security</div>
-
-      <form action="/admin/resetPassword" method="GET">
-        <button type="submit">
-          <div class="row">
-            <div class="row-title">Change Admin Password</div>
-            <div class="row-desc">Update credentials for this account</div>
-          </div>
-        </button>
-      </form>
-
-      <form action="/logout" method="POST">
-        <button type="submit">
+        <button type="submit" style="margin-top: 1rem;">
           <div class="row danger">
-            <div class="row-title">Sign Out</div>
-            <div class="row-desc">End the current admin session</div>
+            <div class="row-title">Remove Product</div>
           </div>
         </button>
+
+        <a href="/admin" class="back-link">Back to Admin Panel</a>
       </form>
     </div>
   </div>

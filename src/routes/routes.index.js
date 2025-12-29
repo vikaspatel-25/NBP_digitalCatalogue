@@ -3,6 +3,7 @@ import { loginPageController, loginController } from '../controllers/login.js';
 import { resetPasswordPageController, resetPasswordController } from '../controllers/resetPwd.js';
 import { adminPageController } from '../controllers/admin.js';
 import { addProductPageController, addProductController } from '../controllers/addProduct.js';
+import { removeProductPageController, removeProductController } from '../controllers/removeProduct.js';
 import { homePageController } from '../controllers/home.js';
 import { productPageController } from '../controllers/product.js';
 
@@ -12,8 +13,8 @@ import upload from "../config/multer.js";
 const Router = express.Router();
 
 Router.route("/")
-  .get((req, res) => { 
-    res.redirect('/home'); 
+  .get((req, res) => {
+    res.redirect('/home');
   });
 
 Router.route('/home')
@@ -48,5 +49,9 @@ Router.route('/admin/addProduct')
     ]),
     addProductController
   );
+
+Router.route('/admin/removeProduct')
+  .get(auth, removeProductPageController)
+  .post(auth, removeProductController);
 
 export default Router;
