@@ -172,8 +172,6 @@
       background: var(--ui-soft);
     }
 
-    /* DRAWER FIXED STYLES END */
-
     main {
       width: 100%;
     }
@@ -456,6 +454,20 @@
     }
   </style>
 
+  <%
+    function toYouTubeEmbed(url) {
+      try {
+        const u = new URL(url);
+        if (u.hostname === 'youtu.be') return 'https://www.youtube.com/embed/' + u.pathname.slice(1);
+        if (u.searchParams.get('v')) return 'https://www.youtube.com/embed/' + u.searchParams.get('v');
+        if (u.pathname.startsWith('/shorts/')) return 'https://www.youtube.com/embed/' + u.pathname.split('/')[2];
+        return null;
+      } catch {
+        return null;
+      }
+    }
+  %>
+
 </head>
 
 <body>
@@ -490,14 +502,9 @@
     </div>
 
     <div class="drawer-content">
-
-          <button
-            class="action-btn contact"
-            onclick="window.open('https://wa.me/919993590572', '_blank')"
-          >
-            Contact Us
-          </button>
-
+      <button class="action-btn contact" onclick="window.open('https://wa.me/919993590572', '_blank')">
+        Contact Us
+      </button>
       <a href="/admin">Admin Panel</a>
     </div>
   </div>
@@ -505,18 +512,13 @@
   <main>
     <div class="site-container">
       <div class="product-page">
+
         <!-- Gallery Section -->
         <div class="section" style="margin-top: 10px;">
           <div class="section-box">
-            <div class="gallery-header" style="
-                  display: flex;
-                  flex-direction: row;
-                  justify-content: space-between;
-                ">
+            <div class="gallery-header" style="display:flex;flex-direction:row;justify-content:space-between;">
               <h2 class="section-title">Gallery</h2>
-              <button class="ask-query-btn-gallery" onclick="askQuery()">
-                Ask Query
-              </button>
+              <button class="ask-query-btn-gallery" onclick="askQuery()">Ask Query</button>
             </div>
             <div class="media-carousel">
               <div class="carousel-track">
@@ -524,24 +526,20 @@
                   <div class="carousel-slide">
                     <img src="<%= img %>" onclick="openFullscreen(this.src)" />
                   </div>
-                  <% }) %>
-                    <% (product.videos || []).forEach(video=> { %>
-                      <div class="carousel-slide">
-                        <video controls>
-                          <source src="<%= video %>" />
-                        </video>
-                      </div>
-                      <% }) %>
+                <% }) %>
+                <% (product.videos || []).forEach(video=> { %>
+                  <div class="carousel-slide">
+                    <video controls>
+                      <source src="<%= video %>" />
+                    </video>
+                  </div>
+                <% }) %>
               </div>
               <% const mediaCount=(product.images?.length || 0) + (product.videos?.length || 0); %>
-                <% if (mediaCount> 1) { %>
-                  <button class="carousel-btn prev" onclick="slideCarousel(-1)">
-                    ‹
-                  </button>
-                  <button class="carousel-btn next" onclick="slideCarousel(1)">
-                    ›
-                  </button>
-                  <% } %>
+              <% if (mediaCount> 1) { %>
+                <button class="carousel-btn prev" onclick="slideCarousel(-1)">‹</button>
+                <button class="carousel-btn next" onclick="slideCarousel(1)">›</button>
+              <% } %>
             </div>
           </div>
         </div>
@@ -550,14 +548,10 @@
         <div class="section">
           <div class="section-box">
             <div class="product-header">
-              <h1 class="section-title product-title">
-                <%= product.productName %>
-              </h1>
+              <h1 class="section-title product-title"><%= product.productName %></h1>
               <div class="product-id-wrapper" onclick="copyProductId()">
                 <div class="tooltip" id="idTooltip">Copy</div>
-                <div class="product-id" id="productId">
-                  <%= product._id %>
-                </div>
+                <div class="product-id" id="productId"><%= product._id %></div>
               </div>
             </div>
             <div class="product-description">
@@ -572,95 +566,92 @@
             <div class="section-box">
               <h2 class="section-title">Videos</h2>
               <div class="youtube-grid">
-                <% product.youtubeLinks.forEach(link=> { %>
-                  <iframe src="<%= link.replace('watch?v=', 'embed/').replace('shorts/', 'embed/') %>"
-                    allowfullscreen></iframe>
-                  <% }) %>
+                <% product.youtubeLinks
+                  .map(toYouTubeEmbed)
+                  .filter(Boolean)
+                  .forEach(src => { %>
+                    <iframe src="<%= src %>" allowfullscreen></iframe>
+                <% }) %>
               </div>
             </div>
           </div>
-          <% } %>
+        <% } %>
 
-            <!-- Articles Section -->
-            <% if (product.articleLinks?.length) { %>
-              <div class="section">
-                <div class="section-box">
-                  <h2 class="section-title">Articles</h2>
-                  <ul class="article-list">
-                    <% product.articleLinks.forEach(link=> { %>
-                      <li class="article-item">
-                        <a href="<%= link %>" target="_blank">
-                          <%= link %>
-                        </a>
-                      </li>
-                      <% }) %>
-                  </ul>
-                  <button class="ask-query-btn-articles" onclick="askQuery()">
-                    Ask Query
-                  </button>
-                </div>
-              </div>
-              <% } %>
+        <!-- Articles Section -->
+        <% if (product.articleLinks?.length) { %>
+          <div class="section">
+            <div class="section-box">
+              <h2 class="section-title">Articles</h2>
+              <ul class="article-list">
+                <% product.articleLinks.forEach(link=> { %>
+                  <li class="article-item">
+                    <a href="<%= link %>" target="_blank"><%= link %></a>
+                  </li>
+                <% }) %>
+              </ul>
+              <button class="ask-query-btn-articles" onclick="askQuery()">Ask Query</button>
+            </div>
+          </div>
+        <% } %>
 
-                <!-- Fullscreen Overlay -->
-                <div class="fullscreen-overlay" id="fullscreenOverlay" onclick="closeFullscreen()">
-                  <button class="fullscreen-close">×</button>
-                  <img id="fullscreenImage" />
-                </div>
+        <!-- Fullscreen Overlay -->
+        <div class="fullscreen-overlay" id="fullscreenOverlay" onclick="closeFullscreen()">
+          <button class="fullscreen-close">×</button>
+          <img id="fullscreenImage" />
+        </div>
 
-                <script>
-                  let currentSlide = 0;
-                  function slideCarousel(dir) {
-                    const slides = document.querySelectorAll(".carousel-slide");
-                    currentSlide = (currentSlide + dir + slides.length) % slides.length;
-                    document.querySelector(".carousel-track").style.transform = `translateX(-${currentSlide * 100}%)`;
-                  }
+        <script>
+          let currentSlide = 0;
+          function slideCarousel(dir) {
+            const slides = document.querySelectorAll(".carousel-slide");
+            currentSlide = (currentSlide + dir + slides.length) % slides.length;
+            document.querySelector(".carousel-track").style.transform = `translateX(-${currentSlide * 100}%)`;
+          }
 
-                  function copyProductId() {
-                    const tooltip = document.getElementById("idTooltip");
-                    navigator.clipboard.writeText(document.getElementById("productId").innerText);
-                    tooltip.textContent = "Copied";
-                    tooltip.classList.add("copied");
-                    setTimeout(() => {
-                      tooltip.textContent = "Copy";
-                      tooltip.classList.remove("copied");
-                    }, 1500);
-                  }
+          function copyProductId() {
+            const tooltip = document.getElementById("idTooltip");
+            navigator.clipboard.writeText(document.getElementById("productId").innerText);
+            tooltip.textContent = "Copied";
+            tooltip.classList.add("copied");
+            setTimeout(() => {
+              tooltip.textContent = "Copy";
+              tooltip.classList.remove("copied");
+            }, 1500);
+          }
 
-                  function openFullscreen(src) {
-                    document.getElementById("fullscreenImage").src = src;
-                    document.getElementById("fullscreenOverlay").classList.add("active");
-                    document.body.style.overflow = "hidden";
-                  }
+          function openFullscreen(src) {
+            document.getElementById("fullscreenImage").src = src;
+            document.getElementById("fullscreenOverlay").classList.add("active");
+            document.body.style.overflow = "hidden";
+          }
 
-                  function closeFullscreen() {
-                    document.getElementById("fullscreenOverlay").classList.remove("active");
-                    document.body.style.overflow = "";
-                  }
+          function closeFullscreen() {
+            document.getElementById("fullscreenOverlay").classList.remove("active");
+            document.body.style.overflow = "";
+          }
 
-                  function askQuery() {
-                    const productName = `<%= product.productName.replace(/"/g, '\\"') %>`;
-                    const pageUrl = window.location.href;
-                    const messageText = `Hello, I have a query about the product: ${productName}. Page link: `;
-                    const whatsappNumber = '919993590572';
-                    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(messageText)}${pageUrl}`;
-                    window.open(whatsappUrl, '_blank');
-                  }
+          function askQuery() {
+            const productName = `<%= product.productName.replace(/"/g, '\\"') %>`;
+            const pageUrl = window.location.href;
+            const messageText = `Hello, I have a query about the product: ${productName}. Page link: `;
+            const whatsappNumber = '919993590572';
+            const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(messageText)}${pageUrl}`;
+            window.open(whatsappUrl, '_blank');
+          }
 
+          function openDrawer() {
+            document.getElementById("drawer").classList.add("open");
+            document.getElementById("overlay").classList.add("active");
+          }
 
-                  function openDrawer() {
-                    document.getElementById("drawer").classList.add("open");
-                    document.getElementById("overlay").classList.add("active");
-                  }
+          function closeDrawer() {
+            document.getElementById("drawer").classList.remove("open");
+            document.getElementById("overlay").classList.remove("active");
+          }
+        </script>
 
-                  function closeDrawer() {
-                    document.getElementById("drawer").classList.remove("open");
-                    document.getElementById("overlay").classList.remove("active");
-                  }
-                </script>
       </div>
     </div>
-
   </main>
 </body>
 
