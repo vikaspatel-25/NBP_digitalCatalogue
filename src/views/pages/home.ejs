@@ -17,7 +17,6 @@
         --orange: #f37021;
         --orange-dark: #d85f18;
         --text-dark: #1f1f1f;
-        /* --bg-container: #f4f4f4; */
         --ui-light: #e2e2e2;
         --ui-soft: #f1f1f1;
         --white: #ffffff;
@@ -181,17 +180,35 @@
       }
 
       .site-container {
-        max-width: 800px;
+        max-width: 1320px;
         margin: 0 auto;
-        background: var(--bg-container);
         min-height: 100vh;
+        padding: 24px;
+      }
+
+      .product-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+      }
+
+      @media (max-width: 1200px) {
+        .product-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      @media (max-width: 900px) {
+        .product-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
       }
 
       @media (max-width: 768px) {
         .header-actions {
           display: none;
         }
-        
+
         .hamburger {
           display: flex;
           align-items: center;
@@ -248,13 +265,12 @@
       </div>
 
       <div class="drawer-content">
-
-          <button
-            class="action-btn contact"
-            onclick="window.open('https://wa.me/919993590572', '_blank')"
-          >
-            Contact Us
-          </button>
+        <button
+          class="action-btn contact"
+          onclick="window.open('https://wa.me/919993590572', '_blank')"
+        >
+          Contact Us
+        </button>
 
         <a href="/admin">Admin Panel</a>
       </div>
@@ -262,10 +278,12 @@
 
     <main>
       <div class="site-container">
-        <% for (const product of products) { %> <%-
-        include('../components/prodCard.ejs', { product }) %> <% } %>
+        <div class="product-grid">
+          <% for (const product of products) { %>
+            <%- include('../components/prodCard.ejs', { product }) %>
+          <% } %>
+        </div>
       </div>
-
     </main>
 
     <script>
