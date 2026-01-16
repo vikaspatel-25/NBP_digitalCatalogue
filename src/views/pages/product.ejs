@@ -249,11 +249,27 @@
       overflow: hidden;
       border-radius: 10px;
       background: #f0f0f0;
+      width: 100%;
+      height: 420px;
+    }
+
+    .carousel-hint {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      pointer-events: none;
+      z-index: 2;
     }
 
     .carousel-track {
       display: flex;
       transition: transform 0.35s ease;
+      height: 100%;
     }
 
     .carousel-slide {
@@ -261,13 +277,14 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      height: 100%;
     }
 
     .carousel-slide img,
     .carousel-slide video {
       width: 100%;
-      height: 420px;
-      object-fit: cover;
+      height: 100%;
+      object-fit: contain;
       background: #000;
       cursor: zoom-in;
     }
@@ -276,8 +293,8 @@
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      width: 36px;
-      height: 36px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       border: none;
       background: rgba(0, 0, 0, 0.45);
@@ -368,7 +385,7 @@
 
     .youtube-grid iframe {
       width: 100%;
-      height: 220px;
+      height: 260px;
       border-radius: 10px;
     }
 
@@ -521,6 +538,7 @@
               <button class="ask-query-btn-gallery" onclick="askQuery()">Ask Query</button>
             </div>
             <div class="media-carousel">
+              <div class="carousel-hint">Click to expand image</div>
               <div class="carousel-track">
                 <% (product.images || []).forEach(img=> { %>
                   <div class="carousel-slide">
