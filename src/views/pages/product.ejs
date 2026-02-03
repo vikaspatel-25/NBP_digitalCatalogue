@@ -488,57 +488,9 @@
 </head>
 
 <body>
-  <header>
-    <div class="header-inner">
-      <div class="brand" onclick="window.location.href='/home'" style="cursor: pointer">
-        <img
-        src="/assets/netZeroStickerIcon.png"
-        alt="Brand Logo"
-        style="padding: 6px;padding-right: 0;"
-      /> <img
-      src="/assets/netZeroText.png"
-      alt="Brand Logo"
-      style="padding: 15px; padding-left: 0px;"
-    />
-      </div>
+ 
+  <%- include('../components/header.ejs') %>
 
-      <div class="header-actions">
-        <button class="action-btn contact" onclick="window.open('https://wa.me/9993590572', '_blank')">
-          Contact Us
-        </button>
-
-        <button class="action-btn admin" onclick="location.href='/admin'">
-          Admin Panel
-        </button>
-      </div>
-
-      <div class="hamburger" onclick="openDrawer()">☰</div>
-    </div>
-  </header>
-
-  <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
-
-  <div class="drawer" id="drawer">
-    <div class="drawer-header">
-      <button class="close-btn" onclick="closeDrawer()">×</button>
-        <img
-        src="/assets/netZeroStickerIcon.png"
-        alt="Brand Logo"
-        style="padding: 6px;padding-right: 0;"
-      /> <img
-      src="/assets/netZeroText.png"
-      alt="Brand Logo"
-      style="padding: 20px; padding-left: 0px;"
-    />
-    </div>
-
-    <div class="drawer-content">
-      <button class="action-btn contact" onclick="window.open('https://wa.me/919993590572', '_blank')">
-        Contact Us
-      </button>
-      <a href="/admin">Admin Panel</a>
-    </div>
-  </div>
 
   <main>
     <div class="site-container">
@@ -578,21 +530,19 @@
 
         <!-- Product Info Section -->
         <div class="section">
-          <div class="section-box">
-            <div class="product-header">
-              <h1 class="section-title product-title"><%= product.productName %></h1>
-              <div class="product-id-wrapper" onclick="copyProductId()">
-                <div class="tooltip" id="idTooltip">Copy</div>
-                <div class="product-id" id="productId"><%= product._id %></div>
-              </div>
+            <div class="section-box">
+                <div class="product-header product-id-wrapper" onclick="copyProductId('<%= product._id %>')"><div class="tooltip" id="idTooltip">Copy</div>
+                <h1 class="section-title product-title" ><%= product.productName %></h1>
+                </div>
+              
+                <div class="product-description">
+                <%- product.detailedDescription.replace(/\r?\n/g, '<br /><br />' ) %>
+                </div>
             </div>
-            <div class="product-description">
-              <%- product.detailedDescription.replace(/\r?\n/g, '<br /><br />' ) %>
-            </div>
-          </div>
         </div>
 
         <!-- Videos Section -->
+        
         <% if (product.youtubeLinks?.length) { %>
           <div class="section">
             <div class="section-box">
@@ -609,7 +559,7 @@
           </div>
         <% } %>
 
-        <!-- Articles Section -->
+        
         <% if (product.articleLinks?.length) { %>
           <div class="section">
             <div class="section-box">
@@ -626,7 +576,7 @@
           </div>
         <% } %>
 
-        <!-- Fullscreen Overlay -->
+        
         <div class="fullscreen-overlay" id="fullscreenOverlay" onclick="closeFullscreen()">
           <button class="fullscreen-close">×</button>
           <img id="fullscreenImage" />
@@ -640,9 +590,9 @@
             document.querySelector(".carousel-track").style.transform = `translateX(-${currentSlide * 100}%)`;
           }
 
-          function copyProductId() {
+          function copyProductId(prodId) {
             const tooltip = document.getElementById("idTooltip");
-            navigator.clipboard.writeText(document.getElementById("productId").innerText);
+            navigator.clipboard.writeText(prodId);
             tooltip.textContent = "Copied";
             tooltip.classList.add("copied");
             setTimeout(() => {
@@ -663,13 +613,18 @@
           }
 
           function askQuery() {
-            const productName = `<%= product.productName.replace(/"/g, '\\"') %>`;
-            const pageUrl = window.location.href;
-            const messageText = `Hello, I have a query about the product: ${productName}. Page link: `;
-            const whatsappNumber = '919993590572';
-            const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(messageText)}${pageUrl}`;
-            window.open(whatsappUrl, '_blank');
-          }
+          const productName = `<%= product.productName.replace(/"/g, '\\"') %>`;
+          const pageUrl = window.location.href;
+
+          const subject = `Query about ${productName}`;
+          const body = `Hello, I have a query about the product: ${productName}.\n\nPage link: ${pageUrl}`;
+
+          const email = "netzeromart@gmail.com";
+
+          const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+          window.open(gmailUrl, "_blank");
+    }
 
           function openDrawer() {
             document.getElementById("drawer").classList.add("open");

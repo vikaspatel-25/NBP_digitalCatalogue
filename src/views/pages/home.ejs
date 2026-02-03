@@ -228,85 +228,70 @@
   </head>
 
   <body>
-    <header>
-      <div class="header-inner">
-        <div class="brand">
-          <img
-            src="/assets/netZeroStickerIcon.png"
-            alt="Brand Logo"
-            style="padding: 6px;padding-right: 0;"
-          /> <img
-          src="/assets/netZeroText.png"
-          alt="Brand Logo"
-          style="padding: 15px; padding-left: 0px;"
-        />
-        </div>
+    
+    <%- include('../components/header.ejs') %>
+    
+    
+    <div id="navBarContainer"
+     style="width: 100%; max-width: 400px; aspect-ratio: 400 / 65; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
 
-        <div class="header-actions">
-          <button
-            class="action-btn contact"
-            onclick="window.open('https://wa.me/919993590572', '_blank')"
-          >
-            Contact Us
-          </button>
+    <div id="navBar" class="nav-bar"
+       style="height: 70%; width: 85%; border-radius: 999px; background-color: #f2f2f2; display: flex; align-items: center; justify-content: space-between; padding: 1.5%;">
 
-          <button class="action-btn admin" onclick="location.href='/admin'">
-            Admin Panel
-          </button>
-        </div>
-
-        <div class="hamburger" onclick="openDrawer()">☰</div>
-      </div>
-    </header>
-
-    <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
-
-    <div class="drawer" id="drawer">
-      <div class="drawer-header">
-        <button class="close-btn" onclick="closeDrawer()">×</button>
-        <img
-        src="/assets/netZeroStickerIcon.png"
-        alt="Brand Logo"
-        style="padding: 6px;padding-right: 0;"
-      /> <img
-      src="/assets/netZeroText.png"
-      alt="Brand Logo"
-      style="padding: 20px; padding-left: 0px;"
-    />
-      </div>
-
-      <div class="drawer-content">
-        <button
-          class="action-btn contact"
-          onclick="window.open('https://wa.me/919993590572', '_blank')"
-        >
-          Contact Us
-        </button>
-
-        <a href="/admin">Admin Panel</a>
-      </div>
+    <div id="tab1" class="n-tab" onclick="handleTabClick(event)"
+         style="height: 100%; width: 50%; border-radius: 999px; font-family: Roboto, sans-serif; color: #ffffff; font-size: clamp(12px, 3vw, 15px); display: flex; align-items: center; justify-content: center; font-weight: 700; cursor: pointer; overflow: hidden; margin: 0 2px; background-color: rgb(1, 88, 160);">
+      Products
     </div>
+
+    <div id="tab2" class="n-tab" onclick="handleTabClick(event)"
+         style="height: 100%; width: 50%; border-radius: 999px; font-family: Roboto, sans-serif; color: #000000; font-size: clamp(12px, 3vw, 15px); display: flex; align-items: center; justify-content: center; font-weight: 700; cursor: pointer; overflow: hidden; margin: 0 2px;">
+      Articles
+    </div>
+
+   </div>
+</div>
+
 
     <main>
       <div class="site-container">
-        <div class="product-grid">
+        <div class="product-grid" id="product-grid">
           <% for (const product of products) { %>
             <%- include('../components/prodCard.ejs', { product }) %>
           <% } %>
         </div>
+        <div class="article-grid product-grid" id="article-grid">
+         Articles will be displayed here
+        </div>
       </div>
     </main>
 
-    <script>
-      function openDrawer() {
-        document.getElementById("drawer").classList.add("open");
-        document.getElementById("overlay").classList.add("active");
+    <script>function handleTabClick(event) {
+      let allTabs = Array.from(document.getElementsByClassName('n-tab'));
+      
+      // reset the styles for all tabs
+      allTabs.forEach(tab => {
+      tab.style.backgroundColor = '#f2f2f2';
+      tab.style.color = '#000000';
+      
+      });
+      
+      // retrieve the clicked tab and set its styles
+      let tabClicked = event.target;
+      tabClicked.style.backgroundColor = '#0158a0';
+      tabClicked.style.color = '#ffffff';
+      
+      let tabClickedId = event.target.getAttribute('id');
+      if (tabClickedId === 'tab1') {
+      document.getElementById('article-grid').style.display = 'none';
+      document.getElementById('product-grid').style.display = 'grid';
+      } 
+      else if (tabClickedId === 'tab2') {
+      document.getElementById('article-grid').style.display = 'flex';
+      document.getElementById('product-grid').style.display = 'none';
       }
 
-      function closeDrawer() {
-        document.getElementById("drawer").classList.remove("open");
-        document.getElementById("overlay").classList.remove("active");
-      }
-    </script>
+      return tabClickedId;
+      };</script>
+    
   </body>
 </html>

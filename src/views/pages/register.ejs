@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Company Registration</title>
+
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --border: #e5e7eb;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --header-bg: #1e3a8a;
+      --header-text: #ffffff;
+      --row-hover: #e6ebf4;
+      --row-active: #dbe2f0;
+      --primary: #2563eb;
+      --primary-hover: #1e4ed8;
+      --input-bg: #f9fafb;
+      --focus: #2563eb;
+      --danger: #dc2626;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 6vh 1rem;
+    }
+
+    .panel {
+      width: 100%;
+      max-width: 640px;
+      background: var(--panel);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .panel-header {
+      padding: 1.6rem 2rem;
+      background: var(--header-bg);
+      color: var(--header-text);
+    }
+
+    .panel-header h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 600;
+    }
+
+    .panel-header p {
+      margin-top: 0.35rem;
+      font-size: 0.85rem;
+      opacity: 0.85;
+    }
+
+    .panel-body {
+      padding: 1.8rem 2rem 2.2rem;
+    }
+
+    .field {
+      margin-bottom: 1.3rem;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .required-star {
+      color: var(--danger);
+      margin-left: 3px;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 0.65rem 0.75rem;
+      font-size: 0.9rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .field input:focus {
+      outline: none;
+      border-color: var(--focus);
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+      background: #ffffff;
+    }
+
+    .file-info {
+      margin-top: 0.35rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .error {
+      margin-bottom: 1rem;
+      padding: 0.65rem 0.8rem;
+      border-radius: 6px;
+      background: rgba(220,38,38,0.08);
+      border: 1px solid rgba(220,38,38,0.2);
+      color: var(--danger);
+      font-size: 0.8rem;
+    }
+
+    .success {
+      margin-bottom: 1rem;
+      padding: 0.65rem 0.8rem;
+      border-radius: 6px;
+      background: rgba(37,99,235,0.08);
+      border: 1px solid rgba(37,99,235,0.2);
+      color: var(--primary);
+      font-size: 0.8rem;
+    }
+
+    .actions {
+      margin-top: 1.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .submit-btn {
+      padding: 0.7rem 1.2rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border-radius: 6px;
+      border: none;
+      background: var(--primary);
+      color: #ffffff;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .submit-btn:hover {
+      background: var(--primary-hover);
+    }
+
+    .secondary-wrapper {
+      text-align: center;
+      margin-top: 1.2rem;
+    }
+
+    .secondary-link {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .secondary-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+
+  <script>
+    function validateFile(input) {
+      const file = input.files[0];
+      if (!file) return false;
+
+      const maxSize = 25 * 1024 * 1024;
+      if (file.type !== 'application/pdf') {
+        alert('Only PDF files are allowed.');
+        input.value = '';
+        return false;
+      }
+
+      if (file.size > maxSize) {
+        alert('File size must not exceed 25MB.');
+        input.value = '';
+        return false;
+      }
+
+      return true;
+    }
+
+    function validateIndianMobile(mobile) {
+      const cleaned = mobile.replace(/^\+91/, '');
+      const indianPattern = /^[6-9]\d{9}$/;
+      return indianPattern.test(cleaned);
+    }
+
+    function validateForm(event) {
+      const companyName = document.getElementById('companyName').value.trim();
+      const mobile = document.getElementById('mobile').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const fileInput = document.getElementById('document');
+
+      if (!companyName || !mobile || !email || !fileInput.files.length) {
+        alert('All fields marked with * are required.');
+        event.preventDefault();
+        return false;
+      }
+
+      if (!validateIndianMobile(mobile)) {
+        alert('Enter a valid Indian mobile number.');
+        event.preventDefault();
+        return false;
+      }
+
+      if (!validateFile(fileInput)) {
+        event.preventDefault();
+        return false;
+      }
+
+      return true;
+    }
+  </script>
+</head>
+
+<body>
+  <div class="panel">
+    <div class="panel-header">
+      <h1>Company Registration</h1>
+      <p>Apply for onboarding to our platform</p>
+    </div>
+
+    <div class="panel-body">
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="error"><%= error %></div>
+      <% } %>
+
+      <% if (typeof success !== 'undefined' && success) { %>
+        <div class="success"><%= success %></div>
+      <% } %>
+
+      <form action="/register" method="POST" enctype="multipart/form-data" onsubmit="validateForm(event)">
+
+        <div class="field">
+          <label for="companyName">Company/Executive Name<span class="required-star">*</span></label>
+          <input type="text" id="companyName" name="companyName" required />
+        </div>
+
+        <div class="field">
+          <label for="mobile">Mobile Number<span class="required-star">*</span></label>
+          <input 
+            type="tel" 
+            id="mobile" 
+            name="mobile" 
+            pattern="^(\+91)?[6-9]\d{9}$" 
+            required 
+          />
+        </div>
+
+        <div class="field">
+          <label for="email">Email Address<span class="required-star">*</span></label>
+          <input type="email" id="email" name="email" required />
+        </div>
+
+        <div class="field">
+          <label for="document">Upload Company Profile (PDF)<span class="required-star">*</span></label>
+          <input 
+            type="file" 
+            id="document" 
+            name="document" 
+            accept="application/pdf" 
+            onchange="validateFile(this)" 
+            required 
+          />
+          <div class="file-info">PDF format only. Maximum size: 25MB.</div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="submit-btn">Submit Registration</button>
+        </div>
+      </form>
+
+      <div class="secondary-wrapper">
+        <a href="/home" class="secondary-link">Back to Website</a>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

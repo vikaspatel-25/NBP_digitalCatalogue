@@ -6,6 +6,7 @@ import { addProductPageController, addProductController } from '../controllers/a
 import { removeProductPageController, removeProductController } from '../controllers/removeProduct.js';
 import { homePageController } from '../controllers/home.js';
 import { productPageController } from '../controllers/product.js';
+import { registerPageController } from '../controllers/register.js';
 
 import auth from '../middlewares/auth.js';
 import upload from "../config/multer.js";
@@ -28,6 +29,9 @@ Router.post('/logout', (req, res) => {
   res.clearCookie('token');
   res.redirect('/login');
 });
+
+Router.route('/register')
+  .get(registerPageController);
 
 Router.route('/home/product')
   .get(productPageController);
