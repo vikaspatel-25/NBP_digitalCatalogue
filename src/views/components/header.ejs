@@ -227,12 +227,13 @@
       </div>
 
       <div class="header-actions">
-        <a href="https://mail.google.com/mail/?view=cm&to=netzeromart@gmail.com" 
-         target="_blank" 
-        class="action-btn contact" style="text-decoration: none;">
-        Contact Us
+        
+        <a href="javascript:void(0);"
+            onclick="contactUsEmail()"
+            class="action-btn contact"
+            style="text-decoration: none;">
+            Contact Us
         </a>
-
 
         <button class="action-btn contact" onclick="location.href='/register'">
             Register Yourself
@@ -278,6 +279,25 @@
       </div>
     </div>
   <script>
+
+
+        function contactUsEmail() {
+            const email = "netzeromart@gmail.com";
+            const subject = "General Inquiry";
+            const body = "Hello,\n\nI would like to get in touch.";
+
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+            if (isMobile) {
+            const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.location.href = mailtoUrl;
+            } else {
+            const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.open(gmailUrl, "_blank");
+            }
+        }
+
+
     function openDrawer() {
       document.getElementById("drawer").classList.add("open");
       document.getElementById("overlay").classList.add("active");
