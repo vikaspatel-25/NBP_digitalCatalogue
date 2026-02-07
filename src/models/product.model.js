@@ -39,6 +39,15 @@ const productSchema = new mongoose.Schema(
       type: Number,
       index: true
     },
+    creatorId: {
+      type: String,
+      required: true
+    },
+    creatorRole: {
+      type: String,
+      enum: ['admin', 'user'],
+      required: true
+    },
     createdAt: {
       type: Date,
       default: Date.now

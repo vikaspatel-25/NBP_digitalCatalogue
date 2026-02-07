@@ -2,6 +2,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import cloudinary from "../config/cloudinary.js";
 import Product from "../models/product.model.js";
+import jwt from "jsonwebtoken";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,6 +28,26 @@ function uploadToCloudinary(buffer, type = "image") {
     );
     stream.end(buffer);
   });
+}
+
+function getCreatorId(req) {
+  const adminToken = req.cookies.adminToken;
+  const userToken = req.cookies.userToken;
+
+  try {
+    if (adminToken) {
+      const decoded = jwt.verify(adminToken, process.env.JWT_SECRET);
+      return { id: decoded.adminId, role: "admin" };
+    }
+    if (userToken) {
+      const decoded = jwt.verify(userToken, process.env.JWT_SECRET);
+      return { id: decoded.userId, role: "user" };
+    }
+  } catch (err) {
+    console.error("Error decoding JWT for creator ID:", err);
+  }
+
+  return null;
 }
 
 async function addProductController(req, res) {
@@ -73,6 +94,8 @@ async function addProductController(req, res) {
       orderValue = lastProduct ? lastProduct.order + 1 : 0;
     }
 
+    const creator = getCreatorId(req);
+
     const productData = {
       productName,
       oneLineDescription,
@@ -85,9 +108,21 @@ async function addProductController(req, res) {
       order: orderValue,
       createdAt: new Date(),
       updatedAt: new Date(),
+      creatorId: creator ? creator.id : null,
+      creatorRole: creator ? creator.role : null,
     };
 
     await Product.create(productData);
+
+    const addAnotherLink =
+      creator && creator.role === "admin"
+        ? "/admin/addProduct"
+        : "/userPanel/addProduct";
+
+    const backLink =
+      creator && creator.role === "admin"
+        ? "/admin"
+        : "/userPanel";
 
     res.send(`<!DOCTYPE html>
 <html lang="en">
@@ -186,8 +221,8 @@ async function addProductController(req, res) {
     <div class="panel-body">
       <h2>Product Added Successfully</h2>
       <p>The product has been saved to the catalogue.</p>
-      <a href="/admin/addProduct" class="btn btn-primary">Add Another Product</a>
-      <a href="/admin" class="btn btn-secondary">Back to Admin</a>
+      <a href="${addAnotherLink}" class="btn btn-primary">Add Another Product</a>
+      <a href="${backLink}" class="btn btn-secondary">Back</a>
     </div>
   </div>
 </body>
