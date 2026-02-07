@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Approval</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #e2e8f0;
+      margin: 0;
+      padding: 3rem 1rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .outer-card {
+      background: #f9fafb;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      max-width: 1000px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      position: relative;
+    }
+
+    h1 {
+      text-align: center;
+      color: #1f2937;
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .user-card {
+      background: #ffffff;
+      border-radius: 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      padding: 1.8rem;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.05);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .user-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .user-info h3 {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .user-info p {
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .user-info .email {
+      color: #3b82f6;
+      font-weight: 500;
+    }
+
+    .user-info .email a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .user-info .mobile {
+      color: #6b7280;
+      font-style: italic;
+      cursor: pointer;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .actions a, .actions form {
+      margin: 0;
+    }
+
+    button {
+      padding: 0.5rem 1.2rem;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .approve { background: #22c55e; color: white; }
+    .approve:hover { background: #16a34a; }
+
+    .reject { background: #ef4444; color: white; }
+    .reject:hover { background: #b91c1c; }
+
+    .download { background: #3b82f6; color: white; }
+    .download:hover { background: #1d4ed8; }
+
+    .no-users {
+      text-align: center;
+      color: #6b7280;
+      font-size: 1.1rem;
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 700px) {
+      .user-card {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+      .actions {
+        justify-content: flex-start;
+      }
+    }
+
+    /* Overlay Loader */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .overlay.active {
+      display: flex;
+    }
+
+    .loader-card {
+      background: #ffffff;
+      padding: 2rem 2.5rem;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      max-width: 320px;
+      width: 90%;
+    }
+
+    .spinner {
+      width: 42px;
+      height: 42px;
+      border: 4px solid #e5e7eb;
+      border-top: 4px solid #3b82f6;
+      border-radius: 50%;
+      margin: 0 auto 1rem;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loader-text {
+      font-size: 0.9rem;
+      color: #1f2937;
+    }
+  </style>
+  <script>
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Mobile number copied: ' + text);
+      });
+    }
+
+    function showLoader() {
+      document.getElementById('overlay').classList.add('active');
+    }
+
+    window.addEventListener('DOMContentLoaded', function () {
+      const forms = document.querySelectorAll('form');
+      forms.forEach(function(form) {
+        form.addEventListener('submit', function() {
+          showLoader();
+        });
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="overlay" id="overlay">
+    <div class="loader-card">
+      <div class="spinner"></div>
+      <div class="loader-text">
+        Processing request. Please wait.
+      </div>
+    </div>
+  </div>
+
+  <div class="outer-card">
+    <h1>Pending User Approvals</h1>
+
+    <% if (users && users.length > 0) { %>
+      <% users.forEach(user => { %>
+        <div class="user-card">
+          <div class="user-info">
+            <h3><%= user.companyName %></h3>
+            <p class="email">
+              Email: <a href="https://mail.google.com/mail/?view=cm&fs=1&to=<%= user.email %>" target="_blank"><%= user.email %></a>
+            </p>
+            <p class="mobile" onclick="copyToClipboard('<%= user.mobile %>')">Mobile: <%= user.mobile %></p>
+          </div>
+          <div class="actions">
+            <% if (user.document && user.document.url && user.document.url !== '') { %>
+              <a href="<%= user.document.url %>" target="_blank">
+                <button class="download" type="button">Open Brochure</button>
+              </a>
+            <% } %>
+            <form action="/admin/userApproval/approve" method="POST">
+              <input type="hidden" name="userId" value="<%= user._id %>" />
+              <button class="approve" type="submit">Approve</button>
+            </form>
+            <form action="/admin/userApproval/reject" method="POST">
+              <input type="hidden" name="userId" value="<%= user._id %>" />
+              <button class="reject" type="submit">Reject</button>
+            </form>
+          </div>
+        </div>
+      <% }) %>
+    <% } else { %>
+      <p class="no-users">No users waiting for approval.</p>
+    <% } %>
+  
+  <a href="/admin" style="margin-top: 20px;align-self: center;text-decoration: none;color: #1f2937;"><h5>Go Back to Admin Panel</h5></a>
+</div>
+</body>
+</html>

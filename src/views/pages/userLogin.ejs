@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Login</title>
+  <title>User Login</title>
 
   <style>
     :root {
@@ -14,8 +14,6 @@
       --muted: #6b7280;
       --header-bg: #1e3a8a;
       --header-text: #ffffff;
-      --row-hover: #e6ebf4;
-      --row-active: #dbe2f0;
       --primary: #2563eb;
       --primary-hover: #1e4ed8;
       --input-bg: #f9fafb;
@@ -51,20 +49,49 @@
       color: var(--header-text);
     }
 
-    .panel-header h1 { margin: 0; font-size: 1.3rem; font-weight: 600; }
-    .panel-header p { margin-top: 0.35rem; font-size: 0.85rem; opacity: 0.85; }
+    .panel-header h1 {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .panel-header p {
+      margin-top: 0.35rem;
+      font-size: 0.85rem;
+      opacity: 0.85;
+    }
+
     .panel-body { padding: 1.8rem 2rem 2.2rem; }
 
-    .password-wrapper { position: relative; }
+    .field { margin-bottom: 1.2rem; }
+
+    .field label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .input-wrapper input,
     .password-wrapper input {
       width: 100%;
-      padding: 0.65rem 2.8rem 0.65rem 0.75rem;
+      padding: 0.65rem 0.75rem;
       font-size: 0.9rem;
       border-radius: 6px;
       border: 1px solid var(--border);
       background: var(--input-bg);
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-wrapper input {
+      padding-right: 2.8rem;
+    }
+
+    .input-wrapper input:focus,
     .password-wrapper input:focus {
       outline: none;
       border-color: var(--focus);
@@ -84,12 +111,16 @@
       background: #ffffff;
       color: var(--muted);
       cursor: pointer;
-      transition: background 0.15s ease;
     }
-    .toggle-btn:hover { background: var(--row-hover); }
+
+    .small-note {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.35rem;
+    }
 
     .actions {
-      margin-top: 1.8rem;
+      margin-top: 1.6rem;
       display: flex;
       flex-direction: column;
       gap: 0.6rem;
@@ -106,34 +137,60 @@
       cursor: pointer;
       transition: background 0.15s ease;
     }
+
     .login-btn:hover { background: var(--primary-hover); }
 
-    .secondary-btn {
-      padding: 0.6rem 1.2rem;
+    .link-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
       font-size: 0.8rem;
-      font-weight: 500;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: #ffffff;
-      color: var(--text);
       cursor: pointer;
-      transition: background 0.15s ease;
+      text-align: left;
+      padding: 0;
     }
-    .secondary-btn:hover { background: var(--row-hover); }
+
+    .link-btn:hover { text-decoration: underline; }
+
+    .back-link {
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: 0.85rem;
+    }
+
+    .back-link a {
+      text-decoration: none;
+      color: var(--text);
+    }
   </style>
 
   <script>
     function togglePassword() {
       const input = document.getElementById("password");
       const btn = document.getElementById("toggleBtn");
-      input.type = input.type === "password" ? "text" : "password";
-      btn.textContent = input.type === "password" ? "Show" : "Hide";
+      if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "Hide";
+      } else {
+        input.type = "password";
+        btn.textContent = "Show";
+      }
     }
 
     function handleForgotPassword() {
-      // Hardcoded admin email
-      const email = 'netzeromart@gmail.com';
-      window.location.href = "/admin/forgotPassword?gmail=" + encodeURIComponent(email);
+      const emailInput = document.getElementById("gmail");
+      const email = emailInput.value.trim();
+      const gmailPattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+
+      if (!gmailPattern.test(email)) {
+        emailInput.focus();
+        emailInput.setCustomValidity("Please enter a valid Gmail address before requesting a passkey.");
+        emailInput.reportValidity();
+        return;
+      }
+
+      emailInput.setCustomValidity("");
+      window.location.href = "/userPanel/forgotPassword?gmail=" + encodeURIComponent(email);
     }
   </script>
 </head>
@@ -141,31 +198,58 @@
 <body>
   <div class="panel">
     <div class="panel-header">
-      <h1>Admin Login</h1>
-      <p>Restricted system access</p>
+      <h1>User Login</h1>
+      <p>Access your account</p>
     </div>
 
     <div class="panel-body">
-      <form action="/adminLogin" method="POST">
+      <form action="/userLogin" method="POST">
+
         <div class="field">
-          <label for="password">Password/PassKey</label>
+          <label for="gmail">Gmail Address</label>
+          <div class="input-wrapper">
+            <input 
+              type="email"
+              id="gmail"
+              name="gmail"
+              required
+              pattern="^[a-zA-Z0-9._%+-]+@gmail\.com$"
+              title="Please enter a valid Gmail address (example@gmail.com)"
+              oninput="this.setCustomValidity('')"
+            />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="password">Password or Passkey</label>
           <div class="password-wrapper">
-            <input type="password" id="password" name="password" required />
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              required 
+              minlength="6" 
+            />
             <button type="button" class="toggle-btn" id="toggleBtn" onclick="togglePassword()">Show</button>
+          </div>
+          <div class="small-note">
+            You may use your account password or assigned passkey.
           </div>
         </div>
 
         <div class="actions">
           <button type="submit" class="login-btn">Sign In</button>
+          <button type="button" class="link-btn" onclick="handleForgotPassword()">
+            Forgot Password?
+          </button>
         </div>
+
       </form>
 
-      <div class="actions">
-        <button type="button" class="secondary-btn" onclick="handleForgotPassword()">Forgot Password?</button>
-        <a href="/home" style="margin-top: 20px; align-self: center; text-decoration: none; color: #1f2937;">
-          <h5>Go Back to Website</h5>
-        </a>
+      <div class="back-link">
+        <a href="/home">Go Back to Website</a>
       </div>
+
     </div>
   </div>
 </body>

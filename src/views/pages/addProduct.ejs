@@ -269,7 +269,7 @@
         </div>
 
         <div class="submit-section">
-          <a href="/admin" style="font-size: small;text-decoration: none;">Back to Admin Panel</a>
+          <a id="backLink" style="font-size: small;text-decoration: none;">Back to Panel</a>
           <button type="submit" class="btn btn-success">Add Product</button>
         </div>
 
@@ -342,6 +342,11 @@
         if (file.size > MAX_VIDEO_SIZE) { alert(`Video "${file.name}" exceeds 50MB.`); this.value = ''; return; }
       }
     });
+    window.addEventListener('DOMContentLoaded', function () {
+      const segments = window.location.pathname.split('/').filter(Boolean);
+      const basePath = '/' + segments[0];
+      document.getElementById('backLink').href = basePath;
+  });
   </script>
 </body>
 </html>

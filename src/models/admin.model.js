@@ -10,6 +10,10 @@ const adminSchema = new mongoose.Schema(
       type: Date,
       required: true,
       default: Date.now
+    },
+    passKey: {
+      type: String,
+      default: ''
     }
   },
   {

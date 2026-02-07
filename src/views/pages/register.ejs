@@ -164,6 +164,51 @@
     .secondary-link:hover {
       text-decoration: underline;
     }
+
+    /* Overlay Loader */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .overlay.active {
+      display: flex;
+    }
+
+    .loader-card {
+      background: #ffffff;
+      padding: 2rem 2.5rem;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      max-width: 320px;
+      width: 90%;
+    }
+
+    .spinner {
+      width: 42px;
+      height: 42px;
+      border: 4px solid #e5e7eb;
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      margin: 0 auto 1rem;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loader-text {
+      font-size: 0.9rem;
+      color: var(--text);
+    }
   </style>
 
   <script>
@@ -193,13 +238,16 @@
       return indianPattern.test(cleaned);
     }
 
+    function showLoader() {
+      document.getElementById('overlay').classList.add('active');
+    }
+
     function validateForm(event) {
       const companyName = document.getElementById('companyName').value.trim();
       const mobile = document.getElementById('mobile').value.trim();
       const email = document.getElementById('email').value.trim();
-      const fileInput = document.getElementById('document');
 
-      if (!companyName || !mobile || !email || !fileInput.files.length) {
+      if (!companyName || !mobile || !email) {
         alert('All fields marked with * are required.');
         event.preventDefault();
         return false;
@@ -211,17 +259,22 @@
         return false;
       }
 
-      if (!validateFile(fileInput)) {
-        event.preventDefault();
-        return false;
-      }
-
+      showLoader();
       return true;
     }
   </script>
 </head>
 
 <body>
+  <div class="overlay" id="overlay">
+    <div class="loader-card">
+      <div class="spinner"></div>
+      <div class="loader-text">
+        Uploading your document. This may take a few seconds. Please wait.
+      </div>
+    </div>
+  </div>
+
   <div class="panel">
     <div class="panel-header">
       <h1>Company Registration</h1>
@@ -230,15 +283,7 @@
 
     <div class="panel-body">
 
-      <% if (typeof error !== 'undefined' && error) { %>
-        <div class="error"><%= error %></div>
-      <% } %>
-
-      <% if (typeof success !== 'undefined' && success) { %>
-        <div class="success"><%= success %></div>
-      <% } %>
-
-      <form action="/register" method="POST" enctype="multipart/form-data" onsubmit="validateForm(event)">
+      <form action="/register" method="POST" enctype="multipart/form-data" onsubmit="return validateForm(event)">
 
         <div class="field">
           <label for="companyName">Company/Executive Name<span class="required-star">*</span></label>
@@ -262,14 +307,13 @@
         </div>
 
         <div class="field">
-          <label for="document">Upload Company Profile (PDF)<span class="required-star">*</span></label>
+          <label for="document">Upload Company Profile (PDF)</label>
           <input 
             type="file" 
             id="document" 
             name="document" 
             accept="application/pdf" 
             onchange="validateFile(this)" 
-            required 
           />
           <div class="file-info">PDF format only. Maximum size: 25MB.</div>
         </div>
@@ -285,5 +329,6 @@
 
     </div>
   </div>
+
 </body>
 </html>

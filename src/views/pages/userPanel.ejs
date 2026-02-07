@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Panel</title>
+  <title>User Panel</title>
 
   <style>
     :root {
@@ -95,67 +95,49 @@
 <body>
   <div class="panel">
     <div class="panel-header">
-      <h1>Admin Panel</h1>
-      <p>Manage content and system access</p>
+      <h1>User Panel</h1>
+      <p>Manage your products and account</p>
     </div>
 
     <div class="section">
-      <div class="section-title">Content Management</div>
+      <div class="section-title">Product Management</div>
 
-      <form action="/admin/addProduct" method="GET">
+      <form action="/userPanel/addProduct" method="GET">
         <button type="submit">
           <div class="row">
-            <div class="row-title">Create New Product</div>
-            <div class="row-desc">Add and publish a new item to the catalog</div>
+            <div class="row-title">Add Product</div>
+            <div class="row-desc">Create and publish a new product</div>
           </div>
         </button>
       </form>
 
-      <form action="/admin/removeProduct" method="GET">
+      <form action="/userPanel/removeProduct" method="GET">
         <button type="submit">
-          <div class="row ">
+          <div class="row">
             <div class="row-title">Remove Product</div>
-            <div class="row-desc">Delete an existing item from the catalog</div>
+            <div class="row-desc">Delete one of your existing products</div>
           </div>
         </button>
       </form>
 
-      <form action="/admin/userApproval" method="GET">
+      <form action="/home" method="GET">
         <button type="submit">
           <div class="row">
-            <div class="row-title">User Approval</div>
-            <div class="row-desc">Approve or reject pending user registrations</div>
-          </div>
-        </button>
-      </form>
-
-      <form action="/admin/userManagement" method="GET">
-        <button type="submit">
-          <div class="row">
-            <div class="row-title">User Management</div>
-            <div class="row-desc">Review or Remove Users</div>
-          </div>
-        </button>
-      </form>
-
-      <form action="/" method="GET">
-        <button type="submit">
-          <div class="row">
-            <div class="row-title">Open Storefront</div>
-            <div class="row-desc">View the live public website</div>
+            <div class="row-title">Go Back to Website</div>
+            <div class="row-desc">Return to the public storefront</div>
           </div>
         </button>
       </form>
     </div>
 
     <div class="section">
-      <div class="section-title">Security</div>
+      <div class="section-title">Account Security</div>
 
-      <form action="/admin/resetPassword" method="GET">
+      <form action="/userPanel/resetPassword" method="GET">
         <button type="submit">
           <div class="row">
-            <div class="row-title">Change Admin Password</div>
-            <div class="row-desc">Update credentials for this account</div>
+            <div class="row-title">Change Password</div>
+            <div class="row-desc">Update your account password or passkey</div>
           </div>
         </button>
       </form>
@@ -164,7 +146,7 @@
         <button type="submit">
           <div class="row danger">
             <div class="row-title">Sign Out</div>
-            <div class="row-desc">End the current admin session</div>
+            <div class="row-desc">End your current session</div>
           </div>
         </button>
       </form>

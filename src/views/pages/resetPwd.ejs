@@ -189,6 +189,16 @@
       error.style.display = 'none';
       return true;
     }
+
+    window.addEventListener('DOMContentLoaded', function () {
+      const segments = window.location.pathname.split('/').filter(Boolean);
+      const basePath = '/' + segments[0];
+
+      const form = document.getElementById('resetForm');
+      form.action = basePath + '/resetPassword';
+
+      document.getElementById('backLink').href = basePath;
+    });
   </script>
 </head>
 
@@ -196,13 +206,13 @@
   <div class="panel">
     <div class="panel-header">
       <h1>Reset Password</h1>
-      <p>Update administrator credentials</p>
+      <p>Update credentials</p>
     </div>
 
     <div class="panel-body">
       <div id="error" class="error"></div>
 
-      <form action="/admin/resetPassword" method="POST" onsubmit="return validateForm()">
+      <form id="resetForm" method="POST" onsubmit="return validateForm()">
         <div class="field">
           <label for="password">New password</label>
           <div class="input-wrapper">
@@ -226,7 +236,7 @@
     </div>
 
     <div class="panel-footer">
-      <a href="/admin" class="back-link">← Back to Admin Panel</a>
+      <a id="backLink" href="#" class="back-link">← Back to Panel</a>
     </div>
   </div>
 </body>
