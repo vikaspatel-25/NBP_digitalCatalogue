@@ -115,6 +115,7 @@ async function loginController(req, res) {
     const token = jwt.sign(
       {
         adminId: admin._id.toString(),
+        companyName:"Admin",
         pwdUpdatedAt: admin.passwordUpdatedAt.getTime(),
       },
       process.env.JWT_SECRET,
@@ -294,6 +295,7 @@ async function  userLoginController(req, res) {
         userId: user._id.toString(),
         email: user.email,
         role: "user",
+        companyName: user.companyName,
         pwdUpdatedAt: user.passwordUpdatedAt ? user.passwordUpdatedAt.getTime() : null,
       },
       process.env.JWT_SECRET,

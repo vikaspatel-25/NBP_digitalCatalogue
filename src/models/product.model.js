@@ -43,6 +43,10 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+    companyName:{
+      type: String,
+      required: true
+    },
     creatorRole: {
       type: String,
       enum: ['admin', 'user'],

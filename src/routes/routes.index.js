@@ -36,13 +36,17 @@ Router.route("/userLogin")
   .get(userLoginPageController)
   .post(userLoginController);
 
-Router.route("/logout")
+Router.route("/admin/logout")
   .post((req, res) => {
-    res.clearCookie("userToken");
     res.clearCookie("adminToken");
-    res.redirect("/");
+    res.redirect("/admin");
   });
 
+Router.route("/userPanel/logout")
+  .post((req, res) => {
+    res.clearCookie("userToken");
+    res.redirect("/userPanel");
+  });
 Router.route("/register")
   .get(registerPageController)
   .post(upload.single("document"), registerCompany);

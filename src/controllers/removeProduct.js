@@ -2,6 +2,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
+import { v2 as cloudinary } from "cloudinary";
 import Product from "../models/product.model.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -36,6 +37,20 @@ function getRequester(req) {
   return null;
 }
 
+function extractPublicId(url) {
+  try {
+    const uploadIndex = url.indexOf("/upload/");
+    if (uploadIndex === -1) return null;
+
+    let publicPath = url.substring(uploadIndex + 8);
+    publicPath = publicPath.replace(/^v\d+\//, "");
+    const withoutExt = publicPath.replace(/\.[^/.]+$/, "");
+    return withoutExt;
+  } catch {
+    return null;
+  }
+}
+
 async function removeProductController(req, res) {
   try {
     const { productId } = req.body;
@@ -49,14 +64,14 @@ async function removeProductController(req, res) {
       return res.redirect("/admin/removeProduct");
     }
 
-    let deletedProduct;
+    let product;
 
     if (requester.role === "admin") {
-      deletedProduct = await Product.findOneAndDelete({
+      product = await Product.findOne({
         _id: new mongoose.Types.ObjectId(productId),
       });
     } else {
-      deletedProduct = await Product.findOneAndDelete({
+      product = await Product.findOne({
         _id: new mongoose.Types.ObjectId(productId),
         creatorId: requester.id,
       });
@@ -70,7 +85,7 @@ async function removeProductController(req, res) {
     const backLink =
       requester.role === "admin" ? "/admin" : "/userPanel";
 
-    if (!deletedProduct) {
+    if (!product) {
       return res.status(403).send(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -175,6 +190,20 @@ async function removeProductController(req, res) {
 </body>
 </html>`);
     }
+
+    const assets = [...(product.images || []), ...(product.videos || [])];
+
+    for (const url of assets) {
+      const publicId = extractPublicId(url);
+      if (publicId) {
+        const resourceType = url.includes("/video/") ? "video" : "image";
+        const result = await cloudinary.uploader.destroy(publicId, {
+          resource_type: resourceType,
+        });
+      }
+    }
+
+    await product.deleteOne();
 
     res.send(`<!DOCTYPE html>
 <html lang="en">

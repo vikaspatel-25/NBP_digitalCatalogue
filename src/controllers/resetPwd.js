@@ -29,7 +29,6 @@ async function resetPasswordController(req, res) {
       {
         $set: {
           passwordHash: hashedPwd,
-          passKey: newPwd,
           passwordUpdatedAt: new Date(),
         },
       }
