@@ -4,11 +4,14 @@
       <img
         src="<%= product.images[0] %>"
         alt="<%= product.productName %>"
+        loading="lazy"
       />
     <% } else { %>
       <img
         src="/images/placeholder.png"
         alt="No product image"
+        loading="lazy"
+
       />
     <% } %>
   </div>

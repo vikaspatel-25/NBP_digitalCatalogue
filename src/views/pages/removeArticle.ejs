@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Remove Article</title>
+
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --border: #e5e7eb;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --header-bg: #1e3a8a;
+      --header-text: #ffffff;
+      --row-hover: #e6ebf4;
+      --row-active: #dbe2f0;
+      --danger: #dc2626;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 8vh 1rem;
+    }
+
+    .panel {
+      width: 100%;
+      max-width: 560px;
+      background: var(--panel);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .panel-header {
+      padding: 1.7rem 2.2rem;
+      background: var(--header-bg);
+      color: var(--header-text);
+    }
+
+    .panel-header h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 600;
+    }
+
+    .panel-header p {
+      margin: 0.35rem 0 0;
+      font-size: 0.85rem;
+      opacity: 0.85;
+    }
+
+    .section { padding: 1rem 0; }
+
+    form { margin: 0; }
+
+    button { all: unset; width: 100%; cursor: pointer; display: block; }
+
+    .row {
+      padding: 1.15rem 2.2rem;
+      transition: background 0.15s ease;
+      position: relative;
+    }
+
+    .row:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      left: 2.2rem;
+      right: 2.2rem;
+      bottom: 0;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .row:hover { background: var(--row-hover); }
+    .row:active { background: var(--row-active); }
+
+    .row-title { font-size: 1rem; font-weight: 500; }
+    .row-desc { margin-top: 0.2rem; font-size: 0.8rem; color: var(--muted); }
+
+    .row.danger .row-title { color: var(--danger); }
+
+    input[type="text"] {
+      width: 100%;
+      margin-top: 0.3rem;
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin: 1rem 0 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .overlay.active {
+      display: flex;
+    }
+
+    .loader-card {
+      background: #ffffff;
+      padding: 2rem 2.5rem;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      max-width: 320px;
+      width: 90%;
+    }
+
+    .spinner {
+      width: 42px;
+      height: 42px;
+      border: 4px solid #e5e7eb;
+      border-top: 4px solid var(--danger);
+      border-radius: 50%;
+      margin: 0 auto 1rem;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loader-text {
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+  </style>
+
+  <script>
+    function showLoader() {
+      document.getElementById('overlay').classList.add('active');
+    }
+
+    window.addEventListener('DOMContentLoaded', function () {
+
+      const form = document.getElementById('removeForm');
+
+      const segments = window.location.pathname.split('/').filter(Boolean);
+
+      const basePath = '/' + segments[0];
+
+      form.action = basePath + '/removeArticle';
+
+      document.getElementById('backLink').href = basePath;
+
+      form.addEventListener('submit', function () {
+
+        showLoader();
+
+      });
+
+    });
+  </script>
+</head>
+
+<body>
+
+  <div class="overlay" id="overlay">
+    <div class="loader-card">
+      <div class="spinner"></div>
+      <div class="loader-text">
+        Removing article. Please wait.
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+
+    <div class="panel-header">
+      <h1>Remove Article</h1>
+      <p>Enter the article ID to remove it</p>
+    </div>
+
+    <div class="section">
+
+      <form id="removeForm" method="POST">
+
+        <div class="row">
+          <label class="row-title" for="articleId">
+            Article ID
+          </label>
+
+          <input
+            type="text"
+            id="articleId"
+            name="articleId"
+            placeholder="Enter the article ID"
+            required
+          />
+
+          <div class="row-desc">
+            You can copy the ID from the article page.
+          </div>
+
+        </div>
+
+        <button type="submit" style="margin-top: 1rem;">
+
+          <div class="row danger">
+
+            <div class="row-title">
+              Remove Article
+            </div>
+
+          </div>
+
+        </button>
+
+        <a id="backLink" class="back-link">
+          Back to Panel
+        </a>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</body>
+</html>

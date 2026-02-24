@@ -310,6 +310,8 @@ btn.parentElement.remove();
 
 function handleSubmit(){
 
+tinymce.triggerSave();   // FIX: sync TinyMCE content to textarea
+
 document.getElementById('submitLoader').style.display='flex';
 
 const btn=document.getElementById('submitBtn');
