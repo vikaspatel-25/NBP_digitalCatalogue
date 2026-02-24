@@ -1,413 +1,225 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title><%= article.title %></title>
+    <title>
+        <%= article.title %>
+    </title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="icon" href="/assets/netZeroStickerIcon.png" type="image/png">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+            --orange: #0158a0;
+            --text-dark: #1f1f1f;
+            --white: #ffffff;
+            --radius: 6px;
+        }
 
-<link rel="icon" href="/assets/netZeroStickerIcon.png" type="image/png">
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        }
 
-<style>
+        body {
+            background: var(--white);
+            color: var(--text-dark);
+        }
 
-:root {
---orange:#0158a0;
---orange-dark:#066422;
---text-dark:#1f1f1f;
---ui-light:#e2e2e2;
---ui-soft:#f1f1f1;
---white:#ffffff;
---radius:6px;
-}
+        .site-container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
 
-*{
-box-sizing:border-box;
-margin:0;
-padding:0;
-font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
-}
+        .article-card {
+            background: #fafafa;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 98%;
+            margin: 20px auto;
+        }
 
-body{
-background:var(--white);
-color:var(--text-dark);
-}
+        .article-title-wrapper {
+            position: relative;
+            padding-left: 12px;
+            margin-bottom: 25px;
+        }
 
-.site-container{
-max-width:800px;
-margin:0 auto;
-min-height:100vh;
-}
+        .article-title-bar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3px;
+            background: var(--orange);
+            border-radius: 3px;
+            height: 100%;
+        }
 
-.section{
-margin-top:40px;
-}
+        .article-title {
+            font-size: 26px;
+            font-weight: 600;
+            line-height: 1.3;
+            margin: 0;
+        }
 
-.section-box{
-background:#fafafa;
-border-radius:12px;
-padding:22px;
-}
+        .cover-wrapper {
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f0f0f0;
+            margin-bottom: 25px;
+        }
 
-.section-title{
-font-size:26px;
-font-weight:600;
-margin-bottom:16px;
-position:relative;
-padding-left:16px;
-line-height:1.2;
-}
+        .cover-wrapper img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
 
-.section-title::before{
-content:"";
-position:absolute;
-left:0;
-top:0;
-width:4px;
-height:30px;
-background:var(--orange);
-border-radius:2px;
-}
+        .article-content {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #333;
+        }
 
-.cover-wrapper{
+        .product-links {
+            margin-top: 25px;
+        }
 
-width:100%;
-border-radius:10px;
-overflow:hidden;
-background:#f0f0f0;
+        .product-links ul {
+            list-style: none;
+            padding: 0;
+        }
 
-}
+        .product-links li {
+            margin-bottom: 10px;
+        }
 
-.cover-wrapper img{
+        .product-links a {
+            text-decoration: none;
+            color: #444;
+            font-size: 15px;
+        }
 
-width:100%;
-height:auto;
-display:block;
+        .product-links a:hover {
+            color: var(--orange);
+            text-decoration: underline;
+        }
 
-}
+        .ask-query-btn {
+            background: #529f23;
+            color: #fff;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--radius);
+            padding: 8px 16px;
+            cursor: pointer;
+            margin-top: 25px;
+        }
 
-.article-header{
+        .ask-query-btn:hover {
+            background: #1ebe57;
+        }
 
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:16px;
-flex-wrap:wrap;
-
-}
-
-.article-id-wrapper{
-
-position:relative;
-display:inline-flex;
-align-items:center;
-cursor:pointer;
-
-}
-
-.tooltip{
-
-position:absolute;
-top:-30px;
-left:50%;
-transform:translateX(-50%);
-background:#1f1f1f;
-color:#fff;
-font-size:11px;
-padding:4px 8px;
-border-radius:4px;
-white-space:nowrap;
-opacity:0;
-transition:opacity .15s ease;
-
-}
-
-.article-id-wrapper:hover .tooltip{
-opacity:1;
-}
-
-.tooltip.copied{
-background:#2e7d32;
-}
-
-.article-content{
-
-margin-top:20px;
-font-size:16px;
-line-height:1.8;
-color:#333;
-
-}
-
-.product-links{
-
-margin-top:25px;
-
-}
-
-.product-links ul{
-
-list-style:none;
-padding:0;
-
-}
-
-.product-links li{
-
-margin-bottom:10px;
-
-}
-
-.product-links a{
-
-text-decoration:none;
-color:#444;
-font-size:15px;
-
-}
-
-.product-links a:hover{
-
-color:var(--orange);
-text-decoration:underline;
-
-}
-
-.ask-query-btn{
-
-background:#529f23;
-color:#fff;
-font-weight:600;
-border:none;
-border-radius:var(--radius);
-padding:8px 16px;
-cursor:pointer;
-margin-top:25px;
-
-}
-
-.ask-query-btn:hover{
-
-background:#1ebe57;
-
-}
-
-.footer{
-
-width:100%;
-margin-top:30px;
-padding:12px 0;
-text-align:center;
-font-size:14px;
-color:#333;
-
-}
-
-</style>
-
+        .footer {
+            width: 100%;
+            margin-top: 30px;
+            padding: 12px 0;
+            text-align: center;
+            font-size: 14px;
+            color: #333;
+        }
+    </style>
 </head>
 
 <body>
 
-<%- include('../components/header.ejs') %>
-
-<main>
-
-<div class="site-container">
-
-
-<!-- Article Title -->
-
-<div class="section" style="margin-top:10px">
-
-<div class="section-box">
-
-<div
-class="article-id-wrapper"
-onclick="copyId('<%= article._id %>')"
->
-
-<div class="tooltip" id="idTooltip">
-Copy
-</div>
-
-<h1 class="section-title">
-
-<%= article.title %>
-
-</h1>
-
-</div>
-
-</div>
-
-</div>
-
-
-
-<!-- Cover Image -->
-
-<% if(article.coverImage){ %>
-
-<div class="section">
-
-<div class="section-box">
-
-<div class="cover-wrapper">
-
-<img src="<%= article.coverImage %>">
-
-</div>
-
-</div>
-
-</div>
-
-<% } %>
-
-
-
-<!-- Article Content -->
-
-<div class="section">
-
-<div class="section-box">
-
-<div class="article-content">
-
-<%- article.content %>
-
-</div>
-
-
-
-</div>
-
-</div>
-
-
-
-<!-- Product Links -->
-
-
-<% if(article.productLinks?.length){ %>
-
-<div class="section">
-
-<div class="section-box">
-
-<h2 class="section-title">
-
-Related Products
-
-</h2>
-
-
-<div class="product-links">
-
-<ul>
-
-<% article.productLinks.forEach(link=>{ %>
-
-<li>
-
-<a href="<%= link %>" target="_blank">
-
-<%= link %>
-
-</a>
-
-</li>
-
-<% }) %>
-
-</ul>
-
-</div>
-
-
-</div>
-
-</div>
-
-<% } %>
-
-
-
-<div class="footer">
-
-Posted By <%= article.companyName %>
-
-</div>
-
-
-
-</div>
-
-</main>
-
-
-
-<script>
-
-function copyId(id){
-
-const tooltip=document.getElementById("idTooltip");
-
-navigator.clipboard.writeText(id);
-
-tooltip.textContent="Copied";
-
-tooltip.classList.add("copied");
-
-setTimeout(()=>{
-
-tooltip.textContent="Copy";
-
-tooltip.classList.remove("copied");
-
-},1500);
-
-}
-
-
-
-function askQuery(){
-
-const title=`<%= article.title.replace(/"/g,'\\"') %>`;
-
-const pageUrl=window.location.href;
-
-const subject=`Query about article: ${title}`;
-
-const body=`Hello, I have a query about the article: ${title}.\n\nPage link: ${pageUrl}`;
-
-const email="netzeromart@gmail.com";
-
-const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-if(isMobile){
-
-window.location.href=
-`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
-}else{
-
-window.open(
-`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
-"_blank"
-);
-
-}
-
-}
-
-</script>
-
+    <%- include('../components/header.ejs') %>
+        <main>
+            <div class="site-container" style="padding: 10px;">
+
+                <div class="article-card" onclick="copyId('<%= article._id %>')">
+                    <div class="article-title-wrapper">
+                        <div class="article-title-bar"></div>
+                        <h1 class="article-title">
+                            <%= article.title %>
+                        </h1>
+                    </div>
+
+                    <% if(article.coverImage){ %>
+                        <div class="cover-wrapper">
+                            <img src="<%= article.coverImage %>">
+                        </div>
+                        <% } %>
+
+                            <div class="article-content"><%- article.content %></div>
+                </div>
+
+                <% if(article.productLinks?.length){ %>
+                    <div class="article-card" style="margin-top:30px;">
+                        <h2 class="article-title">Related Products</h2>
+                        <div class="product-links">
+                            <ul>
+                                <% article.productLinks.forEach(link=>{ %>
+                                    <li><a href="<%= link %>" target="_blank">
+                                            <%= link %>
+                                        </a></li>
+                                    <% }) %>
+                            </ul>
+                        </div>
+                    </div>
+                    <% } %>
+
+                        <div class="footer">Posted By <%= article.companyName %>
+                        </div>
+
+            </div>
+        </main>
+
+        <script>
+            function copyId(id) {
+                const tooltip = document.createElement('div');
+                tooltip.textContent = 'Copied';
+                tooltip.style.position = 'fixed';
+                tooltip.style.top = '20px';
+                tooltip.style.left = '50%';
+                tooltip.style.transform = 'translateX(-50%)';
+                tooltip.style.background = '#2e7d32';
+                tooltip.style.color = '#fff';
+                tooltip.style.padding = '6px 12px';
+                tooltip.style.borderRadius = '4px';
+                document.body.appendChild(tooltip);
+                navigator.clipboard.writeText(id);
+                setTimeout(() => { document.body.removeChild(tooltip); }, 1500);
+            }
+
+            function askQuery() {
+                const title = `<%= article.title.replace(/"/g,'"') %>`;
+                const pageUrl = window.location.href;
+                const subject = `Query about article: ${title}`;
+                const body = `Hello, I have a query about the article: ${title}.
+
+Page link: ${pageUrl}`;
+                const email = "netzeromart@gmail.com";
+                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                if (isMobile) {
+                    window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                } else {
+                    window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, "_blank");
+                }
+            }
+        </script>
 
 </body>
+
 </html>
