@@ -472,6 +472,12 @@
         display: block;
         margin: 24px auto 0;
       }
+      .product-price-range {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 6px 0 14px 0;
+      color: #1f2937;
+}
     </style>
 
     <% function toYouTubeEmbed(url) { try { const u = new URL(url); if
@@ -534,23 +540,32 @@
 
           <!-- Product Info Section -->
           <div class="section">
-            <div class="section-box">
-              <div
-                class="product-header product-id-wrapper product-title"
-                onclick="copyProductId('<%= product._id %>')"
-              >
-                <div class="tooltip" id="idTooltip">Copy</div>
-                <h1 class="section-title product-title">
-                  <%= product.productName %>
-                </h1>
-              </div>
+  <div class="section-box">
 
-              <div class="product-description">
-                <%- product.detailedDescription.replace(/\r?\n/g, '<br /><br />'
-                ) %>
-              </div>
-            </div>
-          </div>
+    <div
+      class="product-header product-id-wrapper product-title"
+      onclick="copyProductId('<%= product._id %>')"
+    >
+      <div class="tooltip" id="idTooltip">Copy</div>
+      <h1 class="section-title product-title">
+        <%= product.productName %>
+      </h1>
+    </div>
+
+   <!-- Price Range -->
+<div class="product-price-range">
+  ₹ <%= product.priceMin %> - ₹ <%= product.priceMax %>
+  <% if (product.priceNote) { %>
+    (<%= product.priceNote %>)
+  <% } %>
+</div>
+
+    <div class="product-description">
+      <%- product.detailedDescription.replace(/\r?\n/g, '<br /><br />') %>
+    </div>
+
+  </div>
+</div>
 
           <!-- Videos Section -->
 

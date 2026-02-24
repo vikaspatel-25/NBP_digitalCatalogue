@@ -37,11 +37,11 @@ function getCreatorId(req) {
   try {
     if (adminToken) {
       const decoded = jwt.verify(adminToken, process.env.JWT_SECRET);
-      return { id: decoded.adminId, role: "admin", companyName: decoded.companyName};
+      return { id: decoded.adminId, role: "admin", companyName: decoded.companyName };
     }
     if (userToken) {
       const decoded = jwt.verify(userToken, process.env.JWT_SECRET);
-      return { id: decoded.userId, role: "user",companyName: decoded.companyName};
+      return { id: decoded.userId, role: "user", companyName: decoded.companyName };
     }
   } catch (err) {
     console.error("Error decoding JWT for creator ID:", err);
@@ -60,8 +60,10 @@ async function addProductController(req, res) {
       listingPlacement,
       youtubeLinks = [],
       articleLinks = [],
+      priceMin,
+      priceMax,
+      priceNote
     } = req.body;
-
     const images = req.files.images || [];
     const videos = req.files.videos || [];
 
@@ -71,6 +73,10 @@ async function addProductController(req, res) {
 
     if (images.length === 0) {
       return res.status(400).send("At least one image required");
+    }
+
+    if (!priceMin || !priceMax) {
+      return res.status(400).send("Price range required");
     }
 
     const uploadedImages = [];
@@ -101,6 +107,9 @@ async function addProductController(req, res) {
       oneLineDescription,
       shortDescription,
       detailedDescription,
+      priceMin,
+      priceMax,
+      priceNote,
       images: uploadedImages,
       videos: uploadedVideos,
       youtubeLinks: Array.isArray(youtubeLinks) ? youtubeLinks : [youtubeLinks],

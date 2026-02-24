@@ -35,6 +35,18 @@ const productSchema = new mongoose.Schema(
       type: [String],
       default: []
     },
+    priceMin: {
+      type: Number,
+      required: true
+    },
+    priceMax: {
+      type: Number,
+      required: true
+    },
+    priceNote: {
+      type: String,
+      trim: true
+    },
     order: {
       type: Number,
       index: true
