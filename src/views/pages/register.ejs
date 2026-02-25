@@ -165,7 +165,6 @@
       text-decoration: underline;
     }
 
-    /* Overlay Loader */
     .overlay {
       position: fixed;
       inset: 0;
@@ -244,10 +243,11 @@
 
     function validateForm(event) {
       const companyName = document.getElementById('companyName').value.trim();
+      const userName = document.getElementById('userName').value.trim();
       const mobile = document.getElementById('mobile').value.trim();
       const email = document.getElementById('email').value.trim();
 
-      if (!companyName || !mobile || !email) {
+      if (!companyName || !userName || !mobile || !email) {
         alert('All fields marked with * are required.');
         event.preventDefault();
         return false;
@@ -286,8 +286,13 @@
       <form action="/register" method="POST" enctype="multipart/form-data" onsubmit="return validateForm(event)">
 
         <div class="field">
-          <label for="companyName">Company/Executive Name<span class="required-star">*</span></label>
+          <label for="companyName">Company Name<span class="required-star">*</span></label>
           <input type="text" id="companyName" name="companyName" required />
+        </div>
+
+        <div class="field">
+          <label for="userName">User Name<span class="required-star">*</span></label>
+          <input type="text" id="userName" name="userName" required />
         </div>
 
         <div class="field">

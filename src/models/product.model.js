@@ -55,9 +55,18 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-    companyName:{
+    companyName: {
       type: String,
       required: true
+    },
+    userName: {
+      type: String,
+      required: true
+    },
+    email: {
+      type: String,
+      required: true,
+      trim: true
     },
     creatorRole: {
       type: String,

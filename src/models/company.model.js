@@ -7,6 +7,11 @@ const companySchema = new mongoose.Schema(
       required: true,
       trim: true
     },
+    userName: {
+      type: String,
+      required: true,
+      trim: true
+    },
     mobile: {
       type: String,
       required: true,

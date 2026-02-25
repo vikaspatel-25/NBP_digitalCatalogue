@@ -1,5 +1,3 @@
-// Reminder: Entire file rewritten top-to-bottom. Only minimal required changes made. No refactors.
-
 import path from "path";
 import { fileURLToPath } from "url";
 import jwt from "jsonwebtoken";
@@ -50,55 +48,19 @@ async function loginController(req, res) {
     }
 
     if (!isMatch) {
-      return res.status(401).send(`
-<!DOCTYPE html>
+      return res.status(401).send(`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Unauthorized</title>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f6f9;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .card {
-      background: #ffffff;
-      padding: 40px 35px;
-      border-radius: 10px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-      text-align: center;
-      width: 100%;
-      max-width: 400px;
-    }
-    .card h2 {
-      margin-bottom: 15px;
-      font-size: 20px;
-      color: #c0392b;
-    }
-    .card p {
-      font-size: 14px;
-      color: #555;
-      margin-bottom: 25px;
-    }
-    .btn {
-      display: inline-block;
-      padding: 10px 18px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-size: 14px;
-      background: #3498db;
-      color: #ffffff;
-      transition: background 0.2s ease;
-    }
-    .btn:hover {
-      background: #2c80b4;
-    }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    .card { background: #ffffff; padding: 40px 35px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); text-align: center; width: 100%; max-width: 400px; }
+    .card h2 { margin-bottom: 15px; font-size: 20px; color: #c0392b; }
+    .card p { font-size: 14px; color: #555; margin-bottom: 25px; }
+    .btn { display: inline-block; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; background: #3498db; color: #ffffff; transition: background 0.2s ease; }
+    .btn:hover { background: #2c80b4; }
   </style>
 </head>
 <body>
@@ -108,15 +70,17 @@ async function loginController(req, res) {
     <a href="/login" class="btn">Back to Login</a>
   </div>
 </body>
-</html>
-`);
+</html>`);
     }
 
     const token = jwt.sign(
       {
         adminId: admin._id.toString(),
-        companyName:"Admin",
-        pwdUpdatedAt: admin.passwordUpdatedAt.getTime(),
+        email: "netzeromart@gmail.com",
+        companyName: "NetZeroMart",
+        userName: "netzeromart",
+        pwdUpdatedAt: admin.passwordUpdatedAt ? admin.passwordUpdatedAt.getTime() : null,
+        role: "admin",
       },
       process.env.JWT_SECRET,
       { expiresIn: "365d" }
@@ -135,8 +99,7 @@ async function loginController(req, res) {
   }
 }
 
-
-async function  userLoginController(req, res) {
+async function userLoginController(req, res) {
   try {
     const { gmail, password } = req.body;
 
@@ -145,59 +108,22 @@ async function  userLoginController(req, res) {
     }
 
     const normalizedEmail = gmail.trim().toLowerCase();
-
     const user = await Users.findOne({ email: normalizedEmail });
 
     if (!user) {
-      return res.status(401).send(`
-<!DOCTYPE html>
+      return res.status(401).send(`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Unauthorized</title>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f6f9;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .card {
-      background: #ffffff;
-      padding: 40px 35px;
-      border-radius: 10px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-      text-align: center;
-      width: 100%;
-      max-width: 400px;
-    }
-    .card h2 {
-      margin-bottom: 15px;
-      font-size: 20px;
-      color: #c0392b;
-    }
-    .card p {
-      font-size: 14px;
-      color: #555;
-      margin-bottom: 25px;
-    }
-    .btn {
-      display: inline-block;
-      padding: 10px 18px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-size: 14px;
-      background: #3498db;
-      color: #ffffff;
-      transition: background 0.2s ease;
-    }
-    .btn:hover {
-      background: #2c80b4;
-    }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    .card { background: #ffffff; padding: 40px 35px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); text-align: center; width: 100%; max-width: 400px; }
+    .card h2 { margin-bottom: 15px; font-size: 20px; color: #c0392b; }
+    .card p { font-size: 14px; color: #555; margin-bottom: 25px; }
+    .btn { display: inline-block; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; background: #3498db; color: #ffffff; transition: background 0.2s ease; }
+    .btn:hover { background: #2c80b4; }
   </style>
 </head>
 <body>
@@ -207,8 +133,7 @@ async function  userLoginController(req, res) {
     <a href="/userLogin" class="btn">Back to Login</a>
   </div>
 </body>
-</html>
-      `);
+</html>`);
     }
 
     if (user.status !== "active") {
@@ -216,7 +141,6 @@ async function  userLoginController(req, res) {
     }
 
     let isMatch = false;
-
     if (user.password) {
       isMatch = await bcrypt.compare(password, user.password);
     }
@@ -228,55 +152,19 @@ async function  userLoginController(req, res) {
     }
 
     if (!isMatch) {
-      return res.status(401).send(`
-<!DOCTYPE html>
+      return res.status(401).send(`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Unauthorized</title>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f6f9;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .card {
-      background: #ffffff;
-      padding: 40px 35px;
-      border-radius: 10px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-      text-align: center;
-      width: 100%;
-      max-width: 400px;
-    }
-    .card h2 {
-      margin-bottom: 15px;
-      font-size: 20px;
-      color: #c0392b;
-    }
-    .card p {
-      font-size: 14px;
-      color: #555;
-      margin-bottom: 25px;
-    }
-    .btn {
-      display: inline-block;
-      padding: 10px 18px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-size: 14px;
-      background: #3498db;
-      color: #ffffff;
-      transition: background 0.2s ease;
-    }
-    .btn:hover {
-      background: #2c80b4;
-    }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    .card { background: #ffffff; padding: 40px 35px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); text-align: center; width: 100%; max-width: 400px; }
+    .card h2 { margin-bottom: 15px; font-size: 20px; color: #c0392b; }
+    .card p { font-size: 14px; color: #555; margin-bottom: 25px; }
+    .btn { display: inline-block; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; background: #3498db; color: #ffffff; transition: background 0.2s ease; }
+    .btn:hover { background: #2c80b4; }
   </style>
 </head>
 <body>
@@ -286,8 +174,7 @@ async function  userLoginController(req, res) {
     <a href="/userLogin" class="btn">Back to Login</a>
   </div>
 </body>
-</html>
-      `);
+</html>`);
     }
 
     const token = jwt.sign(
@@ -296,6 +183,7 @@ async function  userLoginController(req, res) {
         email: user.email,
         role: "user",
         companyName: user.companyName,
+        userName: user.userName,
         pwdUpdatedAt: user.passwordUpdatedAt ? user.passwordUpdatedAt.getTime() : null,
       },
       process.env.JWT_SECRET,

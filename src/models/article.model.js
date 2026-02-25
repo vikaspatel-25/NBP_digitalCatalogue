@@ -38,6 +38,17 @@ type: String,
 default: null
 },
 
+userName: {
+type: String,
+default: null
+},
+
+email: {
+type: String,
+default: null,
+trim: true
+},
+
 createdAt: {
 type: Date,
 default: Date.now

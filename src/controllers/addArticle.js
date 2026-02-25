@@ -53,7 +53,9 @@ function getCreatorId(req) {
       return {
         id: decoded.adminId,
         role: "admin",
-        companyName: decoded.companyName,
+        companyName: decoded.companyName || "NetZeroMart",
+        userName: decoded.userName || "Admin",
+        email: decoded.email || null,
       };
     }
 
@@ -64,7 +66,9 @@ function getCreatorId(req) {
       return {
         id: decoded.userId,
         role: "user",
-        companyName: decoded.companyName,
+        companyName: decoded.companyName || null,
+        userName: decoded.userName || null,
+        email: decoded.email || null,
       };
     }
 
@@ -228,6 +232,10 @@ async function addArticleController(req, res) {
       creatorId: creator.id,
 
       companyName: creator.companyName,
+
+      userName: creator.userName,
+
+      email: creator.email,
 
       creatorRole: creator.role,
     };

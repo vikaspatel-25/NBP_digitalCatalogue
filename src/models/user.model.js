@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema(
   {
     companyName: { type: String, required: true },
+    userName: { type: String, required: true, trim: true },
     email: { type: String, required: true, lowercase: true, trim: true },
     mobile: { type: String },
     document: {

@@ -11,474 +11,459 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-   <link rel="icon" href="/assets/netZeroStickerIcon.png" type="image/png">
+    <link rel="icon" href="/assets/netZeroStickerIcon.png" type="image/png">
 
     <style>
-      :root {
-        --orange: #0158a0;
-        --orange-dark: #066422;
-        --text-dark: #1f1f1f;
-        --ui-light: #e2e2e2;
-        --ui-soft: #f1f1f1;
-        --white: #ffffff;
-        --radius: 6px;
-      }
+  :root {
+    --orange: #0158a0;
+    --orange-dark: #066422;
+    --text-dark: #1f1f1f;
+    --ui-light: #e2e2e2;
+    --ui-soft: #f1f1f1;
+    --white: #ffffff;
+    --radius: 6px;
+  }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
-          sans-serif;
-      }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+      sans-serif;
+  }
 
-      body {
-        background: var(--white);
-        color: var(--text-dark);
-      }
+  body {
+    background: var(--white);
+    color: var(--text-dark);
+  }
 
-      header {
-        width: 100%;
-        background: var(--white);
-        border-bottom: 1px solid var(--ui-light);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-      }
+  header {
+    width: 100%;
+    background: var(--white);
+    border-bottom: 1px solid var(--ui-light);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  }
 
-      .header-inner {
-        max-width: 1400px;
-        width: 95%;
-        margin: 0 auto;
-        height: 72px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
+  .header-inner {
+    max-width: 1400px;
+    width: 95%;
+    margin: 0 auto;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
 
-      .brand {
-        display: flex;
-        align-items: center;
-        height: 100%;
-      }
+  .brand {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
 
-      .brand img {
-        height: 100%;
-        width: auto;
-        object-fit: contain;
-        display: block;
-      }
+  .brand img {
+    height: 100%;
+    width: auto;
+    object-fit: contain;
+    display: block;
+  }
 
-      .header-actions {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
 
-      .action-btn {
-        padding: 9px 16px;
-        font-size: 13px;
-        font-weight: 500;
-        border-radius: var(--radius);
-        cursor: pointer;
-        border: 1px solid transparent;
-      }
+  .action-btn {
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: var(--radius);
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
 
-      .action-btn.contact {
-        background: var(--ui-soft);
-        color: var(--text-dark);
-        border-color: var(--ui-light);
-      }
+  .action-btn.contact {
+    background: var(--ui-soft);
+    color: var(--text-dark);
+    border-color: var(--ui-light);
+  }
 
-      .action-btn.admin {
-        background: var(--orange);
-        color: var(--white);
-      }
+  .action-btn.admin {
+    background: var(--orange);
+    color: var(--white);
+  }
 
-      .action-btn.admin:hover {
-        background: var(--orange-dark);
-      }
+  .action-btn.admin:hover {
+    background: var(--orange-dark);
+  }
 
-      .hamburger {
-        display: none;
-        font-size: 20px;
-        cursor: pointer;
-        line-height: 1;
-      }
+  .hamburger {
+    display: none;
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+  }
 
-      .overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 1;
-        background: rgba(0, 0, 0, 0.25);
-        display: none;
-      }
+  .overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    background: rgba(0, 0, 0, 0.25);
+    display: none;
+  }
 
-      .overlay.active {
-        display: block;
-      }
+  .overlay.active {
+    display: block;
+  }
 
-      .drawer {
-        position: fixed;
-        z-index: 3;
-        top: 0;
-        right: -280px;
-        width: 280px;
-        height: 100%;
-        background: var(--white);
-        border-left: 1px solid var(--ui-light);
-        transition: right 0.3s ease;
-        display: flex;
-        flex-direction: column;
-      }
+  .drawer {
+    position: fixed;
+    z-index: 3;
+    top: 0;
+    right: -280px;
+    width: 280px;
+    height: 100%;
+    background: var(--white);
+    border-left: 1px solid var(--ui-light);
+    transition: right 0.3s ease;
+    display: flex;
+    flex-direction: column;
+  }
 
-      .drawer.open {
-        right: 0;
-      }
+  .drawer.open {
+    right: 0;
+  }
 
-      .drawer-header {
-        height: 72px;
-        padding: 0 20px;
-        border-bottom: 1px solid var(--ui-light);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
+  .drawer-header {
+    height: 72px;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--ui-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
-      .drawer-header img {
-        height: 100%;
-        max-height: 100%;
-        width: auto;
-        object-fit: contain;
-        display: block;
-      }
+  .drawer-header img {
+    height: 100%;
+    max-height: 100%;
+    width: auto;
+    object-fit: contain;
+    display: block;
+  }
 
-      .close-btn {
-        font-size: 18px;
-        cursor: pointer;
-        background: none;
-        border: none;
-      }
+  .close-btn {
+    font-size: 18px;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
 
-      .drawer-content {
-        padding: 28px 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-      }
+  .drawer-content {
+    padding: 28px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
 
-      .drawer-content a {
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--text-dark);
-        padding: 10px 12px;
-        border-radius: var(--radius);
-        background: var(--ui-soft);
-      }
+  .drawer-content a {
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-dark);
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    background: var(--ui-soft);
+  }
 
-      main {
-        width: 100%;
-      }
+  main {
+    width: 100%;
+  }
 
-      .site-container {
-        max-width: 800px;
-        margin: 0 auto;
-        min-height: 100vh;
-      }
+  .site-container {
+    max-width: 800px;
+    margin: 0 auto;
+    min-height: 100vh;
+  }
 
-      @media (max-width: 768px) {
-        .header-actions {
-          display: none;
-        }
+  @media (max-width: 768px) {
+    .header-actions {
+      display: none;
+    }
 
-        .hamburger {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background: var(--ui-soft);
-        }
+    .hamburger {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--ui-soft);
+    }
 
-        .site-container {
-          max-width: 99%;
-        }
+    .site-container {
+      max-width: 99%;
+    }
 
-        .carousel-slide img,
-        .carousel-slide video {
-          height: 260px;
-        }
+    .carousel-slide img,
+    .carousel-slide video {
+      height: 260px;
+    }
 
-        .product-header {
-          align-items: flex-start;
-        }
-      }
+    .product-header {
+      align-items: flex-start;
+    }
+  }
 
-      .product-page {
-      }
+  .product-page {}
 
-      .section {
-        margin-top: 56px;
-      }
+  .section {
+    margin-top: 56px;
+  }
 
-      .section-box {
-        background: #fafafa;
-        border-radius: 12px;
-        padding: 22px;
-      }
+  .section-box {
+    background: #fafafa;
+    border-radius: 12px;
+    padding: 22px;
+  }
 
-      .section-title {
-        font-size: 22px;
-        font-weight: 600;
-        margin-bottom: 16px;
-        position: relative;
-        padding-left: 16px;
-      }
+  .section-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    position: relative;
+    padding-left: 16px;
+  }
 
-      .section-title::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0px;
-        width: 4px;
-        height: 28px;
-        background: var(--orange);
-        border-radius: 2px;
-      }
+  .section-title::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%; /* full height for multi-line titles */
+    background: var(--orange);
+    border-radius: 2px;
+  }
 
-      .media-carousel {
-        position: relative;
-        overflow: hidden;
-        border-radius: 10px;
-        background: #f0f0f0;
-        width: 100%;
-        height: 420px;
-      }
+  .media-carousel {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #f0f0f0;
+    width: 100%;
+    height: 420px;
+  }
 
-      .carousel-hint {
-        position: absolute;
-        bottom: 12px;
-        right: 12px;
-        background: rgba(0, 0, 0, 0.6);
-        color: #fff;
-        font-size: 12px;
-        padding: 6px 10px;
-        border-radius: 6px;
-        pointer-events: none;
-        z-index: 2;
-      }
+  .carousel-hint {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    pointer-events: none;
+    z-index: 2;
+  }
 
-      .carousel-track {
-        display: flex;
-        transition: transform 0.35s ease;
-        height: 100%;
-      }
+  .carousel-track {
+    display: flex;
+    transition: transform 0.35s ease;
+    height: 100%;
+  }
 
-      .carousel-slide {
-        min-width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
-      }
+  .carousel-slide {
+    min-width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+  }
 
-      .carousel-slide img,
-      .carousel-slide video {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        background: #000;
-        cursor: zoom-in;
-      }
+  .carousel-slide img,
+  .carousel-slide video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+    cursor: zoom-in;
+  }
 
-      .carousel-btn {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        border: none;
-        background: rgba(0, 0, 0, 0.45);
-        color: #fff;
-        cursor: pointer;
-        z-index: 2;
-      }
+  .carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    cursor: pointer;
+    z-index: 2;
+  }
 
-      .carousel-btn.prev {
-        left: 12px;
-      }
+  .carousel-btn.prev {
+    left: 12px;
+  }
 
-      .carousel-btn.next {
-        right: 12px;
-      }
+  .carousel-btn.next {
+    right: 12px;
+  }
 
-      .product-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        flex-wrap: wrap;
-      }
+  .product-header {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
 
-      .product-title {
-        font-size: 26px;
-        font-weight: 600;
-        margin-bottom: 30px;
-        line-height: 1.2;
-      }
+  .product-title {
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 0;
+    line-height: 1.2;
+  }
 
-      .product-id-wrapper {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        height: 24px;
-        cursor: pointer;
-        flex-shrink: 0;
-      }
+  .product-id-wrapper {
+    position: relative;
+    display: inline-flex; /* restored tooltip behavior */
+    align-items: center;  /* original vertical alignment */
+    cursor: pointer;
+    flex-shrink: 0;
+  }
 
-      .product-id {
-        height: 24px;
-        line-height: 24px;
-        font-size: 12px;
-        color: #555;
-        background: #eaeaea;
-        padding: 0 8px;
-        border-radius: 4px;
-        font-family: monospace;
-        user-select: none;
-      }
+  .product-id-wrapper .tooltip {
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f1f1f;
+    color: #fff;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+  }
 
-      .tooltip {
-        position: absolute;
-        top: -30px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #1f1f1f;
-        color: #fff;
-        font-size: 11px;
-        padding: 4px 8px;
-        border-radius: 4px;
-        white-space: nowrap;
-        opacity: 0;
-        transition: opacity 0.15s ease;
-        pointer-events: none;
-      }
+  .product-id-wrapper:hover .tooltip {
+    opacity: 1;
+  }
 
-      .product-id-wrapper:hover .tooltip {
-        opacity: 1;
-      }
+  .tooltip.copied {
+    background: #2e7d32;
+  }
 
-      .tooltip.copied {
-        background: #2e7d32;
-      }
+  .product-price-range {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 12px 0; /* vertical spacing for price */
+    color: #1f2937;
+  }
 
-      .product-description {
-        margin-top: 18px;
-        font-size: 15px;
-        line-height: 1.75;
-        color: #333;
-      }
+  .product-description {
+    margin-top: 18px;
+    font-size: 15px;
+    line-height: 1.75;
+    color: #333;
+  }
 
-      .youtube-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 20px;
-      }
+  .youtube-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+  }
 
-      .youtube-grid iframe {
-        width: 100%;
-        height: 260px;
-        border-radius: 10px;
-      }
+  .youtube-grid iframe {
+    width: 100%;
+    height: 260px;
+    border-radius: 10px;
+  }
 
-      .article-list {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 14px;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
+  .article-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
 
-      .article-item {
-        background: #ffffff;
-        border-radius: 10px;
-        padding: 14px 16px;
-        border: 1px solid #eee;
-      }
+  .article-item {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 14px 16px;
+    border: 1px solid #eee;
+  }
 
-      .article-item a {
-        font-size: 15px;
-        font-style: italic;
-        color: #444;
-        text-decoration: none;
-        word-break: break-all;
-      }
+  .article-item a {
+    font-size: 15px;
+    font-style: italic;
+    color: #444;
+    text-decoration: none;
+    word-break: break-all;
+  }
 
-      .article-item a:hover {
-        color: var(--orange);
-        text-decoration: underline;
-      }
+  .article-item a:hover {
+    color: var(--orange);
+    text-decoration: underline;
+  }
 
-      .fullscreen-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.92);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-      }
+  .fullscreen-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
 
-      .fullscreen-overlay.active {
-        display: flex;
-      }
+  .fullscreen-overlay.active {
+    display: flex;
+  }
 
-      .fullscreen-overlay img {
-        max-width: 92%;
-        max-height: 92%;
-      }
+  .fullscreen-overlay img {
+    max-width: 92%;
+    max-height: 92%;
+  }
 
-      .fullscreen-close {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        font-size: 28px;
-        color: #fff;
-        background: none;
-        border: none;
-        cursor: pointer;
-      }
+  .fullscreen-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 28px;
+    color: #fff;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
 
-      .ask-query-btn-gallery,
-      .ask-query-btn-articles {
-        background: #529f23;
-        color: #fff;
-        font-weight: 600;
-        border: none;
-        max-height: 31px;
-        border-radius: var(--radius);
-        padding: 8px 16px;
-        cursor: pointer;
-      }
+  .ask-query-btn-gallery,
+  .ask-query-btn-articles {
+    background: #529f23;
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    max-height: 31px;
+    border-radius: var(--radius);
+    padding: 8px 16px;
+    cursor: pointer;
+  }
 
-      .ask-query-btn-gallery:hover,
-      .ask-query-btn-articles:hover {
-        background: #1ebe57;
-      }
+  .ask-query-btn-gallery:hover,
+  .ask-query-btn-articles:hover {
+    background: #1ebe57;
+  }
 
-      .ask-query-btn-articles {
-        display: block;
-        margin: 24px auto 0;
-      }
-      .product-price-range {
-      font-size: 16px;
-      font-weight: 600;
-      margin: 6px 0 14px 0;
-      color: #1f2937;
-}
-    </style>
+  .ask-query-btn-articles {
+    display: block;
+    margin: 24px auto 0;
+  }
+</style>
 
     <% function toYouTubeEmbed(url) { try { const u = new URL(url); if
     (u.hostname === 'youtu.be') return 'https://www.youtube.com/embed/' +
@@ -492,7 +477,7 @@
     <%- include('../components/header.ejs') %>
 
     <main>
-      <div class="site-container">
+      <div class="site-container" style="padding: 10px;">
         <div class="product-page">
           <!-- Gallery Section -->
           <div class="section" style="margin-top: 10px">
@@ -505,8 +490,12 @@
                   justify-content: space-between;
                 "
               >
-                <h2 class="section-title">Gallery</h2>
-                <button class="ask-query-btn-gallery" onclick="askQuery()">
+                  <h2 class="section-title">
+                    <%= product.companyName && product.companyName.toLowerCase() !== 'admin' 
+                          ? product.companyName 
+                          : 'Gallery' %>
+                  </h2>    
+                              <button class="ask-query-btn-gallery" onclick="askQuery()">
                   Ask Query
                 </button>
               </div>
@@ -542,29 +531,32 @@
           <div class="section">
   <div class="section-box">
 
-    <div
-      class="product-header product-id-wrapper product-title"
-      onclick="copyProductId('<%= product._id %>')"
-    >
-      <div class="tooltip" id="idTooltip">Copy</div>
-      <h1 class="section-title product-title">
-        <%= product.productName %>
-      </h1>
-    </div>
-
-   <!-- Price Range -->
-<div class="product-price-range">
-  ₹ <%= product.priceMin %> - ₹ <%= product.priceMax %>
-  <% if (product.priceNote) { %>
-    (<%= product.priceNote %>)
-  <% } %>
-</div>
-
-    <div class="product-description">
-      <%- product.detailedDescription.replace(/\r?\n/g, '<br /><br />') %>
-    </div>
-
+    <div class="product-header product-id-wrapper" 
+     style="display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 8px; height: 100%;">
+  
+  <!-- Product ID & Title -->
+  <div class="product-id-wrapper" onclick="copyProductId('<%= product._id %>')" 
+       style="position: relative; cursor: pointer;">
+    <div class="tooltip" id="idTooltip">Copy</div>
+    <h1 class="section-title product-title" style="margin: 0;">
+      <%= product.productName %>
+    </h1>
   </div>
+
+  <!-- Price Range -->
+  <div class="product-price-range" style="font-weight: 600; text-align: left;">
+    ₹ <%= product.priceMin %> - ₹ <%= product.priceMax %>
+    <% if (product.priceNote) { %>
+      (<%= product.priceNote %>)
+    <% } %>
+  </div>
+
+  <!-- Product Description -->
+  <div class="product-description" style="display: flex; flex-direction: column; gap: 8px; text-align: left;">
+    <%- product.detailedDescription.replace(/\r?\n/g, '<br /><br />') %> lorem50
+  </div>
+
+</div>
 </div>
 
           <!-- Videos Section -->
@@ -599,8 +591,9 @@
           </div>
           <% } %>
         <div style="width:100%; margin-top:16px; padding:12px 0; text-align:center; font-family:Arial, sans-serif; font-size:14px; color:#333;">
-         Posted By <%= product.companyName %>
-        </div>
+<div class="footer">
+                     Posted By <%= product.userName == 'admin' || "Admin" ? 'NetZeroMart' : product.userName %>
+                    </div>        </div>
 
 
           <div
@@ -655,8 +648,7 @@
 
               const subject = `Query about ${productName}`;
               const body = `Hello, I have a query about the product: ${productName}.\n\nPage link: ${pageUrl}`;
-              const email = "netzeromart@gmail.com";
-
+              const email = `<%= product.email %>` || "netzeromart@gmail.com";  
               const isMobile = /Android|iPhone|iPad|iPod/i.test(
                 navigator.userAgent
               );
@@ -678,15 +670,11 @@
             function openDrawer() {
               document.getElementById("drawer").classList.add("open");
               document.getElementById("overlay").classList.add("active");
-            }
-
-            function closeDrawer() {
-              document.getElementById("drawer").classList.remove("open");
-              document.getElementById("overlay").classList.remove("active");
-            }
-          </script>
-        </div>
-      </div>
-    </main>
-  </body>
-</html>
+}        function closeDrawer() {
+          document.getElementById("drawer").classList.remove("open");
+          document.getElementById("overlay").classList.remove("active");
+        }
+      </script>
+    </div>
+  </div>
+</main>

@@ -37,11 +37,23 @@ function getCreatorId(req) {
   try {
     if (adminToken) {
       const decoded = jwt.verify(adminToken, process.env.JWT_SECRET);
-      return { id: decoded.adminId, role: "admin", companyName: decoded.companyName };
+      return {
+        id: decoded.adminId,
+        role: "admin",
+        companyName: decoded.companyName,
+        userName: decoded.userName,
+        email: decoded.email
+      };
     }
     if (userToken) {
       const decoded = jwt.verify(userToken, process.env.JWT_SECRET);
-      return { id: decoded.userId, role: "user", companyName: decoded.companyName };
+      return {
+        id: decoded.userId,
+        role: "user",
+        companyName: decoded.companyName,
+        userName: decoded.userName,
+        email: decoded.email
+      };
     }
   } catch (err) {
     console.error("Error decoding JWT for creator ID:", err);
@@ -119,6 +131,8 @@ async function addProductController(req, res) {
       updatedAt: new Date(),
       creatorId: creator ? creator.id : null,
       companyName: creator ? creator.companyName : null,
+      userName: creator ? creator.userName : null,
+      email: creator ? creator.email : null,
       creatorRole: creator ? creator.role : null,
     };
 
@@ -237,7 +251,6 @@ async function addProductController(req, res) {
   </div>
 </body>
 </html>`);
-
   } catch (error) {
     console.error("Error adding product:", error);
     res.status(500).send("Internal Server Error");

@@ -180,8 +180,9 @@
                     </div>
                     <% } %>
 
-                        <div class="footer">Posted By <%= article.companyName %>
-                        </div>
+                       <div class="footer">
+                     Posted By <%= article.userName == 'admin' || "Admin" ? 'NetZeroMart' : article.userName %>
+                    </div>
 
             </div>
         </main>

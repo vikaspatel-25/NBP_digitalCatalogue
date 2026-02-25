@@ -11,9 +11,10 @@ export const registerPageController = async (req, res) => {
 
 export const registerCompany = async (req, res) => {
   try {
-    const { companyName, mobile, email } = req.body;
+    const { userName, companyName, mobile, email } = req.body;
 
-    if (!companyName || !mobile || !email) {
+    // Ensure required fields exist
+    if (!userName || !companyName || !mobile || !email) {
       return res.render('pages/register', {
         error: 'All required fields must be provided.',
         success: null
@@ -22,6 +23,7 @@ export const registerCompany = async (req, res) => {
 
     let documentData = undefined;
 
+    // Upload document to Cloudinary if provided
     if (req.file) {
       const uploadResult = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
@@ -44,7 +46,9 @@ export const registerCompany = async (req, res) => {
       };
     }
 
+    // Prepare user object for Mongo
     const userData = {
+      userName,
       companyName,
       mobile,
       email
@@ -54,6 +58,7 @@ export const registerCompany = async (req, res) => {
       userData.document = documentData;
     }
 
+    // Create user
     await User.create(userData);
 
     return res.send(`<!DOCTYPE html>
@@ -93,6 +98,7 @@ export const registerCompany = async (req, res) => {
 </html>`);
 
   } catch (error) {
+    console.error('Error registering company:', error);
     return res.render('pages/register', {
       error: 'Something went wrong. Please try again later.',
       success: null
