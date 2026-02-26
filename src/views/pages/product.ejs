@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+  
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -214,7 +215,7 @@
     }
   }
 
-  .product-page {}
+  
 
   .section {
     margin-top: 56px;
@@ -474,6 +475,7 @@
   </head>
 
   <body>
+
     <%- include('../components/header.ejs') %>
 
     <main>
@@ -553,7 +555,7 @@
 
   <!-- Product Description -->
   <div class="product-description" style="display: flex; flex-direction: column; gap: 8px; text-align: left;">
-    <%- product.detailedDescription.replace(/\r?\n/g, '<br /><br />') %> lorem50
+    <%- product.detailedDescription.replace(/\r?\n/g, '<br /><br />') %> 
   </div>
 
 </div>
@@ -591,10 +593,10 @@
           </div>
           <% } %>
         <div style="width:100%; margin-top:16px; padding:12px 0; text-align:center; font-family:Arial, sans-serif; font-size:14px; color:#333;">
-<div class="footer">
-                     Posted By <%= product.userName == 'admin' || "Admin" ? 'NetZeroMart' : product.userName %>
-                    </div>        </div>
-
+        <div class="footer">
+          Posted By <%= product.userName == 'admin' || "Admin" ? 'NetZeroMart' : product.userName %>
+          </div>        
+        </div>
 
           <div
             class="fullscreen-overlay"
