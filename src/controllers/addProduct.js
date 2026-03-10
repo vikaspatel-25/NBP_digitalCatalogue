@@ -65,17 +65,19 @@ function getCreatorId(req) {
 async function addProductController(req, res) {
   try {
     const {
-      productName,
-      oneLineDescription,
-      shortDescription,
-      detailedDescription,
-      listingPlacement,
-      youtubeLinks = [],
-      articleLinks = [],
-      priceMin,
-      priceMax,
-      priceNote
-    } = req.body;
+  productName,
+  oneLineDescription,
+  shortDescription,
+  detailedDescription,
+  listingPlacement,
+  youtubeLinks = [],
+  articleLinks = [],
+  priceMin,
+  priceMax,
+  priceNote
+} = req.body;
+
+ 
     const images = req.files.images || [];
     const videos = req.files.videos || [];
 
@@ -250,7 +252,8 @@ async function addProductController(req, res) {
     </div>
   </div>
 </body>
-</html>`);
+    </html>`);
+
   } catch (error) {
     console.error("Error adding product:", error);
     res.status(500).send("Internal Server Error");

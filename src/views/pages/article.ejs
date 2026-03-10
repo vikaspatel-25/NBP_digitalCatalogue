@@ -148,8 +148,8 @@
         <main>
             <div class="site-container" style="padding: 10px;">
 
-                <div class="article-card" onclick="copyId('<%= article._id %>')">
-                    <div class="article-title-wrapper">
+                <div class="article-card">
+                    <div class="article-title-wrapper" onclick="copyId('<%= article._id %>')" style="cursor: pointer;">
                         <div class="article-title-bar"></div>
                         <h1 class="article-title">
                             <%= article.title %>
@@ -210,7 +210,7 @@
                 const subject = `Query about article: ${title}`;
                 const body = `Hello, I have a query about the article: ${title}.
 
-Page link: ${pageUrl}`;
+                Page link: ${pageUrl}`;
                 const email = "netzeromart@gmail.com";
                 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
                 if (isMobile) {

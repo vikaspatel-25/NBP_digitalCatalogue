@@ -328,8 +328,8 @@
 
   .product-id-wrapper {
     position: relative;
-    display: inline-flex; /* restored tooltip behavior */
-    align-items: center;  /* original vertical alignment */
+    display: inline-flex; 
+    align-items: center;  
     cursor: pointer;
     flex-shrink: 0;
   }
@@ -533,14 +533,14 @@
           <div class="section">
   <div class="section-box">
 
-    <div class="product-header product-id-wrapper" 
+    <div class="product-header" 
      style="display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 8px; height: 100%;">
   
   <!-- Product ID & Title -->
-  <div class="product-id-wrapper" onclick="copyProductId('<%= product._id %>')" 
-       style="position: relative; cursor: pointer;">
+  <div class="product-id-wrapper"  
+       style="position: relative;">
     <div class="tooltip" id="idTooltip">Copy</div>
-    <h1 class="section-title product-title" style="margin: 0;">
+    <h1 class="section-title product-title" onclick="copyProductId('<%= product._id %>')" style="margin: 0;">
       <%= product.productName %>
     </h1>
   </div>
