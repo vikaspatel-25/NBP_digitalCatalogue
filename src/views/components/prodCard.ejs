@@ -22,7 +22,12 @@
     <p class="product-caption" style="margin-top:10px;">
       <%= product.shortDescription || product.detailedDescription %>
     </p>
-
+<div class="product-price-range" style="font-weight: 400; text-align: left;">
+    ₹ <%= product.priceMin %> - ₹ <%= product.priceMax %>
+    <% if (product.priceNote) { %>
+      (<%= product.priceNote %>)
+    <% } %>
+  </div>
     <button 
       class="view-details-btn"
       onclick="window.location.href='/product?id=<%= product._id %>'"
@@ -47,7 +52,12 @@
     cursor: pointer;
     width: 100%;
   }
-
+.product-price-range {
+    font-size: 12px;
+    font-weight: 600;
+    margin: 12px 0; /* vertical spacing for price */
+    color: #044202;
+  }
   .product-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 16px rgba(0,0,0,0.12);
