@@ -8,8 +8,17 @@ import cookieParser from 'cookie-parser'
 
 dotenv.config({ path: './.env' })
 
+const isTestMode =
+  process.env.NODE_ENV === 'test' ||
+  process.execArgv.includes('--test') ||
+  process.argv.some(arg => arg.includes('test'))
+
 const url = process.env.MONGO_URI
-await connectDB(url)
+if (url) {
+  await connectDB(url)
+} else if (!isTestMode) {
+  console.warn('WARNING: MONGO_URI is not defined. Database not connected.')
+}
 
 const app = express()
 const PORT = process.env.PORT || 7002
@@ -48,7 +57,11 @@ app.use(
 
 app.use('/', router)
 
-app.listen(PORT, () => {
-  console.log(`server started ${PORT}`)
-})
+if (!isTestMode && !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`server started ${PORT}`)
+  })
+}
+
+export default app
 
