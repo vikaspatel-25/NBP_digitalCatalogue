@@ -15,10 +15,15 @@ const transporter = nodemailer.createTransport({
 
 async function adminForgotPassword(req, res) {
   try {
-    // Get email from URL query instead of hardcoded
-    const email = req.query.gmail?.trim();
-    if (!email) return res.status(400).send('Gmail address is required');
+    const authorizedAdminEmail = (process.env.ADMIN_EMAIL || process.env.GMAIL_USER || 'netzeromart@gmail.com').trim().toLowerCase();
+    const providedEmail = req.query.gmail?.trim().toLowerCase();
+    if (!providedEmail) return res.status(400).send('Gmail address is required');
 
+    if (providedEmail !== authorizedAdminEmail) {
+      return res.status(403).send('Unauthorized: Admin passkey can only be sent to the registered administrator email address.');
+    }
+
+    const email = authorizedAdminEmail;
     const admin = await Admin.findOne({});
     if (!admin) return res.status(404).send('Admin record not found');
 

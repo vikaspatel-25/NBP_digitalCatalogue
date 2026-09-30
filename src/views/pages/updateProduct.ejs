@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Update Product - NetZeroMart</title>
+
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --border: #e5e7eb;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --header-bg: #1e3a8a;
+      --header-text: #ffffff;
+      --primary: #2563eb;
+      --primary-hover: #1e4ed8;
+      --danger: #dc2626;
+      --danger-hover: #b91c1c;
+      --success: #22c55e;
+      --input-bg: #f9fafb;
+      --focus: #2563eb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 4vh 1rem;
+    }
+
+    .panel {
+      width: 100%;
+      max-width: 900px;
+      background: var(--panel);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .panel-header {
+      padding: 1.7rem 2.2rem;
+      background: var(--header-bg);
+      color: var(--header-text);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .panel-header .back-btn {
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+
+    .panel-header .back-btn:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    .panel-body {
+      padding: 1.8rem 2.2rem 2.2rem;
+    }
+
+    .section {
+      margin-bottom: 1.8rem;
+      padding: 1.2rem 1.5rem;
+      background: #f9fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .section h2 {
+      margin-top: 0;
+      margin-bottom: 0.8rem;
+      font-size: 1rem;
+      color: var(--text);
+      border-bottom: 1px solid #dfe4ea;
+      padding-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    label {
+      display: block;
+      margin-top: 0.9rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="url"],
+    textarea,
+    select,
+    input[type="file"] {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.9rem;
+      margin-top: 0.3rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--focus);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+      background: #ffffff;
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .btn {
+      padding: 0.55rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: var(--danger-hover); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-secondary { background: #e5e7eb; color: var(--text); }
+    .btn-secondary:hover { background: #d1d5db; }
+
+    /* Search & Selector UI */
+    .selector-container {
+      background: #ffffff;
+      border: 2px dashed #cbd5e1;
+      padding: 1.2rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search-row input {
+      margin-top: 0;
+    }
+
+    .product-list-preview {
+      max-height: 240px;
+      overflow-y: auto;
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+    }
+
+    .product-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .product-list-item:hover {
+      background: #f8fafc;
+    }
+
+    .product-list-item.active {
+      background: #eff6ff;
+      border-left: 4px solid var(--primary);
+    }
+
+    .product-list-item-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .product-list-item img {
+      width: 42px;
+      height: 42px;
+      object-fit: cover;
+      border-radius: 4px;
+      background: #e2e8f0;
+    }
+
+    .product-list-item-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .product-list-item-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* Existing Image Gallery with Remove Toggle */
+    .images-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .image-card {
+      position: relative;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 2px solid var(--border);
+      aspect-ratio: 1;
+      background: #f1f5f9;
+    }
+
+    .image-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .image-card.marked-remove {
+      opacity: 0.35;
+      border-color: var(--danger);
+    }
+
+    .image-remove-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(220, 38, 38, 0.9);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .image-restore-btn {
+      position: absolute;
+      inset: 0;
+      background: rgba(220, 38, 38, 0.75);
+      color: white;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .image-card.marked-remove .image-restore-btn {
+      display: flex;
+    }
+
+    .dynamic-item {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      align-items: center;
+    }
+
+    .dynamic-item input {
+      flex: 1;
+      margin-top: 0;
+    }
+
+    .dynamic-item button.remove {
+      background: var(--danger);
+      font-size: 0.75rem;
+      padding: 0.45rem 0.7rem;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .alert {
+      padding: 0.8rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 1.2rem;
+      font-size: 0.85rem;
+    }
+
+    .alert-error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .alert-success {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .submit-section {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2rem;
+      align-items: center;
+    }
+
+    .submit-section button {
+      padding: 0.75rem 1.8rem;
+      font-size: 0.95rem;
+    }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .loading-overlay.active {
+      display: flex;
+    }
+
+    .loading-box {
+      text-align: center;
+      background: #ffffff;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 4px solid #e3e3e3;
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      margin: 0 auto 15px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+
+<body>
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <div style="font-size: 0.95rem; font-weight: 600; color: #1f2937;">Saving Changes...</div>
+      <div style="font-size: 0.8rem; color: #6b7280; margin-top: 4px;">Uploading media and updating catalogue. Please wait.</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <div>
+        <h1>Update Product</h1>
+        <div style="font-size: 0.85rem; opacity: 0.85; margin-top: 2px;">
+          Search, select, and refine product details
+        </div>
+      </div>
+      <a href="<%= basePath %>" class="back-btn">Back to Panel</a>
+    </div>
+
+    <div class="panel-body">
+      <% if (error) { %>
+        <div class="alert alert-error"><%= error %></div>
+      <% } %>
+      <% if (success) { %>
+        <div class="alert alert-success"><%= success %></div>
+      <% } %>
+
+      <!-- Step 1: Search & Select Product -->
+      <div class="selector-container">
+        <label style="margin-top: 0; font-weight: 600; color: #1e3a8a;">
+          Step 1: Search & Select Product to Update
+        </label>
+        <div class="search-row" style="margin-top: 8px;">
+          <input
+            type="text"
+            id="productSearchInput"
+            placeholder="Search by product name or paste Product ID..."
+            oninput="handleSearch(this.value)"
+          />
+        </div>
+
+        <div class="product-list-preview" id="productListPreview">
+          <% if (products && products.length > 0) { %>
+            <% products.forEach(prod => { %>
+              <div
+                class="product-list-item <%= selectedProduct && selectedProduct._id.toString() === prod._id.toString() ? 'active' : '' %>"
+                data-id="<%= prod._id %>"
+                data-name="<%= (prod.productName || '').toLowerCase() %>"
+                onclick="selectProduct('<%= prod._id %>')"
+              >
+                <div class="product-list-item-left">
+                  <% if (prod.images && prod.images.length > 0) { %>
+                    <img src="<%= prod.images[0] %>" alt="" />
+                  <% } else { %>
+                    <img src="/images/placeholder.png" alt="" />
+                  <% } %>
+                  <div>
+                    <div class="product-list-item-title"><%= prod.productName %></div>
+                    <div class="product-list-item-sub">
+                      ₹<%= prod.priceMin %> - ₹<%= prod.priceMax %> | ID: <%= prod._id %>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <button type="button" class="btn btn-secondary" style="font-size: 0.75rem; padding: 4px 8px;">
+                    <%= selectedProduct && selectedProduct._id.toString() === prod._id.toString() ? 'Selected ✓' : 'Edit' %>
+                  </button>
+                </div>
+              </div>
+            <% }) %>
+          <% } else { %>
+            <div style="padding: 16px; text-align: center; color: var(--muted); font-size: 0.85rem;">
+              No products found in your catalogue.
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Step 2: Edit Product Details Form -->
+      <% if (selectedProduct) { %>
+        <form
+          id="updateProductForm"
+          method="POST"
+          action="<%= basePath %>/updateProduct"
+          enctype="multipart/form-data"
+          onsubmit="handleSubmit(event)"
+        >
+          <input type="hidden" name="productId" value="<%= selectedProduct._id %>" />
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding: 8px 12px; background: #e0f2fe; border-radius: 6px; color: #0369a1; font-size: 0.85rem;">
+            <span>Editing: <strong><%= selectedProduct.productName %></strong> (ID: <%= selectedProduct._id %>)</span>
+            <a href="/home/product?id=<%= selectedProduct._id %>" target="_blank" style="color: #0284c7; font-weight: 600; text-decoration: none;">View Live Product ↗</a>
+          </div>
+
+          <!-- Section: Basic Info -->
+          <div class="section">
+            <h2>Basic Product Information</h2>
+
+            <label>Product Name</label>
+            <input type="text" name="productName" value="<%= selectedProduct.productName %>" required />
+
+            <label>One-line Description (optional)</label>
+            <input type="text" name="oneLineDescription" value="<%= selectedProduct.oneLineDescription || '' %>" placeholder="Short tagline" />
+
+            <label>Listing Placement</label>
+            <select name="listingPlacement">
+              <option value="keep" selected>Keep current placement (Order: <%= selectedProduct.order !== undefined ? selectedProduct.order : 0 %>)</option>
+              <option value="top">Push to top of catalogue</option>
+              <option value="bottom">Push to bottom of catalogue</option>
+            </select>
+
+            <label>Price Range</label>
+            <div class="dynamic-item">
+              <input type="number" name="priceMin" value="<%= selectedProduct.priceMin %>" placeholder="Min Price (₹)" required />
+              <input type="number" name="priceMax" value="<%= selectedProduct.priceMax %>" placeholder="Max Price (₹)" required />
+            </div>
+
+            <label>Price Note</label>
+            <input type="text" name="priceNote" value="<%= selectedProduct.priceNote || '' %>" placeholder="e.g. Per unit / Per ton / Per piece" />
+          </div>
+
+          <!-- Section: Descriptions -->
+          <div class="section">
+            <h2>Product Descriptions</h2>
+
+            <label>Short Description (used on home cards)</label>
+            <textarea name="shortDescription" required><%= selectedProduct.shortDescription %></textarea>
+
+            <label>Detailed Description</label>
+            <textarea name="detailedDescription" style="min-height: 140px;" required><%= selectedProduct.detailedDescription %></textarea>
+          </div>
+
+          <!-- Section: Images Management -->
+          <div class="section">
+            <h2>
+              <span>Product Images</span>
+              <span style="font-size: 0.75rem; color: var(--muted); font-weight: normal;">Click ✕ to remove existing images</span>
+            </h2>
+
+            <!-- Existing Images Gallery -->
+            <label style="margin-top: 0;">Current Images (<span id="preservedCount"><%= selectedProduct.images ? selectedProduct.images.length : 0 %></span> kept):</label>
+            <div class="images-grid" id="existingImagesGrid">
+              <% if (selectedProduct.images && selectedProduct.images.length > 0) { %>
+                <% selectedProduct.images.forEach((imgUrl, index) => { %>
+                  <div class="image-card" id="img-card-<%= index %>">
+                    <img src="<%= imgUrl %>" alt="" />
+                    <input type="hidden" name="existingImages" value="<%= imgUrl %>" id="img-input-<%= index %>" />
+                    <button type="button" class="image-remove-btn" onclick="toggleRemoveImage(<%= index %>)" title="Remove this image">✕</button>
+                    <div class="image-restore-btn" onclick="toggleRemoveImage(<%= index %>)">Click to Restore</div>
+                  </div>
+                <% }) %>
+              <% } else { %>
+                <p style="font-size: 0.8rem; color: var(--muted); margin: 6px 0;">No existing images.</p>
+              <% } %>
+            </div>
+
+            <!-- Upload Additional Images -->
+            <label style="margin-top: 1.2rem;">Upload Additional Images</label>
+            <input type="file" name="images" multiple accept="image/*" onchange="previewNewImages(event)" />
+            <div id="newImagesPreview" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
+          </div>
+
+          <!-- Section: Videos & External Links -->
+          <div class="section">
+            <h2>Videos & External Links</h2>
+
+            <!-- Existing Videos -->
+            <% if (selectedProduct.videos && selectedProduct.videos.length > 0) { %>
+              <label style="margin-top: 0;">Existing Uploaded Videos:</label>
+              <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;">
+                <% selectedProduct.videos.forEach((vidUrl, vIndex) => { %>
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: #fff; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem;">
+                    <input type="hidden" name="existingVideos" value="<%= vidUrl %>" id="vid-input-<%= vIndex %>" />
+                    <a href="<%= vidUrl %>" target="_blank" style="color: var(--primary); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;">
+                      📹 Video <%= vIndex + 1 %>: <%= vidUrl %>
+                    </a>
+                    <button type="button" class="btn btn-danger" style="font-size: 0.7rem; padding: 3px 8px;" onclick="toggleRemoveVideo(<%= vIndex %>, this)">Remove</button>
+                  </div>
+                <% }) %>
+              </div>
+            <% } %>
+
+            <label style="margin-top: 1rem;">Upload Additional Video Files (optional)</label>
+            <input type="file" name="videos" multiple accept="video/*" />
+
+            <!-- YouTube Links -->
+            <label style="margin-top: 1.2rem;">YouTube Video Links</label>
+            <div id="youtubeContainer">
+              <% if (selectedProduct.youtubeLinks && selectedProduct.youtubeLinks.length > 0) { %>
+                <% selectedProduct.youtubeLinks.forEach(link => { %>
+                  <div class="dynamic-item">
+                    <input type="url" name="youtubeLinks" value="<%= link %>" placeholder="https://www.youtube.com/watch?v=..." />
+                    <button type="button" class="remove" onclick="this.parentElement.remove()">Remove</button>
+                  </div>
+                <% }) %>
+              <% } %>
+            </div>
+            <button type="button" class="btn btn-secondary" style="margin-top: 8px;" onclick="addLinkInput('youtubeContainer', 'youtubeLinks', 'https://www.youtube.com/watch?v=...')">
+              + Add YouTube Link
+            </button>
+
+            <!-- Article Links -->
+            <label style="margin-top: 1.2rem;">Related Article Links</label>
+            <div id="articleContainer">
+              <% if (selectedProduct.articleLinks && selectedProduct.articleLinks.length > 0) { %>
+                <% selectedProduct.articleLinks.forEach(link => { %>
+                  <div class="dynamic-item">
+                    <input type="url" name="articleLinks" value="<%= link %>" placeholder="https://example.com/article..." />
+                    <button type="button" class="remove" onclick="this.parentElement.remove()">Remove</button>
+                  </div>
+                <% }) %>
+              <% } %>
+            </div>
+            <button type="button" class="btn btn-secondary" style="margin-top: 8px;" onclick="addLinkInput('articleContainer', 'articleLinks', 'https://...')">
+              + Add Article Link
+            </button>
+          </div>
+
+          <!-- Submit Bar -->
+          <div class="submit-section">
+            <a href="<%= basePath %>/updateProduct" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save All Changes</button>
+          </div>
+        </form>
+      <% } else { %>
+        <div style="text-align: center; padding: 2.5rem 1rem; color: var(--muted);">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔍</div>
+          <div style="font-size: 1.05rem; font-weight: 600; color: var(--text);">Select a product above to begin updating</div>
+          <p style="font-size: 0.85rem; max-width: 420px; margin: 6px auto 0;">
+            Use the search box or list above to pick the product you wish to modify.
+          </p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <script>
+    function handleSearch(term) {
+      const q = term.trim().toLowerCase();
+      const items = document.querySelectorAll('.product-list-item');
+      items.forEach(item => {
+        const name = item.getAttribute('data-name') || '';
+        const id = (item.getAttribute('data-id') || '').toLowerCase();
+        if (!q || name.includes(q) || id.includes(q)) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    function selectProduct(id) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('id', id);
+      url.searchParams.delete('error');
+      url.searchParams.delete('success');
+      window.location.href = url.toString();
+    }
+
+    function toggleRemoveImage(index) {
+      const card = document.getElementById('img-card-' + index);
+      const input = document.getElementById('img-input-' + index);
+      if (!card || !input) return;
+
+      if (card.classList.contains('marked-remove')) {
+        // Restore image
+        card.classList.remove('marked-remove');
+        input.disabled = false;
+      } else {
+        // Mark for removal
+        card.classList.add('marked-remove');
+        input.disabled = true;
+      }
+      updatePreservedCount();
+    }
+
+    function updatePreservedCount() {
+      const enabled = document.querySelectorAll('#existingImagesGrid input[name="existingImages"]:not([disabled])');
+      const counter = document.getElementById('preservedCount');
+      if (counter) counter.innerText = enabled.length;
+    }
+
+    function toggleRemoveVideo(index, btn) {
+      const input = document.getElementById('vid-input-' + index);
+      if (!input) return;
+      if (input.disabled) {
+        input.disabled = false;
+        btn.innerText = 'Remove';
+        btn.className = 'btn btn-danger';
+      } else {
+        input.disabled = true;
+        btn.innerText = 'Restore';
+        btn.className = 'btn btn-secondary';
+      }
+    }
+
+    function addLinkInput(containerId, fieldName, placeholder) {
+      const container = document.getElementById(containerId);
+      const div = document.createElement('div');
+      div.className = 'dynamic-item';
+      div.innerHTML = `
+        <input type="url" name="${fieldName}" placeholder="${placeholder}" />
+        <button type="button" class="remove" onclick="this.parentElement.remove()">Remove</button>
+      `;
+      container.appendChild(div);
+    }
+
+    function previewNewImages(event) {
+      const preview = document.getElementById('newImagesPreview');
+      preview.innerHTML = '';
+      const files = event.target.files;
+      if (!files) return;
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) continue;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.style.width = '70px';
+          img.style.height = '70px';
+          img.style.objectFit = 'cover';
+          img.style.borderRadius = '6px';
+          img.style.border = '1px solid #cbd5e1';
+          preview.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function handleSubmit(event) {
+      // Validate that at least one image remains
+      const preserved = document.querySelectorAll('#existingImagesGrid input[name="existingImages"]:not([disabled])');
+      const newFiles = document.querySelector('input[name="images"]').files;
+      const totalImages = preserved.length + (newFiles ? newFiles.length : 0);
+
+      if (totalImages === 0) {
+        alert('Product must have at least one image. Please keep an existing image or upload a new one.');
+        event.preventDefault();
+        return false;
+      }
+
+      document.getElementById('loadingOverlay').classList.add('active');
+      return true;
+    }
+  </script>
+</body>
+</html>

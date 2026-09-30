@@ -22,7 +22,9 @@ const userApprovalPagePath = path.join(__dirname, '../views/pages/userApproval.e
 
 async function userApprovalPageController(req, res) {
   try {
-    const users = await Company.find({ approved: false });
+    const users = await Company.find({
+      $or: [{ approved: false }, { approved: { $exists: false } }]
+    }).sort({ createdAt: -1 });
     res.render(userApprovalPagePath, { users });
   } catch (error) {
     res.status(500).send('Internal Server Error');

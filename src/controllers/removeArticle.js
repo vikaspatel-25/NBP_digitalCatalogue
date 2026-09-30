@@ -3,6 +3,21 @@ import { fileURLToPath } from "url";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import Article from "../models/article.model.js";
+import cloudinary from "../config/cloudinary.js";
+
+function extractPublicId(url) {
+  try {
+    const uploadIndex = url.indexOf("/upload/");
+    if (uploadIndex === -1) return null;
+
+    let publicPath = url.substring(uploadIndex + 8);
+    publicPath = publicPath.replace(/^v\d+\//, "");
+    const withoutExt = publicPath.replace(/\.[^/.]+$/, "");
+    return withoutExt;
+  } catch {
+    return null;
+  }
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -195,6 +210,17 @@ Back
 
 </body>
 </html>`);
+    }
+
+    if (article.coverImage) {
+      const publicId = extractPublicId(article.coverImage);
+      if (publicId) {
+        try {
+          await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+        } catch (cloudErr) {
+          console.error("Error removing article cover image from Cloudinary:", cloudErr);
+        }
+      }
     }
 
     await article.deleteOne();

@@ -30,6 +30,10 @@ const companySchema = new mongoose.Schema(
       public_id: {
         type: String
       }
+    },
+    approved: {
+      type: Boolean,
+      default: false
     }
   },
   { timestamps: true }

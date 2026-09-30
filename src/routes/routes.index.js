@@ -19,6 +19,7 @@ import { userResetPasswordController } from "../controllers/user.resetPwd.js";
 import { adminForgotPassword, userForgotPassword } from "../controllers/forgotPassword.js";
 import { addArticleController, addArticlePageController } from "../controllers/addArticle.js";
 import { removeArticlePageController, removeArticleController } from "../controllers/removeArticle.js";
+import { updateProductPageController, updateProductController } from "../controllers/updateProduct.js";
 
 const Router = express.Router();
 
@@ -58,7 +59,13 @@ Router.route("/register")
 Router.route("/home/product")
   .get(productPageController);
 
+Router.route("/product")
+  .get(productPageController);
+
 Router.route("/home/article")
+  .get(articlePageController);
+
+Router.route("/article")
   .get(articlePageController);
 
 
@@ -83,6 +90,17 @@ Router.route("/admin/addProduct")
       { name: "videos", maxCount: 5 },
     ]),
     addProductController
+  );
+
+Router.route("/admin/updateProduct")
+  .get(auth, updateProductPageController)
+  .post(
+    auth,
+    upload.fields([
+      { name: "images", maxCount: 10 },
+      { name: "videos", maxCount: 5 },
+    ]),
+    updateProductController
   );
 
 Router.route("/admin/removeProduct")
@@ -132,6 +150,17 @@ Router.route("/userPanel/addProduct")
       { name: "videos", maxCount: 5 },
     ]),
     addProductController
+  );
+
+Router.route("/userPanel/updateProduct")
+  .get(userAuth, updateProductPageController)
+  .post(
+    userAuth,
+    upload.fields([
+      { name: "images", maxCount: 10 },
+      { name: "videos", maxCount: 5 },
+    ]),
+    updateProductController
   );
 
 Router.route("/userPanel/removeProduct")
