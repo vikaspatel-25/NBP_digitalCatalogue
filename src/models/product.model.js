@@ -53,25 +53,25 @@ const productSchema = new mongoose.Schema(
     },
     creatorId: {
       type: String,
-      required: true
+      default: null
     },
     companyName: {
       type: String,
-      required: true
+      default: null
     },
     userName: {
       type: String,
-      required: true
+      default: null
     },
     email: {
       type: String,
-      required: true,
+      default: null,
       trim: true
     },
     creatorRole: {
       type: String,
-      enum: ['admin', 'user'],
-      required: true
+      enum: ['admin', 'user', null],
+      default: null
     },
     createdAt: {
       type: Date,

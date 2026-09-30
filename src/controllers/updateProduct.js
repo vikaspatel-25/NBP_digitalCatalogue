@@ -290,7 +290,14 @@ async function updateProductController(req, res) {
     product.order = orderValue;
     product.updatedAt = new Date();
 
-    await product.save();
+    // Backfill legacy products that lack creator metadata
+    if (!product.creatorId && requester) product.creatorId = requester.id;
+    if (!product.creatorRole && requester) product.creatorRole = requester.role;
+    if (!product.companyName && requester) product.companyName = requester.companyName || "NetZeroMart";
+    if (!product.userName && requester) product.userName = requester.userName || "Admin";
+    if (!product.email && requester) product.email = requester.email || "netzeromart@gmail.com";
+
+    await product.save({ validateModifiedOnly: true });
 
     res.send(`<!DOCTYPE html>
 <html lang="en">
