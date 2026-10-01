@@ -55,6 +55,13 @@ app.use(
   })
 )
 
+// Serve React App for the beta redesigned paths
+app.use(express.static(path.resolve(__dirname, '../frontend/dist'), { index: false }));
+
+app.get(['/v2/admin*', '/v2/userPanel*'], (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../frontend/dist/index.html'));
+});
+
 app.use('/', router)
 
 if (!isTestMode && !process.env.VERCEL) {

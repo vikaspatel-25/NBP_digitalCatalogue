@@ -260,4 +260,81 @@ async function addProductController(req, res) {
   }
 }
 
-export { addProductPageController, addProductController };
+async function addApiProductController(req, res) {
+  try {
+    const {
+      productName, oneLineDescription, shortDescription, detailedDescription,
+      listingPlacement, youtubeLinks = [], articleLinks = [],
+      priceMin, priceMax, priceNote
+    } = req.body;
+
+    const images = req.files.images || [];
+    const videos = req.files.videos || [];
+
+    if (!productName || !shortDescription || !detailedDescription) {
+      return res.status(400).json({ success: false, error: "Required fields missing" });
+    }
+
+    if (images.length === 0) {
+      return res.status(400).json({ success: false, error: "At least one image required" });
+    }
+
+    if (!priceMin || !priceMax) {
+      return res.status(400).json({ success: false, error: "Price range required" });
+    }
+
+    const uploadedImages = [];
+    for (const image of images) {
+      const result = await uploadToCloudinary(image.buffer, "image");
+      uploadedImages.push(result.secure_url);
+    }
+
+    const uploadedVideos = [];
+    for (const video of videos) {
+      const result = await uploadToCloudinary(video.buffer, "video");
+      uploadedVideos.push(result.secure_url);
+    }
+
+    let orderValue;
+    if (listingPlacement === "top") {
+      const firstProduct = await Product.findOne().sort({ order: 1 }).select("order");
+      orderValue = firstProduct ? firstProduct.order - 1 : 0;
+    } else {
+      const lastProduct = await Product.findOne().sort({ order: -1 }).select("order");
+      orderValue = lastProduct ? lastProduct.order + 1 : 0;
+    }
+
+    const creator = getCreatorId(req);
+
+    const productData = {
+      productName,
+      oneLineDescription,
+      shortDescription,
+      detailedDescription,
+      priceMin,
+      priceMax,
+      priceNote,
+      images: uploadedImages,
+      videos: uploadedVideos,
+      youtubeLinks: Array.isArray(youtubeLinks) ? youtubeLinks : [youtubeLinks],
+      articleLinks: Array.isArray(articleLinks) ? articleLinks : [articleLinks],
+      order: orderValue,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      creatorId: creator ? creator.id : null,
+      companyName: creator ? creator.companyName : null,
+      userName: creator ? creator.userName : null,
+      email: creator ? creator.email : null,
+      creatorRole: creator ? creator.role : null,
+    };
+
+    await Product.create(productData);
+
+    return res.json({ success: true, message: "Product added successfully" });
+  } catch (error) {
+    console.error("Error adding product via API:", error);
+    res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+}
+
+export { addProductPageController, addProductController, addApiProductController };

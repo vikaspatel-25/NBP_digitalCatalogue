@@ -1,227 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <title>
-        <%= article.title %>
-    </title>
-
+    <title><%= article.title %></title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="icon" href="/assets/netZeroStickerIcon.png" type="image/png">
-
-    <style>
-        :root {
-            --orange: #0158a0;
-            --text-dark: #1f1f1f;
-            --white: #ffffff;
-            --radius: 6px;
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                blue: '#0158a0',
+                green: '#529f23',
+                darkBlue: '#004a87',
+                darkGreen: '#044202'
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+            }
+          }
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-
-        body {
-            background: var(--white);
-            color: var(--text-dark);
-        }
-
-        .site-container {
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-        }
-
-        .article-card {
-            background: #fafafa;
-            border-radius: 12px;
-            padding: 30px;
-            max-width: 98%;
-            margin: 20px auto;
-        }
-
-        .article-title-wrapper {
-            position: relative;
-            padding-left: 12px;
-            margin-bottom: 25px;
-        }
-
-        .article-title-bar {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 3px;
-            background: var(--orange);
-            border-radius: 3px;
-            height: 100%;
-        }
-
-        .article-title {
-            font-size: 26px;
-            font-weight: 600;
-            line-height: 1.3;
-            margin: 0;
-        }
-
-        .cover-wrapper {
-            width: 100%;
-            border-radius: 10px;
-            overflow: hidden;
-            background: #f0f0f0;
-            margin-bottom: 25px;
-        }
-
-        .cover-wrapper img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .article-content {
-            font-size: 16px;
-            line-height: 1.8;
-            color: #333;
-        }
-
-        .product-links {
-            margin-top: 25px;
-        }
-
-        .product-links ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .product-links li {
-            margin-bottom: 10px;
-        }
-
-        .product-links a {
-            text-decoration: none;
-            color: #444;
-            font-size: 15px;
-        }
-
-        .product-links a:hover {
-            color: var(--orange);
-            text-decoration: underline;
-        }
-
-        .ask-query-btn {
-            background: #529f23;
-            color: #fff;
-            font-weight: 600;
-            border: none;
-            border-radius: var(--radius);
-            padding: 8px 16px;
-            cursor: pointer;
-            margin-top: 25px;
-        }
-
-        .ask-query-btn:hover {
-            background: #1ebe57;
-        }
-
-        .footer {
-            width: 100%;
-            margin-top: 30px;
-            padding: 12px 0;
-            text-align: center;
-            font-size: 14px;
-            color: #333;
-        }
-    </style>
+      }
+    </script>
 </head>
-
-<body>
-
+<body class="bg-white text-gray-900 antialiased font-sans flex flex-col min-h-screen">
     <%- include('../components/header.ejs') %>
-        <main>
-            <div class="site-container" style="padding: 10px;">
-
-                <div class="article-card">
-                    <div class="article-title-wrapper" onclick="copyId('<%= article._id %>')" style="cursor: pointer;">
-                        <div class="article-title-bar"></div>
-                        <h1 class="article-title">
-                            <%= article.title %>
-                        </h1>
-                    </div>
-
-                    <% if(article.coverImage){ %>
-                        <div class="cover-wrapper">
-                            <img src="<%= article.coverImage %>">
-                        </div>
-                        <% } %>
-
-                            <div class="article-content"><%- article.content %></div>
+    <main class="flex-grow w-full">
+        <div class="max-w-[1320px] mx-auto p-2.5 min-h-screen">
+            <div class="bg-gray-50 rounded-xl p-5 md:p-8 max-w-[98%] mx-auto my-5 shadow-sm border border-gray-100">
+                <div class="relative pl-3.5 mb-6 cursor-pointer group" onclick="copyId('<%= article._id %>')">
+                    <div class="absolute left-0 top-0 w-1 h-full bg-brand-blue rounded-full"></div>
+                    <h1 class="text-2xl md:text-3xl font-semibold leading-snug m-0 text-gray-900 group-hover:text-brand-blue transition-colors">
+                        <%= article.title %>
+                    </h1>
                 </div>
 
-                <% if(article.productLinks?.length){ %>
-                    <div class="article-card" style="margin-top:30px;">
-                        <h2 class="article-title">Related Products</h2>
-                        <div class="product-links">
-                            <ul>
-                                <% article.productLinks.forEach(link=>{ %>
-                                    <li><a href="<%= link %>" target="_blank">
-                                            <%= link %>
-                                        </a></li>
-                                    <% }) %>
-                            </ul>
-                        </div>
+                <% if(article.coverImage){ %>
+                    <div class="w-full rounded-lg overflow-hidden bg-gray-100 mb-6">
+                        <img src="<%= article.coverImage %>" class="w-full h-auto block object-cover">
                     </div>
-                    <% } %>
+                <% } %>
 
-                       <div class="footer">
-                     Posted By <%= article.userName == 'admin' || "Admin" ? 'NetZeroMart' : article.userName %>
-                    </div>
-
+                <div class="text-base leading-relaxed text-gray-700 max-w-none flex flex-col gap-4">
+                    <%- article.content %>
+                </div>
             </div>
-        </main>
 
-        <script>
-            function copyId(id) {
-                const tooltip = document.createElement('div');
-                tooltip.textContent = 'Copied ID';
-                tooltip.style.position = 'fixed';
-                tooltip.style.top = '20px';
-                tooltip.style.left = '50%';
-                tooltip.style.transform = 'translateX(-50%)';
-                tooltip.style.background = '#2e7d32';
-                tooltip.style.color = '#fff';
-                tooltip.style.padding = '6px 12px';
-                tooltip.style.borderRadius = '4px';
-                document.body.appendChild(tooltip);
-                navigator.clipboard.writeText(id);
-                setTimeout(() => { document.body.removeChild(tooltip); }, 1500);
+            <% if(article.productLinks?.length){ %>
+                <div class="bg-gray-50 rounded-xl p-5 md:p-8 max-w-[98%] mx-auto mt-8 shadow-sm border border-gray-100">
+                    <h2 class="text-2xl font-semibold mb-4">Related Products</h2>
+                    <ul class="list-none p-0 m-0 flex flex-col gap-2.5">
+                        <% article.productLinks.forEach(link=>{ %>
+                            <li>
+                                <a href="<%= link %>" target="_blank" class="text-[15px] text-gray-700 no-underline hover:text-brand-blue hover:underline break-all">
+                                    <%= link %>
+                                </a>
+                            </li>
+                        <% }) %>
+                    </ul>
+                </div>
+            <% } %>
+
+            <div class="w-full mt-8 py-3 text-center text-sm text-gray-600 font-medium">
+                Posted By <%= article.userName == 'admin' || "Admin" ? 'NetZeroMart' : article.userName %>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function copyId(id) {
+            const tooltip = document.createElement('div');
+            tooltip.textContent = 'Copied ID';
+            tooltip.className = 'fixed top-5 left-1/2 -translate-x-1/2 bg-green-700 text-white px-3 py-1.5 rounded shadow-md z-50 transition-opacity';
+            document.body.appendChild(tooltip);
+            navigator.clipboard.writeText(id);
+            setTimeout(() => { 
+                tooltip.style.opacity = '0';
+                setTimeout(() => document.body.removeChild(tooltip), 300);
+            }, 1500);
+        }
+
+        function askQuery() {
+            const title = `<%= article.title.replace(/"/g,'\\"') %>`;
+            const pageUrl = window.location.href;
+            const subject = `Query about article: ${title}`;
+            const body = `Hello, I have a query about the article: ${title}.\n\nPage link: ${pageUrl}`;
+            const email = "netzeromart@gmail.com";
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            if (isMobile) {
+                window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            } else {
+                window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, "_blank");
             }
-
-            function askQuery() {
-                const title = `<%= article.title.replace(/"/g,'"') %>`;
-                const pageUrl = window.location.href;
-                const subject = `Query about article: ${title}`;
-                const body = `Hello, I have a query about the article: ${title}.
-
-                Page link: ${pageUrl}`;
-                const email = "netzeromart@gmail.com";
-                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-                if (isMobile) {
-                    window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                } else {
-                    window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, "_blank");
-                }
-            }
-        </script>
+        }
+    </script>
     <%- include('../components/footer.ejs') %>
-
 </body>
-
 </html>

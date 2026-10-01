@@ -315,3 +315,54 @@ async function removeProductController(req, res) {
 }
 
 export { removeProductPageController, removeProductController };
+
+export async function apiRemoveProductPageController(req, res) {
+  try {
+    const Product = (await import('../models/product.model.js')).default;
+    const requester = getRequester(req);
+    const filter = requester && requester.role === "admin" ? {} : { creatorId: requester.id };
+    const products = await Product.find(filter).sort({ createdAt: -1 });
+    res.json({ success: true, products });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+}
+
+export async function apiRemoveProductController(req, res) {
+  try {
+    const { productId } = req.body;
+    const Product = (await import('../models/product.model.js')).default;
+    const { v2: cloudinary } = await import('cloudinary');
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ success: false, error: 'Product not found' });
+    }
+
+    const requester = getRequester(req);
+    if (requester && requester.role !== "admin" && product.creatorId !== requester.id) {
+      return res.status(403).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const allMedia = [...(product.images || []), ...(product.videos || [])];
+    const extractPublicId = (url) => {
+      const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
+      return match ? match[1] : null;
+    };
+
+    for (const url of allMedia) {
+      const publicId = extractPublicId(url);
+      if (publicId) {
+        try {
+          const type = url.includes('/video/') ? 'video' : 'image';
+          await cloudinary.uploader.destroy(publicId, { resource_type: type });
+        } catch (cErr) {}
+      }
+    }
+
+    await Product.findByIdAndDelete(productId);
+    res.json({ success: true, message: 'Product removed successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+}

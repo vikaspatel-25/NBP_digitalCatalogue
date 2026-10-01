@@ -153,3 +153,85 @@ async function rejectUserController(req, res) {
 }
 
 export { userApprovalPageController, approveUserController, rejectUserController };
+
+export async function apiUserApprovalPageController(req, res) {
+  try {
+    const users = await Company.find({
+      $or: [{ approved: false }, { approved: { $exists: false } }]
+    }).sort({ createdAt: -1 });
+    res.json({ success: true, users });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+}
+
+export async function apiApproveUserController(req, res) {
+  try {
+    const userId = req.body.userId;
+    const userData = await Company.findById(userId);
+    if (!userData) return res.status(404).json({ success: false, error: 'User not found' });
+
+    const newUserId = uuidv4();
+    const rawPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(rawPassword, 4);
+
+    const now = new Date();
+
+    const newUser = new User({
+      companyName: userData.companyName || '',
+      userName: userData.userName || '',
+      email: userData.email,
+      mobile: userData.mobile,
+      document: userData.document && typeof userData.document === 'object'
+        ? userData.document
+        : { url: '', public_id: '' },
+      userId: newUserId,
+      password: hashedPassword,
+      passwordUpdatedAt: now,
+      passKey: rawPassword,
+      role: 'user',
+      status: 'active'
+    });
+
+    await newUser.save();
+
+    await transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to: userData.email,
+      subject: 'Your NetZero Mart Account Has Been Approved',
+      html: `<p>Your temporary pass key is: ${rawPassword}</p>`
+    });
+
+    await Company.findByIdAndDelete(userId);
+
+    res.json({ success: true, message: 'User approved successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+}
+
+export async function apiRejectUserController(req, res) {
+  try {
+    const userId = req.body.userId;
+    const userData = await Company.findById(userId);
+
+    if (userData) {
+      if (userData.document && userData.document.public_id) {
+        try {
+          await cloudinary.uploader.destroy(userData.document.public_id);
+        } catch (cloudErr) {}
+      }
+      await transporter.sendMail({
+        from: process.env.GMAIL_USER,
+        to: userData.email,
+        subject: 'Update on Your NetZero Mart Registration',
+        html: `<p>Application Not Approved</p>`
+      });
+    }
+
+    await Company.findByIdAndDelete(userId);
+    res.json({ success: true, message: 'User rejected successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+}

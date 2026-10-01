@@ -39,3 +39,33 @@ async function removeUserController(req, res) {
 }
 
 export { userManagementPageController, removeUserController };
+
+export async function apiUserManagementPageController(req, res) {
+  try {
+    const users = await User.find({});
+    res.json({ success: true, users });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+}
+
+export async function apiRemoveUserController(req, res) {
+  try {
+    const { userId } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    if (user.document && user.document.public_id) {
+      await cloudinary.uploader.destroy(user.document.public_id);
+    }
+
+    await User.findByIdAndDelete(userId);
+
+    res.json({ success: true, message: 'User removed successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+}

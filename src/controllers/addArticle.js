@@ -284,3 +284,62 @@ async function addArticleController(req, res) {
 
 
 export { addArticlePageController, addArticleController };
+
+export async function apiAddArticleController(req, res) {
+  try {
+    const { title, date, bodyText, bodyHtml, videoUrl, authorName, sourceLink } = req.body;
+    const Article = (await import('../models/article.model.js')).default;
+    const { v2: cloudinary } = await import('cloudinary');
+    const jwt = (await import('jsonwebtoken')).default;
+
+    if (!title || !date || (!bodyText && !bodyHtml)) {
+      return res.status(400).json({ success: false, error: 'Required fields missing' });
+    }
+
+    let coverImageUrl = '';
+    if (req.file) {
+      const uploadToCloudinary = (buffer) => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream({ resource_type: "image" }, (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          });
+          stream.end(buffer);
+        });
+      };
+      const result = await uploadToCloudinary(req.file.buffer);
+      coverImageUrl = result.secure_url;
+    }
+
+    const getCreatorId = (req) => {
+      const adminToken = req.cookies.adminToken;
+      const userToken = req.cookies.userToken;
+      try {
+        if (adminToken) {
+          const decoded = jwt.verify(adminToken, process.env.JWT_SECRET);
+          return { id: decoded.adminId, role: "admin", companyName: decoded.companyName, userName: decoded.userName, email: decoded.email };
+        }
+        if (userToken) {
+          const decoded = jwt.verify(userToken, process.env.JWT_SECRET);
+          return { id: decoded.userId, role: "user", companyName: decoded.companyName, userName: decoded.userName, email: decoded.email };
+        }
+      } catch (err) {}
+      return null;
+    };
+
+    const creator = getCreatorId(req);
+    const newArticle = new Article({
+      title, date, bodyText, bodyHtml, videoUrl, authorName, sourceLink, coverImageUrl,
+      creatorId: creator ? creator.id : null,
+      companyName: creator ? creator.companyName : null,
+      userName: creator ? creator.userName : null,
+      email: creator ? creator.email : null,
+      creatorRole: creator ? creator.role : null,
+    });
+
+    await newArticle.save();
+    res.json({ success: true, message: 'Article added successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+}

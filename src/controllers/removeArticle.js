@@ -357,3 +357,43 @@ export {
 removeArticlePageController,
 removeArticleController
 };
+
+export async function apiRemoveArticlePageController(req, res) {
+  try {
+    const Article = (await import('../models/article.model.js')).default;
+    const requester = getRequester(req);
+    const filter = requester && requester.role === "admin" ? {} : { creatorId: requester.id };
+    const articles = await Article.find(filter).sort({ createdAt: -1 });
+    res.json({ success: true, articles });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+}
+
+export async function apiRemoveArticleController(req, res) {
+  try {
+    const { articleId } = req.body;
+    const Article = (await import('../models/article.model.js')).default;
+    const { v2: cloudinary } = await import('cloudinary');
+
+    const article = await Article.findById(articleId);
+    if (!article) return res.status(404).json({ success: false, error: 'Article not found' });
+
+    const requester = getRequester(req);
+    if (requester && requester.role !== "admin" && article.creatorId !== requester.id) {
+      return res.status(403).json({ success: false, error: 'Unauthorized' });
+    }
+
+    if (article.coverImageUrl) {
+      const match = article.coverImageUrl.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
+      if (match) {
+        try { await cloudinary.uploader.destroy(match[1]); } catch (e) {}
+      }
+    }
+
+    await Article.findByIdAndDelete(articleId);
+    res.json({ success: true, message: 'Article removed successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+}

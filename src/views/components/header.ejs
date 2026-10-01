@@ -1,307 +1,70 @@
-<style>
-    :root {
-      --orange: #0158A0;
-      --orange-dark: #066422;
-      --text-dark: #1f1f1f;
-      --ui-light: #e2e2e2;
-      --ui-soft: #f1f1f1;
-      --white: #ffffff;
-      --radius: 6px;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
-        sans-serif;
-    }
-
-    body {
-      background: var(--white);
-      color: var(--text-dark);
-    }
-
-    header {
-      width: 100%;
-      background: var(--white);
-      border-bottom: 1px solid var(--ui-light);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-    }
-
-    .header-inner {
-      max-width: 1400px;
-      margin: 0 auto;
-      height: 72px;
-      padding: 0 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .brand {
-      height: 100%;
-      display: flex;
-      align-items: center;
-    }
-
-    .brand img {
-      height: 100%;
-      max-height: 100%;
-      width: auto;
-      
-      object-fit: contain;
-      display: block;
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .action-btn {
-      padding: 9px 16px;
-      font-size: 13px;
-      font-weight: 500;
-      border-radius: var(--radius);
-      cursor: pointer;
-      border: 1px solid transparent;
-    }
-
-    .action-btn.contact {
-      background: var(--ui-soft);
-      color: var(--text-dark);
-      border-color: var(--ui-light);
-    }
-
-    .action-btn.admin {
-      background: var(--orange);
-      color: var(--white);
-    }
-
-    .action-btn.admin:hover {
-      background: var(--orange-dark);
-    }
-
-    .hamburger {
-      display: none;
-      font-size: 20px;
-      cursor: pointer;
-      line-height: 1;
-    }
-
-    .overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      background: rgba(0, 0, 0, 0.25);
-      display: none;
-    }
-
-    .overlay.active {
-      display: block;
-    }
-
-    .drawer {
-      position: fixed;
-      z-index: 3;
-      top: 0;
-      right: -280px;
-      width: 280px;
-      height: 100%;
-      background: var(--white);
-      border-left: 1px solid var(--ui-light);
-      transition: right 0.3s ease;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .drawer.open {
-      right: 0;
-    }
-
-    .drawer-header {
-      height: 72px;
-      padding: 0 20px;
-      border-bottom: 1px solid var(--ui-light);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .drawer-header img {
-      height: 100%;
-      max-height: 100%;
-      width: auto;
-      object-fit: contain;
-      display: block;
-    }
-
-    .close-btn {
-      font-size: 18px;
-      cursor: pointer;
-      background: none;
-      border: none;
-    }
-
-    .drawer-content {
-      padding: 28px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .drawer-content a {
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-dark);
-      padding: 10px 12px;
-      border-radius: var(--radius);
-      background: var(--ui-soft);
-    }
-
-    main {
-      width: 100%;
-    }
-
-    .site-container {
-      max-width: 1320px;
-      margin: 0 auto;
-      min-height: 100vh;
-      padding: 24px;
-    }
-
-    .product-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 20px;
-    }
-
-    @media (max-width: 1200px) {
-      .product-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-
-    @media (max-width: 900px) {
-      .product-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .header-actions {
-        display: none;
-      }
-
-      .hamburger {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: var(--ui-soft);
-      }
-
-      .site-container {
-        max-width: 99%;
-      }
-    }
-  </style>
-    <header>
-    <div class="header-inner">
-      <div class="brand" onclick="window.location.href='/'" style="cursor: pointer;">
-        <img
-          src="/assets/netZeroStickerIcon.png"
-          alt="Brand Logo"
-
-          style="padding: 6px;padding-right: 0;"
-        /> <img
-        src="/assets/netZeroText.png"
-        alt="Brand Logo"
-        style="padding: 15px; padding-left: 0px;"
-      />                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
-      </div>
-      <div class="header-actions">
-        
-      <button class="action-btn contact" onclick="location.href='/userPanel'">
+<header class="w-full bg-white border-b border-gray-200 shadow-sm relative z-50">
+  <div class="max-w-[1400px] mx-auto h-[72px] px-6 flex items-center justify-between w-full md:w-[95%]">
+    <div class="flex items-center h-full cursor-pointer" onclick="window.location.href='/'">
+      <img src="/assets/netZeroStickerIcon.png" alt="Brand Logo" class="p-1.5 pr-0 h-full max-h-full w-auto object-contain" />
+      <img src="/assets/netZeroText.png" alt="Brand Logo" class="py-[15px] pl-0 h-full max-h-full w-auto object-contain" />
+    </div>
+    <div class="hidden md:flex items-center gap-2.5">
+      <button class="px-4 py-2 text-[13px] font-medium rounded-md cursor-pointer border border-gray-200 bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors" onclick="location.href='/userPanel'">
           User Panel
       </button>
-        <button class="action-btn contact" onclick="location.href='/register'">
-            Register Yourself
-        </button>
-        <a href="javascript:void(0);"
-            onclick="contactUsEmail()"
-            class="action-btn contact"
-            style="text-decoration: none;">
-            Contact Us
-        </a>
-        
-        
-      </div>
-
-      <div class="hamburger" onclick="openDrawer()">☰</div>
+      <button class="px-4 py-2 text-[13px] font-medium rounded-md cursor-pointer border border-gray-200 bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors" onclick="location.href='/register'">
+          Register Yourself
+      </button>
+      <a href="javascript:void(0);" onclick="contactUsEmail()" class="px-4 py-2 text-[13px] font-medium rounded-md border border-gray-200 bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors no-underline inline-block">
+          Contact Us
+      </a>
     </div>
-     </header>
-
-     <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
-
-    <div class="drawer" id="drawer">
-      <div class="drawer-header">
-        <button class="close-btn" onclick="closeDrawer()">×</button>
-        <img
-        src="/assets/netZeroStickerIcon.png"
-        alt="Brand Logo"
-        style="padding: 6px;padding-right: 0;"
-      /> <img
-      src="/assets/netZeroText.png"
-      alt="Brand Logo"
-      style="padding: 20px; padding-left: 0px;"
-    />
-      </div>
-
-      <div class="drawer-content">
-        <a href="javascript:void(0);"
-         onclick="contactUsEmail()"
-        class="action-btn contact"
-        style="text-decoration: none;">
-        Contact Us
-        </a>
-        <a href="/userPanel">User Panel</a>
-        <a href="/register">Register Yourself</a>
-
-      </div>
+    <div class="md:hidden flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 cursor-pointer text-xl" onclick="openDrawer()">
+      ☰
     </div>
-  <script>
+  </div>
+</header>
 
+<div class="fixed inset-0 z-40 bg-black/25 hidden" id="overlay" onclick="closeDrawer()"></div>
 
-        function contactUsEmail() {
-            const email = "netzeromart@gmail.com";
-            const subject = "General Inquiry";
-            const body = "Hello,\n\nI would like to get in touch.";
+<div class="fixed z-50 top-0 -right-[280px] w-[280px] h-full bg-white border-l border-gray-200 transition-all duration-300 flex flex-col" id="drawer">
+  <div class="h-[72px] px-5 border-b border-gray-200 flex justify-between items-center">
+    <button class="text-xl cursor-pointer bg-transparent border-none text-gray-600 hover:text-black" onclick="closeDrawer()">×</button>
+    <div class="flex items-center h-full">
+      <img src="/assets/netZeroStickerIcon.png" alt="Brand Logo" class="p-1.5 pr-0 h-full max-h-full w-auto object-contain" />
+      <img src="/assets/netZeroText.png" alt="Brand Logo" class="py-5 pl-0 h-full max-h-full w-auto object-contain" />
+    </div>
+  </div>
+  <div class="p-7 px-5 flex flex-col gap-3.5">
+    <a href="javascript:void(0);" onclick="contactUsEmail()" class="text-sm font-medium text-gray-800 p-2.5 rounded-md bg-gray-100 no-underline hover:bg-gray-200">Contact Us</a>
+    <a href="/userPanel" class="text-sm font-medium text-gray-800 p-2.5 rounded-md bg-gray-100 no-underline hover:bg-gray-200">User Panel</a>
+    <a href="/register" class="text-sm font-medium text-gray-800 p-2.5 rounded-md bg-gray-100 no-underline hover:bg-gray-200">Register Yourself</a>
+  </div>
+</div>
+<script>
+  function contactUsEmail() {
+      const email = "netzeromart@gmail.com";
+      const subject = "General Inquiry";
+      const body = "Hello,\n\nI would like to get in touch.";
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile) {
+          window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      } else {
+          window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, "_blank");
+      }
+  }
 
-            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  function openDrawer() {
+    const drawer = document.getElementById("drawer");
+    drawer.classList.remove("-right-[280px]");
+    drawer.classList.add("right-0");
+    const overlay = document.getElementById("overlay");
+    overlay.classList.remove("hidden");
+    overlay.classList.add("block");
+  }
 
-            if (isMobile) {
-            const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            window.location.href = mailtoUrl;
-            } else {
-            const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            window.open(gmailUrl, "_blank");
-            }
-        }
-
-
-    function openDrawer() {
-      document.getElementById("drawer").classList.add("open");
-      document.getElementById("overlay").classList.add("active");
-    }
-
-    function closeDrawer() {
-      document.getElementById("drawer").classList.remove("open");
-      document.getElementById("overlay").classList.remove("active");
-    }
-  </script>
+  function closeDrawer() {
+    const drawer = document.getElementById("drawer");
+    drawer.classList.remove("right-0");
+    drawer.classList.add("-right-[280px]");
+    const overlay = document.getElementById("overlay");
+    overlay.classList.remove("block");
+    overlay.classList.add("hidden");
+  }
+</script>

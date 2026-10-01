@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "nodemon src/index",
-    "test": "node --test"
+    "test": "node --test",
+    "build": "cd frontend && npm install && npm run build"
   },
   "author": "",
   "license": "ISC",

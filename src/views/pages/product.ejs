@@ -1,686 +1,215 @@
 <!DOCTYPE html>
 <html lang="en">
-  
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NetZeroMart</title>
+    <title>NetZeroMart - <%= product.productName %></title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="icon" href="/assets/netZeroStickerIcon.png" type="image/png">
 
-    <style>
-  :root {
-    --orange: #0158a0;
-    --orange-dark: #066422;
-    --text-dark: #1f1f1f;
-    --ui-light: #e2e2e2;
-    --ui-soft: #f1f1f1;
-    --white: #ffffff;
-    --radius: 6px;
-  }
-
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
-      sans-serif;
-  }
-
-  body {
-    background: var(--white);
-    color: var(--text-dark);
-  }
-
-  header {
-    width: 100%;
-    background: var(--white);
-    border-bottom: 1px solid var(--ui-light);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-  }
-
-  .header-inner {
-    max-width: 1400px;
-    width: 95%;
-    margin: 0 auto;
-    height: 72px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .brand {
-    display: flex;
-    align-items: center;
-    height: 100%;
-  }
-
-  .brand img {
-    height: 100%;
-    width: auto;
-    object-fit: contain;
-    display: block;
-  }
-
-  .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .action-btn {
-    padding: 9px 16px;
-    font-size: 13px;
-    font-weight: 500;
-    border-radius: var(--radius);
-    cursor: pointer;
-    border: 1px solid transparent;
-  }
-
-  .action-btn.contact {
-    background: var(--ui-soft);
-    color: var(--text-dark);
-    border-color: var(--ui-light);
-  }
-
-  .action-btn.admin {
-    background: var(--orange);
-    color: var(--white);
-  }
-
-  .action-btn.admin:hover {
-    background: var(--orange-dark);
-  }
-
-  .hamburger {
-    display: none;
-    font-size: 20px;
-    cursor: pointer;
-    line-height: 1;
-  }
-
-  .overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    background: rgba(0, 0, 0, 0.25);
-    display: none;
-  }
-
-  .overlay.active {
-    display: block;
-  }
-
-  .drawer {
-    position: fixed;
-    z-index: 3;
-    top: 0;
-    right: -280px;
-    width: 280px;
-    height: 100%;
-    background: var(--white);
-    border-left: 1px solid var(--ui-light);
-    transition: right 0.3s ease;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .drawer.open {
-    right: 0;
-  }
-
-  .drawer-header {
-    height: 72px;
-    padding: 0 20px;
-    border-bottom: 1px solid var(--ui-light);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .drawer-header img {
-    height: 100%;
-    max-height: 100%;
-    width: auto;
-    object-fit: contain;
-    display: block;
-  }
-
-  .close-btn {
-    font-size: 18px;
-    cursor: pointer;
-    background: none;
-    border: none;
-  }
-
-  .drawer-content {
-    padding: 28px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .drawer-content a {
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-dark);
-    padding: 10px 12px;
-    border-radius: var(--radius);
-    background: var(--ui-soft);
-  }
-
-  main {
-    width: 100%;
-  }
-
-  .site-container {
-    max-width: 800px;
-    margin: 0 auto;
-    min-height: 100vh;
-  }
-
-  @media (max-width: 768px) {
-    .header-actions {
-      display: none;
-    }
-
-    .hamburger {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: var(--ui-soft);
-    }
-
-    .site-container {
-      max-width: 99%;
-    }
-
-    .carousel-slide img,
-    .carousel-slide video {
-      height: 260px;
-    }
-
-    .product-header {
-      align-items: flex-start;
-    }
-  }
-
-  
-
-  .section {
-    margin-top: 56px;
-  }
-
-  .section-box {
-    background: #fafafa;
-    border-radius: 12px;
-    padding: 22px;
-  }
-
-  .section-title {
-    font-size: 22px;
-    font-weight: 600;
-    margin-bottom: 16px;
-    position: relative;
-    padding-left: 16px;
-  }
-
-  .section-title::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 4px;
-    height: 100%; /* full height for multi-line titles */
-    background: var(--orange);
-    border-radius: 2px;
-  }
-
-  .media-carousel {
-    position: relative;
-    overflow: hidden;
-    border-radius: 10px;
-    background: #f0f0f0;
-    width: 100%;
-    height: 420px;
-  }
-
-  .carousel-hint {
-    position: absolute;
-    bottom: 12px;
-    right: 12px;
-    background: rgba(0, 0, 0, 0.6);
-    color: #fff;
-    font-size: 12px;
-    padding: 6px 10px;
-    border-radius: 6px;
-    pointer-events: none;
-    z-index: 2;
-  }
-
-  .carousel-track {
-    display: flex;
-    transition: transform 0.35s ease;
-    height: 100%;
-  }
-
-  .carousel-slide {
-    min-width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-  }
-
-  .carousel-slide img,
-  .carousel-slide video {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    background: #000;
-    cursor: zoom-in;
-  }
-
-  .carousel-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(0, 0, 0, 0.45);
-    color: #fff;
-    cursor: pointer;
-    z-index: 2;
-  }
-
-  .carousel-btn.prev {
-    left: 12px;
-  }
-
-  .carousel-btn.next {
-    right: 12px;
-  }
-
-  .product-header {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  .product-title {
-    font-size: 26px;
-    font-weight: 600;
-    margin-bottom: 0;
-    line-height: 1.2;
-  }
-
-  .product-id-wrapper {
-    position: relative;
-    display: inline-flex; 
-    align-items: center;  
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-
-  .product-id-wrapper .tooltip {
-    position: absolute;
-    top: -30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #1f1f1f;
-    color: #fff;
-    font-size: 11px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    white-space: nowrap;
-    opacity: 0;
-    transition: opacity 0.15s ease;
-    pointer-events: none;
-  }
-
-  .product-id-wrapper:hover .tooltip {
-    opacity: 1;
-  }
-
-  .tooltip.copied {
-    background: #2e7d32;
-  }
-
-  .product-price-range {
-    font-size: 16px;
-    font-weight: 600;
-    margin: 12px 0; /* vertical spacing for price */
-    color: #1f2937;
-  }
-
-  .product-description {
-    margin-top: 18px;
-    font-size: 15px;
-    line-height: 1.75;
-    color: #333;
-  }
-
-  .youtube-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
-  }
-
-  .youtube-grid iframe {
-    width: 100%;
-    height: 260px;
-    border-radius: 10px;
-  }
-
-  .article-list {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 14px;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .article-item {
-    background: #ffffff;
-    border-radius: 10px;
-    padding: 14px 16px;
-    border: 1px solid #eee;
-  }
-
-  .article-item a {
-    font-size: 15px;
-    font-style: italic;
-    color: #444;
-    text-decoration: none;
-    word-break: break-all;
-  }
-
-  .article-item a:hover {
-    color: var(--orange);
-    text-decoration: underline;
-  }
-
-  .fullscreen-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.92);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-  }
-
-  .fullscreen-overlay.active {
-    display: flex;
-  }
-
-  .fullscreen-overlay img {
-    max-width: 92%;
-    max-height: 92%;
-  }
-
-  .fullscreen-close {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    font-size: 28px;
-    color: #fff;
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-
-  .ask-query-btn-gallery,
-  .ask-query-btn-articles {
-    background: #529f23;
-    color: #fff;
-    font-weight: 600;
-    border: none;
-    max-height: 31px;
-    border-radius: var(--radius);
-    padding: 8px 16px;
-    cursor: pointer;
-  }
-
-  .ask-query-btn-gallery:hover,
-  .ask-query-btn-articles:hover {
-    background: #1ebe57;
-  }
-
-  .ask-query-btn-articles {
-    display: block;
-    margin: 24px auto 0;
-  }
-</style>
-
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                blue: '#0158a0',
+                green: '#529f23',
+                darkBlue: '#004a87',
+                darkGreen: '#044202',
+                greenHover: '#1ebe57'
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
     <% function toYouTubeEmbed(url) { try { const u = new URL(url); if
     (u.hostname === 'youtu.be') return 'https://www.youtube.com/embed/' +
     u.pathname.slice(1); if (u.searchParams.get('v')) return
     'https://www.youtube.com/embed/' + u.searchParams.get('v'); if
     (u.pathname.startsWith('/shorts/')) return 'https://www.youtube.com/embed/'
     + u.pathname.split('/')[2]; return null; } catch { return null; } } %>
-  </head>
-
-  <body>
-
+</head>
+<body class="bg-white text-gray-900 antialiased font-sans flex flex-col min-h-screen">
     <%- include('../components/header.ejs') %>
-
-    <main>
-      <div class="site-container" style="padding: 10px;">
+    <main class="flex-grow w-full">
+      <div class="max-w-[800px] w-full md:w-[99%] mx-auto min-h-screen p-2.5">
         <div class="product-page">
           <!-- Gallery Section -->
-          <div class="section" style="margin-top: 10px">
-            <div class="section-box">
-              <div
-                class="gallery-header"
-                style="
-                  display: flex;
-                  flex-direction: row;
-                  justify-content: space-between;
-                "
-              >
-                  <h2 class="section-title">
+          <div class="mt-4">
+            <div class="bg-gray-50 rounded-xl p-5 shadow-sm border border-gray-100">
+              <div class="flex flex-row justify-between items-center mb-4">
+                  <h2 class="text-[22px] font-semibold relative pl-4 m-0 before:content-[''] before:absolute before:left-0 before:top-0 before:w-1 before:h-full before:bg-brand-blue before:rounded-full">
                     <%= product.companyName && product.companyName.toLowerCase() !== 'admin' 
                           ? product.companyName 
                           : 'Gallery' %>
                   </h2>    
-                              <button class="ask-query-btn-gallery" onclick="askQuery()">
-                  Ask Query
-                </button>
+                  <button class="bg-brand-green text-white font-semibold border-none rounded-md px-4 py-2 cursor-pointer hover:bg-brand-greenHover transition-colors text-sm max-h-[36px] flex items-center" onclick="askQuery()">
+                    Ask Query
+                  </button>
               </div>
-              <div class="media-carousel">
-                <div class="carousel-hint">Click to expand image</div>
-                <div class="carousel-track">
+              <div class="relative overflow-hidden rounded-lg bg-gray-200 w-full h-[300px] md:h-[420px] group">
+                <div class="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2.5 py-1.5 rounded-md pointer-events-none z-10">Click to expand image</div>
+                <div class="flex transition-transform duration-300 ease-in-out h-full" id="carousel-track">
                   <% (product.images || []).forEach(img=> { %>
-                  <div class="carousel-slide">
-                    <img src="<%= img %>" onclick="openFullscreen(this.src)" />
+                  <div class="min-w-full flex justify-center items-center h-full carousel-slide shrink-0">
+                    <img src="<%= img %>" onclick="openFullscreen(this.src)" class="w-full h-full object-contain bg-black cursor-zoom-in" />
                   </div>
                   <% }) %> <% (product.videos || []).forEach(video=> { %>
-                  <div class="carousel-slide">
-                    <video controls>
+                  <div class="min-w-full flex justify-center items-center h-full carousel-slide shrink-0">
+                    <video controls class="w-full h-full object-contain bg-black">
                       <source src="<%= video %>" />
                     </video>
                   </div>
                   <% }) %>
                 </div>
-                <% const mediaCount=(product.images?.length || 0) +
-                (product.videos?.length || 0); %> <% if (mediaCount> 1) { %>
-                <button class="carousel-btn prev" onclick="slideCarousel(-1)">
-                  ‹
-                </button>
-                <button class="carousel-btn next" onclick="slideCarousel(1)">
-                  ›
-                </button>
+                <% const mediaCount=(product.images?.length || 0) + (product.videos?.length || 0); %> 
+                <% if (mediaCount > 1) { %>
+                  <button class="absolute top-1/2 -translate-y-1/2 left-3 w-11 h-11 rounded-full border-none bg-black/45 text-white text-xl cursor-pointer z-10 hover:bg-black/70 transition-colors flex items-center justify-center" onclick="slideCarousel(-1)">
+                    ‹
+                  </button>
+                  <button class="absolute top-1/2 -translate-y-1/2 right-3 w-11 h-11 rounded-full border-none bg-black/45 text-white text-xl cursor-pointer z-10 hover:bg-black/70 transition-colors flex items-center justify-center" onclick="slideCarousel(1)">
+                    ›
+                  </button>
                 <% } %>
               </div>
             </div>
           </div>
 
           <!-- Product Info Section -->
-          <div class="section">
-  <div class="section-box">
+          <div class="mt-14">
+            <div class="bg-gray-50 rounded-xl p-5 shadow-sm border border-gray-100">
+              <div class="flex flex-col items-start justify-center gap-2 h-full">
+                <!-- Product ID & Title -->
+                <div class="relative inline-flex items-center cursor-pointer shrink-0 group">
+                  <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none" id="idTooltip">Copy ID</div>
+                  <h1 class="text-[26px] font-semibold leading-tight m-0 text-gray-900 hover:text-brand-blue relative pl-4 before:content-[''] before:absolute before:left-0 before:top-0 before:w-1 before:h-full before:bg-brand-blue before:rounded-full" onclick="copyProductId('<%= product._id %>')">
+                    <%= product.productName %>
+                  </h1>
+                </div>
 
-    <div class="product-header" 
-     style="display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 8px; height: 100%;">
-  
-  <!-- Product ID & Title -->
-  <div class="product-id-wrapper"  
-       style="position: relative;">
-    <div class="tooltip" id="idTooltip">Copy ID</div>
-    <h1 class="section-title product-title" onclick="copyProductId('<%= product._id %>')" style="margin: 0;">
-      <%= product.productName %>
-    </h1>
-  </div>
+                <!-- Price Range -->
+                <div class="text-base font-semibold my-3 text-gray-800 text-left">
+                  ₹ <%= product.priceMin %> - ₹ <%= product.priceMax %>
+                  <% if (product.priceNote) { %>
+                    <span class="font-normal text-gray-500">(<%= product.priceNote %>)</span>
+                  <% } %>
+                </div>
 
-  <!-- Price Range -->
-  <div class="product-price-range" style="font-weight: 600; text-align: left;">
-    ₹ <%= product.priceMin %> - ₹ <%= product.priceMax %>
-    <% if (product.priceNote) { %>
-      (<%= product.priceNote %>)
-    <% } %>
-  </div>
-
-  <!-- Product Description -->
-  <div class="product-description" style="display: flex; flex-direction: column; gap: 8px; text-align: left;">
-    <%- product.detailedDescription.replace(/\r?\n/g, '<br /><br />') %> 
-  </div>
-
-</div>
-</div>
+                <!-- Product Description -->
+                <div class="mt-4 text-[15px] leading-[1.75] text-gray-700 text-left flex flex-col gap-2 w-full max-w-none">
+                  <%- product.detailedDescription.replace(/\r?\n/g, '<br /><br />') %> 
+                </div>
+              </div>
+            </div>
+          </div>
 
           <!-- Videos Section -->
-
           <% if (product.youtubeLinks?.length) { %>
-          <div class="section">
-            <div class="section-box">
-              <h2 class="section-title">Videos</h2>
-              <div class="youtube-grid">
-                <% product.youtubeLinks .map(toYouTubeEmbed) .filter(Boolean)
-                .forEach(src => { %>
-                <iframe src="<%= src %>" allowfullscreen></iframe>
+          <div class="mt-14">
+            <div class="bg-gray-50 rounded-xl p-5 shadow-sm border border-gray-100">
+              <h2 class="text-[22px] font-semibold mb-4 relative pl-4 m-0 before:content-[''] before:absolute before:left-0 before:top-0 before:w-1 before:h-full before:bg-brand-blue before:rounded-full">Videos</h2>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <% product.youtubeLinks.map(toYouTubeEmbed).filter(Boolean).forEach(src => { %>
+                <iframe src="<%= src %>" allowfullscreen class="w-full h-[260px] rounded-lg border-none shadow-sm bg-black"></iframe>
                 <% }) %>
               </div>
             </div>
           </div>
-          <% } %> <% if (product.articleLinks?.length) { %>
-          <div class="section">
-            <div class="section-box">
-              <h2 class="section-title">Articles</h2>
-              <ul class="article-list">
+          <% } %> 
+          
+          <!-- Articles Section -->
+          <% if (product.articleLinks?.length) { %>
+          <div class="mt-14">
+            <div class="bg-gray-50 rounded-xl p-5 shadow-sm border border-gray-100">
+              <h2 class="text-[22px] font-semibold mb-4 relative pl-4 m-0 before:content-[''] before:absolute before:left-0 before:top-0 before:w-1 before:h-full before:bg-brand-blue before:rounded-full">Articles</h2>
+              <ul class="flex flex-col gap-3.5 p-0 m-0 list-none">
                 <% product.articleLinks.forEach(link=> { %>
-                <li class="article-item">
-                  <a href="<%= link %>" target="_blank"><%= link %></a>
+                <li class="bg-white rounded-lg p-3.5 px-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <a href="<%= link %>" target="_blank" class="text-[15px] italic text-gray-700 no-underline break-all hover:text-brand-blue hover:underline"><%= link %></a>
                 </li>
                 <% }) %>
               </ul>
-              <button class="ask-query-btn-articles" onclick="askQuery()">
+              <button class="block mx-auto mt-6 bg-brand-green text-white font-semibold border-none rounded-md px-4 py-2 cursor-pointer hover:bg-brand-greenHover transition-colors" onclick="askQuery()">
                 Ask Query
               </button>
             </div>
           </div>
           <% } %>
-        <div style="width:100%; margin-top:16px; padding:12px 0; text-align:center; font-family:Arial, sans-serif; font-size:14px; color:#333;">
-        <div class="footer">
-          Posted By <%= product.userName == 'admin' || "Admin" ? 'NetZeroMart' : product.userName %>
-          </div>        
-        </div>
 
-          <div
-            class="fullscreen-overlay"
-            id="fullscreenOverlay"
-            onclick="closeFullscreen()"
-          >
-            <button class="fullscreen-close">×</button>
-            <img id="fullscreenImage" />
+          <div class="w-full mt-6 py-3 text-center font-sans text-sm text-gray-700 font-medium">
+            Posted By <%= product.userName == 'admin' || "Admin" ? 'NetZeroMart' : product.userName %>       
+          </div>
+
+          <!-- Fullscreen overlay -->
+          <div class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[9999]" id="fullscreenOverlay" onclick="closeFullscreen()">
+            <button class="absolute top-5 right-5 text-3xl text-white bg-transparent border-none cursor-pointer hover:text-gray-300 transition-colors" onclick="closeFullscreen()">×</button>
+            <img id="fullscreenImage" class="max-w-[92%] max-h-[92%] object-contain" />
           </div>
 
           <script>
             let currentSlide = 0;
             function slideCarousel(dir) {
               const slides = document.querySelectorAll(".carousel-slide");
-              currentSlide =
-                (currentSlide + dir + slides.length) % slides.length;
-              document.querySelector(
-                ".carousel-track"
-              ).style.transform = `translateX(-${currentSlide * 100}%)`;
+              if (!slides.length) return;
+              currentSlide = (currentSlide + dir + slides.length) % slides.length;
+              document.getElementById("carousel-track").style.transform = `translateX(-${currentSlide * 100}%)`;
             }
 
             function copyProductId(prodId) {
               const tooltip = document.getElementById("idTooltip");
               navigator.clipboard.writeText(prodId);
               tooltip.textContent = "Copied";
-              tooltip.classList.add("copied");
+              tooltip.classList.add("bg-green-700");
               setTimeout(() => {
-                tooltip.textContent = "Copy";
-                tooltip.classList.remove("copied");
+                tooltip.textContent = "Copy ID";
+                tooltip.classList.remove("bg-green-700");
               }, 1500);
             }
 
             function openFullscreen(src) {
               document.getElementById("fullscreenImage").src = src;
-              document
-                .getElementById("fullscreenOverlay")
-                .classList.add("active");
+              const overlay = document.getElementById("fullscreenOverlay");
+              overlay.classList.remove("hidden");
+              overlay.classList.add("flex");
               document.body.style.overflow = "hidden";
             }
 
             function closeFullscreen() {
-              document
-                .getElementById("fullscreenOverlay")
-                .classList.remove("active");
+              const overlay = document.getElementById("fullscreenOverlay");
+              overlay.classList.remove("flex");
+              overlay.classList.add("hidden");
               document.body.style.overflow = "";
             }
 
             function askQuery() {
               const productName = `<%= product.productName.replace(/"/g, '\\"') %>`;
               const pageUrl = window.location.href;
-
               const subject = `Query about ${productName}`;
               const body = `Hello, I have a query about the product: ${productName}.\n\nPage link: ${pageUrl}`;
               const email = `<%= product.email %>` || "netzeromart@gmail.com";  
-              const isMobile = /Android|iPhone|iPad|iPod/i.test(
-                navigator.userAgent
-              );
+              const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
               if (isMobile) {
-                const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(
-                  subject
-                )}&body=${encodeURIComponent(body)}`;
+                const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                 window.location.href = mailtoUrl;
               } else {
-                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
-                  email
-                )}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(
-                  body
-                )}`;
+                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                 window.open(gmailUrl, "_blank");
               }
             }
-            function openDrawer() {
-              document.getElementById("drawer").classList.add("open");
-              document.getElementById("overlay").classList.add("active");
-}        function closeDrawer() {
-          document.getElementById("drawer").classList.remove("open");
-          document.getElementById("overlay").classList.remove("active");
-        }
-      </script>
-    </div>
-  </div>
-
-  </main>
+          </script>
+        </div>
+      </div>
+    </main>
     <%- include('../components/footer.ejs') %>
-
-  </body>
+</body>
+</html>

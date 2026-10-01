@@ -8,91 +8,52 @@
     <link rel="canonical" href="https://netzeromart.com/">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-   <link rel="icon" href="/assets/netZeroStickerIcon.png" type="image/png">
-
-    <style>
-      :root {
-        --orange: #0158A0;
-        --orange-dark: #066422;
-        --text-dark: #1f1f1f;
-        --ui-light: #e2e2e2;
-        --ui-soft: #f1f1f1;
-        --white: #ffffff;
-        --radius: 6px;
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="icon" href="/assets/netZeroStickerIcon.png" type="image/png">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                blue: '#0158a0',
+                green: '#529f23',
+                darkBlue: '#004a87',
+                darkGreen: '#044202'
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+            }
+          }
+        }
       }
-
-      * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif; }
-      body { background: var(--white); color: var(--text-dark); }
-      header { width: 100%; background: var(--white); border-bottom: 1px solid var(--ui-light); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06); }
-      .header-inner { max-width: 1400px; margin: 0 auto; height: 72px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
-      .brand { height: 100%; display: flex; align-items: center; }
-      .brand img { height: 100%; max-height: 100%; width: auto; object-fit: contain; display: block; }
-      .header-actions { display: flex; align-items: center; gap: 10px; }
-      .action-btn { padding: 9px 16px; font-size: 13px; font-weight: 500; border-radius: var(--radius); cursor: pointer; border: 1px solid transparent; }
-      .action-btn.contact { background: var(--ui-soft); color: var(--text-dark); border-color: var(--ui-light); }
-      .action-btn.admin { background: var(--orange); color: var(--white); }
-      .action-btn.admin:hover { background: var(--orange-dark); }
-      .hamburger { display: none; font-size: 20px; cursor: pointer; line-height: 1; }
-      .overlay { position: fixed; inset: 0; z-index: 1; background: rgba(0, 0, 0, 0.25); display: none; }
-      .overlay.active { display: block; }
-      .drawer { position: fixed; z-index: 3; top: 0; right: -280px; width: 280px; height: 100%; background: var(--white); border-left: 1px solid var(--ui-light); transition: right 0.3s ease; display: flex; flex-direction: column; }
-      .drawer.open { right: 0; }
-      .drawer-header { height: 72px; padding: 0 20px; border-bottom: 1px solid var(--ui-light); display: flex; justify-content: space-between; align-items: center; }
-      .drawer-header img { height: 100%; max-height: 100%; width: auto; object-fit: contain; display: block; }
-      .close-btn { font-size: 18px; cursor: pointer; background: none; border: none; }
-      .drawer-content { padding: 28px 20px; display: flex; flex-direction: column; gap: 14px; }
-      .drawer-content a { text-decoration: none; font-size: 14px; font-weight: 500; color: var(--text-dark); padding: 10px 12px; border-radius: var(--radius); background: var(--ui-soft); }
-      main { width: 100%; }
-      .site-container { max-width: 1320px; margin: 0 auto; min-height: 100vh; padding: 20px; }
-      .product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-      @media (max-width: 1200px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
-      @media (max-width: 900px) { .product-grid { grid-template-columns: repeat(2, 1fr); } }
-      @media (max-width: 768px) { .header-actions { display: none; } .hamburger { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--ui-soft); } .site-container { max-width: 99%; } }
-
-      .article-slider{ margin-bottom:30px; width:100%; }
-      /* Hide horizontal scrollbar */
+    </script>
+    <style>
       .slider-viewport{ overflow-x:auto; scroll-behavior:smooth; -webkit-overflow-scrolling:touch; scrollbar-width:none; -ms-overflow-style:none; }
       .slider-viewport::-webkit-scrollbar{ display:none; }
-
-      .slider-track{ display:flex; gap:20px; padding-bottom:6px; }
-      .slide{ flex:0 0 320px; max-width:320px; }
-      .article-card{ width:100%; height:130px; display:flex; gap:12px; border:1px solid #e2e2e2; border-radius:6px; overflow:hidden; background:white; }
-      .article-card .article-image{ width:120px; height:100%; display:flex; align-items:center; justify-content:center; background:#f5f5f5; overflow:hidden; }
-      .article-card .article-image img{ max-width:100%; max-height:100%; object-fit:contain; }
-      .article-card .article-content{ flex:1; display:flex; flex-direction:column; justify-content:center; padding:8px 10px 8px 0; overflow:hidden; }
-      .article-card .article-title{ font-size:clamp(14px,1.2vw,17px); line-height:1.3; margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
-      .article-card .article-excerpt{ font-size:clamp(12px,1vw,14px); margin-top:4px; color:#555; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
-
-      /* Article grid initially hidden for all screen sizes */
-      #article-grid { display:none; justify-content:center; }
-      @media (min-width:901px){ #article-grid.show { display:grid; grid-template-columns: repeat(2, 1fr); gap:20px; } }
-      @media (max-width:900px){ #article-grid.show { display:grid; grid-template-columns: 1fr; gap:16px; } }
     </style>
   </head>
-
-  <body>
-
+  <body class="bg-white text-gray-900 antialiased font-sans flex flex-col min-h-screen">
     <%- include('../components/header.ejs') %>
 
-    <div id="navBarContainer" style="width:100%; max-width:400px; aspect-ratio:400/65; display:flex; align-items:center; justify-content:center; margin:0 auto;">
-      <div id="navBar" class="nav-bar" style="height:70%; width:85%; border-radius:999px; background-color:#f2f2f2; display:flex; align-items:center; justify-content:space-between; padding:1.5%;">
-        <div id="tab1" class="n-tab" onclick="handleTabClick(event)" style="height:100%; width:50%; border-radius:999px; font-family:Roboto, sans-serif; color:#ffffff; font-size:clamp(12px,3vw,15px); display:flex; align-items:center; justify-content:center; font-weight:700; cursor:pointer; overflow:hidden; margin:0 2px; background-color: rgb(1,88,160);">Products</div>
-        <div id="tab2" class="n-tab" onclick="handleTabClick(event)" style="height:100%; width:50%; border-radius:999px; font-family:Roboto, sans-serif; color:#000000; font-size:clamp(12px,3vw,15px); display:flex; align-items:center; justify-content:center; font-weight:700; cursor:pointer; overflow:hidden; margin:0 2px;">Articles</div>
+    <div class="w-full max-w-[400px] aspect-[400/65] flex items-center justify-center mx-auto my-6 px-4">
+      <div class="h-[70%] w-[85%] rounded-full bg-gray-100 flex items-center justify-between p-1 shadow-inner relative">
+        <div id="tab1" class="n-tab h-full w-1/2 rounded-full text-white text-[clamp(12px,3vw,15px)] flex items-center justify-center font-bold cursor-pointer mx-0.5 bg-brand-blue transition-colors duration-200 z-10" onclick="handleTabClick(event)">Products</div>
+        <div id="tab2" class="n-tab h-full w-1/2 rounded-full text-gray-800 text-[clamp(12px,3vw,15px)] flex items-center justify-center font-bold cursor-pointer mx-0.5 transition-colors duration-200 z-10 hover:bg-gray-200" onclick="handleTabClick(event)">Articles</div>
       </div>
     </div>
 
-    <main>
-      <div class="site-container">
-
-        <div class="article-slider">
+    <main class="w-full flex-grow">
+      <div class="max-w-[1320px] mx-auto px-5 pb-12 w-full md:w-[99%] lg:w-full">
+        
+        <div class="mb-8 w-full article-slider relative">
           <div class="slider-viewport" id="sliderViewport">
-            <div class="slider-track">
+            <div class="flex gap-5 pb-1.5 w-max">
               <% for (const article of articles) { %>
-                <div class="slide">
+                <div class="slide flex-none w-[320px] max-w-[320px] snap-center">
                   <%- include('../components/articleCard.ejs', { article }) %>
                 </div>
               <% } %>
@@ -100,16 +61,15 @@
           </div>
         </div>
 
-        <div class="product-grid" id="product-grid">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 product-grid" id="product-grid">
           <% for (const product of products) { %>
             <%- include('../components/prodCard.ejs', { product }) %>
           <% } %>
         </div>
 
-        <!-- Article section hidden by default -->
-        <div class="article-grid product-grid" id="article-grid">
+        <div class="hidden grid-cols-1 md:grid-cols-2 gap-5 article-grid" id="article-grid">
           <% for (const article of articles) { %>
-            <div style="display:flex; justify-content:center; width:100%;">
+            <div class="flex justify-center w-full">
               <%- include('../components/articleCard.ejs', { article }) %>
             </div>
           <% } %>
@@ -121,11 +81,16 @@
         window.addEventListener("load", function(){
           const viewport = document.getElementById("sliderViewport");
           let index = 0;
-          function slideWidth(){ return document.querySelector(".slide").offsetWidth + 20; }
+          function slideWidth(){ 
+            const slide = document.querySelector(".slide");
+            return slide ? slide.offsetWidth + 20 : 0; 
+          }
           function autoSlide(){
+            const slideNodes = document.querySelectorAll(".slide");
+            if (!slideNodes.length) return;
             const width = slideWidth();
             index++;
-            if(index >= document.querySelectorAll(".slide").length){ index = 0; }
+            if(index >= slideNodes.length){ index = 0; }
             viewport.scrollTo({ left:index * width, behavior:"smooth" });
           }
           setInterval(autoSlide,4000);
@@ -133,26 +98,34 @@
 
         function handleTabClick(event) {
           let allTabs = Array.from(document.getElementsByClassName('n-tab'));
-          allTabs.forEach(tab => { tab.style.backgroundColor = '#f2f2f2'; tab.style.color = '#000000'; });
+          allTabs.forEach(tab => { 
+            tab.classList.remove('bg-brand-blue', 'text-white');
+            tab.classList.add('text-gray-800');
+            tab.style.backgroundColor = 'transparent';
+          });
+          
           let tabClicked = event.target;
-          tabClicked.style.backgroundColor = '#0158a0'; tabClicked.style.color = '#ffffff';
+          tabClicked.classList.remove('text-gray-800');
+          tabClicked.classList.add('bg-brand-blue', 'text-white');
+          
           let tabClickedId = tabClicked.getAttribute('id');
+          const articleGrid = document.getElementById('article-grid');
+          const productGrid = document.getElementById('product-grid');
+          const articleSlider = document.querySelector('.article-slider');
+
           if (tabClickedId === 'tab1') {
-            document.getElementById('article-grid').classList.remove('show');
-            document.getElementById('product-grid').style.display = 'grid';
-            document.querySelector('.article-slider').style.display = 'block';
+            articleGrid.className = 'hidden grid-cols-1 md:grid-cols-2 gap-5 article-grid';
+            productGrid.className = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 product-grid';
+            articleSlider.style.display = 'block';
           } else if (tabClickedId === 'tab2') {
-            document.getElementById('article-grid').classList.add('show');
-            document.getElementById('product-grid').style.display = 'none';
-            document.querySelector('.article-slider').style.display = 'none';
+            articleGrid.className = 'grid grid-cols-1 md:grid-cols-2 gap-5 article-grid show';
+            productGrid.className = 'hidden product-grid';
+            articleSlider.style.display = 'none';
           }
           return tabClickedId;
         }
       </script>
-
     </main>
-    
     <%- include('../components/footer.ejs') %>
-
   </body>
 </html>

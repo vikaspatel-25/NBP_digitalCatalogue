@@ -1,130 +1,30 @@
-<a href="/home/product?id=<%= product._id %>" class="product-card">
-  <div class="card-image-container">
+<a href="/home/product?id=<%= product._id %>" class="flex flex-col no-underline text-inherit rounded-lg overflow-hidden bg-white shadow-[0_3px_10px_rgba(0,0,0,0.08)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.12)] hover:-translate-y-1 transition-all duration-200 cursor-pointer w-full group">
+  <div class="w-full aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden relative">
     <% if (product.images && product.images.length) { %>
-      <img
-        src="<%= product.images[0] %>"
-        alt="<%= product.productName %>"
-        loading="lazy"
-      />
+      <img src="<%= product.images[0] %>" alt="<%= product.productName %>" loading="lazy" class="w-full h-full object-contain block" />
     <% } else { %>
-      <img
-        src="/images/placeholder.png"
-        alt="No product image"
-        loading="lazy"
-
-      />
+      <img src="/images/placeholder.png" alt="No product image" loading="lazy" class="w-full h-full object-contain block" />
     <% } %>
   </div>
 
-  <div class="card-content">
-    <h3 class="product-name"><%= product.productName %></h3>
+  <div class="p-3 flex flex-col gap-1.5 flex-grow">
+    <h3 class="text-sm font-bold m-0 leading-tight whitespace-nowrap overflow-hidden text-ellipsis text-gray-900 group-hover:text-[#0158a0] transition-colors">
+      <%= product.productName %>
+    </h3>
 
-    <p class="product-caption" style="margin-top:10px;">
+    <p class="text-xs text-gray-600 leading-snug mt-2.5 line-clamp-4 flex-grow">
       <%= product.shortDescription || product.detailedDescription %>
     </p>
-<div class="product-price-range" style="font-weight: 400; text-align: left;">
-    ₹ <%= product.priceMin %> - ₹ <%= product.priceMax %>
-    <% if (product.priceNote) { %>
-      (<%= product.priceNote %>)
-    <% } %>
-  </div>
-    <button 
-      class="view-details-btn"
-      onclick="window.location.href='/home/product?id=<%= product._id %>'"
-      type="button"
-    >
+
+    <div class="text-xs font-semibold my-3 text-[#044202] text-left">
+      ₹ <%= product.priceMin %> - ₹ <%= product.priceMax %>
+      <% if (product.priceNote) { %>
+        <span class="font-normal text-gray-500">(<%= product.priceNote %>)</span>
+      <% } %>
+    </div>
+    
+    <button type="button" class="mt-1.5 self-start px-2.5 py-1.5 text-[11px] font-medium rounded-md border-none bg-[#529f23] text-white cursor-pointer hover:bg-[#0158a0] transition-colors" onclick="event.preventDefault(); window.location.href='/home/product?id=<%= product._id %>'">
       View Details
     </button>
   </div>
 </a>
-
-<style>
-  .product-card {
-    display: flex;
-    flex-direction: column;
-    text-decoration: none;
-    color: inherit;
-    border-radius: 10px;
-    overflow: hidden;
-    background: #ffffff;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-    transition: transform 0.2s, box-shadow 0.2s;
-    cursor: pointer;
-    width: 100%;
-  }
-.product-price-range {
-    font-size: 12px;
-    font-weight: 600;
-    margin: 12px 0; /* vertical spacing for price */
-    color: #044202;
-  }
-  .product-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-  }
-
-  .card-image-container {
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    background: #f5f5f5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
-
-  .card-image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    display: block;
-  }
-
-  .card-content {
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex-grow: 1;
-  }
-
-  .product-name {
-    font-size: 14px;
-    font-weight: 700;
-    margin: 0;
-    line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .product-caption {
-    font-size: 12px;
-    color: #555555;
-    line-height: 1.4;
-    margin: 10px 0 0 0;
-    display: -webkit-box;
-    -webkit-line-clamp: 4;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    flex-grow: 1;
-  }
-
-  .view-details-btn {
-    margin-top: 6px;
-    align-self: flex-start;
-    padding: 6px 10px;
-    font-size: 11px;
-    font-weight: 500;
-    border-radius: 6px;
-    border: none;
-    background-color: #529F23;
-    color: #ffffff;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .view-details-btn:hover {
-    background-color: #0158A0;
-  }
-</style>
