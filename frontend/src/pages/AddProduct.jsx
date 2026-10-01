@@ -1,26 +1,61 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
-import { UploadCloud, X, Loader2, Plus, Info } from 'lucide-react';
+import { 
+  UploadCloud, 
+  X, 
+  Loader2, 
+  Plus, 
+  AlertCircle, 
+  CheckCircle2, 
+  Image as ImageIcon, 
+  Video, 
+  Link2, 
+  Sparkles,
+  ArrowRight,
+  ShieldCheck,
+  Building2,
+  FileText
+} from 'lucide-react';
 
 export default function AddProduct({ apiEndpoint = '/api/admin/addProduct', role = 'admin' }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
 
+  // Form states
+  const [productName, setProductName] = useState('');
+  const [oneLineDescription, setOneLineDescription] = useState('');
+  const [shortDescription, setShortDescription] = useState('');
+  const [detailedDescription, setDetailedDescription] = useState('');
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
+  const [priceNote, setPriceNote] = useState('');
+  const [listingPlacement, setListingPlacement] = useState('top');
+
+  // Media states
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [videos, setVideos] = useState([]);
   const [youtubeLinks, setYoutubeLinks] = useState(['']);
   const [articleLinks, setArticleLinks] = useState(['']);
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length + images.length > 10) return alert('Max 10 images allowed');
-    setImages(prev => [...prev, ...files]);
-    
-    files.forEach(file => {
+  // Drag states
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+
+  const handleImageFiles = (files) => {
+    const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (images.length + validFiles.length > 10) {
+      alert('Maximum 10 product images allowed.');
+      return;
+    }
+
+    setImages(prev => [...prev, ...validFiles]);
+
+    validFiles.forEach(file => {
       const reader = new FileReader();
-      reader.onload = (ev) => setImagePreviews(prev => [...prev, { name: file.name, url: ev.target.result }]);
+      reader.onload = (e) => {
+        setImagePreviews(prev => [...prev, { name: file.name, url: e.target.result, size: (file.size / 1024).toFixed(0) }]);
+      };
       reader.readAsDataURL(file);
     });
   };
@@ -30,48 +65,94 @@ export default function AddProduct({ apiEndpoint = '/api/admin/addProduct', role
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleVideoFiles = (e) => {
+    const files = Array.from(e.target.files).filter(f => f.type.startsWith('video/'));
+    if (videos.length + files.length > 5) {
+      alert('Maximum 5 product videos allowed.');
+      return;
+    }
+    setVideos(prev => [...prev, ...files]);
+  };
+
+  const removeVideo = (index) => {
+    setVideos(prev => prev.filter((_, i) => i !== index));
+  };
+
   const addLink = (setter) => setter(prev => [...prev, '']);
   const updateLink = (setter, index, value) => {
     setter(prev => {
-      const newArr = [...prev];
-      newArr[index] = value;
-      return newArr;
+      const copy = [...prev];
+      copy[index] = value;
+      return copy;
     });
   };
   const removeLink = (setter, index) => setter(prev => prev.filter((_, i) => i !== index));
 
+  const resetForm = () => {
+    setProductName('');
+    setOneLineDescription('');
+    setShortDescription('');
+    setDetailedDescription('');
+    setPriceMin('');
+    setPriceMax('');
+    setPriceNote('');
+    setListingPlacement('top');
+    setImages([]);
+    setImagePreviews([]);
+    setVideos([]);
+    setYoutubeLinks(['']);
+    setArticleLinks(['']);
+    setError(null);
+    setSuccess(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
-    const formData = new FormData(e.target);
-    
-    // Clear out standard files from FormData to manually append them
-    formData.delete('images');
-    formData.delete('videos');
-    
+    if (images.length === 0) {
+      setError('Please upload at least one product image.');
+      return;
+    }
+
+    if (Number(priceMin) > Number(priceMax)) {
+      setError('Minimum price cannot be greater than maximum price.');
+      return;
+    }
+
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append('productName', productName.trim());
+    formData.append('oneLineDescription', oneLineDescription.trim());
+    formData.append('shortDescription', shortDescription.trim());
+    formData.append('detailedDescription', detailedDescription.trim());
+    formData.append('priceMin', priceMin.trim());
+    formData.append('priceMax', priceMax.trim());
+    formData.append('priceNote', priceNote.trim());
+    formData.append('listingPlacement', listingPlacement);
+
     images.forEach(img => formData.append('images', img));
     videos.forEach(vid => formData.append('videos', vid));
 
-    // Links are already in formData if they have name attribute, but to be safe:
-    formData.delete('youtubeLinks[]');
-    formData.delete('articleLinks[]');
-    youtubeLinks.filter(l => l).forEach(l => formData.append('youtubeLinks[]', l));
-    articleLinks.filter(l => l).forEach(l => formData.append('articleLinks[]', l));
+    youtubeLinks.filter(Boolean).forEach(link => formData.append('youtubeLinks[]', link.trim()));
+    articleLinks.filter(Boolean).forEach(link => formData.append('articleLinks[]', link.trim()));
 
     try {
       const res = await axios.post(apiEndpoint, formData, {
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      
-      if (res.data.success) {
+
+      if (res.data && res.data.success) {
         setSuccess(true);
-        window.scrollTo(0, 0);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        setError(res.data?.error || 'Failed to save product.');
       }
     } catch (err) {
-      setError(err.response?.data?.error || err.message || 'An error occurred');
+      console.error('Error adding product:', err);
+      setError(err.response?.data?.error || err.message || 'Failed to upload media and save product.');
     } finally {
       setLoading(false);
     }
@@ -79,160 +160,414 @@ export default function AddProduct({ apiEndpoint = '/api/admin/addProduct', role
 
   if (success) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <div className="bg-green-100 text-green-800 p-6 rounded-full mb-6">
-          <UploadCloud size={48} />
+      <div className="max-w-2xl mx-auto py-12 px-6">
+        <div className="bg-white rounded-3xl border border-slate-200/80 p-8 sm:p-12 shadow-xl text-center space-y-6 animate-scale-up">
+          <div className="w-20 h-20 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
+            <CheckCircle2 size={42} />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              Product Listed Successfully!
+            </h2>
+            <p className="text-sm text-slate-500 max-w-md mx-auto">
+              <strong>{productName}</strong> is now catalogued and visible to prospective customers on NetZeroMart.
+            </p>
+          </div>
+
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a
+              href="/home"
+              target="_blank"
+              rel="noreferrer"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition shadow-sm flex items-center justify-center gap-2"
+            >
+              <span>View Live Storefront</span>
+              <ArrowRight size={14} />
+            </a>
+            <button
+              onClick={resetForm}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition shadow-sm shadow-blue-600/20"
+            >
+              Add Another Product
+            </button>
+          </div>
         </div>
-        <h2 className="text-3xl font-bold mb-2">Product Added Successfully!</h2>
-        <p className="text-gray-600 mb-8">Your product has been saved to the catalogue.</p>
-        <button 
-          onClick={() => window.location.reload()}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-          Add Another Product
-        </button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="bg-blue-900 text-white px-6 py-4">
-        <h1 className="text-xl font-semibold">Add New Product</h1>
+    <div className="max-w-5xl mx-auto space-y-6">
+      {/* Header Banner */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold uppercase tracking-wider mb-2">
+            {role === 'admin' ? <ShieldCheck size={14} /> : <Building2 size={14} />}
+            <span>{role === 'admin' ? 'Master Admin Listing' : 'Vendor Catalogue Listing'}</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            Add New Product
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Publish high-impact sustainable products, equipment specifications, pricing estimates, and brochures.
+          </p>
+        </div>
       </div>
 
-      <div className="p-6">
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
+      {error && (
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-center gap-3">
+          <AlertCircle size={20} className="flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information Card */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-5">
+          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2 pb-3 border-b border-slate-100">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+            <span>General Specifications</span>
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Product Title / Name *
+              </label>
+              <input
+                type="text"
+                required
+                value={productName}
+                onChange={e => setProductName(e.target.value)}
+                placeholder="e.g. High-Efficiency Monocrystalline Solar Panel 550W"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                One-Line Tagline / Punchline
+              </label>
+              <input
+                type="text"
+                value={oneLineDescription}
+                onChange={e => setOneLineDescription(e.target.value)}
+                placeholder="e.g. Next-generation photovoltaic efficiency certified for industrial rooftop installations"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Catalog Priority / Placement
+              </label>
+              <select
+                value={listingPlacement}
+                onChange={e => setListingPlacement(e.target.value)}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
+              >
+                <option value="top">Push to Top (Featured / Newest)</option>
+                <option value="bottom">Standard Placement (Bottom)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Unit / Price Note
+              </label>
+              <input
+                type="text"
+                value={priceNote}
+                onChange={e => setPriceNote(e.target.value)}
+                placeholder="e.g. Per unit, Per kW, Ex-Factory"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Estimated Minimum Price (₹) *
+              </label>
+              <input
+                type="number"
+                required
+                min="0"
+                value={priceMin}
+                onChange={e => setPriceMin(e.target.value)}
+                placeholder="10000"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Estimated Maximum Price (₹) *
+              </label>
+              <input
+                type="number"
+                required
+                min="0"
+                value={priceMax}
+                onChange={e => setPriceMax(e.target.value)}
+                placeholder="15000"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition font-mono"
+              />
+            </div>
           </div>
-        )}
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic Info */}
-          <section className="bg-gray-50 p-5 rounded-lg border border-gray-200">
-            <h2 className="text-lg font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">Basic Product Info</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
-                <input type="text" name="productName" required className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Listing Placement</label>
-                <select name="listingPlacement" className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                  <option value="top">Push to top</option>
-                  <option value="bottom">Push to bottom</option>
-                </select>
-              </div>
-              <div className="md:col-span-2 grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Min Price *</label>
-                  <input type="text" name="priceMin" required placeholder="e.g. 100" className="w-full border border-gray-300 rounded-md p-2" />
+        {/* Descriptions Card */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-5">
+          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2 pb-3 border-b border-slate-100">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+            <span>Descriptions & Technical Details</span>
+          </h2>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Short Summary (Card View) *
+              </label>
+              <textarea
+                required
+                rows={2}
+                value={shortDescription}
+                onChange={e => setShortDescription(e.target.value)}
+                placeholder="Concise 1-2 sentence overview for catalog search cards..."
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition leading-relaxed"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Comprehensive Technical Description *
+              </label>
+              <textarea
+                required
+                rows={6}
+                value={detailedDescription}
+                onChange={e => setDetailedDescription(e.target.value)}
+                placeholder="Full technical specifications, efficiency ratings, compliance certifications, durability metrics, warranty, and installation details..."
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition leading-relaxed"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Media & Gallery Upload Card */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-5">
+          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2 pb-3 border-b border-slate-100">
+            <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+            <span>Product Imagery & Media</span>
+          </h2>
+
+          {/* Drag & Drop Image Zone */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Product Images * ({images.length}/10 selected)
+              </label>
+              <span className="text-xs text-slate-400">PNG, JPG, WebP up to 10MB</span>
+            </div>
+
+            <div
+              onDragOver={(e) => { e.preventDefault(); setIsDraggingImage(true); }}
+              onDragLeave={() => setIsDraggingImage(false)}
+              onDrop={(e) => { e.preventDefault(); setIsDraggingImage(false); handleImageFiles(e.dataTransfer.files); }}
+              className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition-all ${
+                isDraggingImage
+                  ? 'border-blue-600 bg-blue-50/50'
+                  : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+              }`}
+            >
+              <input
+                type="file"
+                id="productImagesUpload"
+                multiple
+                accept="image/*"
+                onChange={e => handleImageFiles(e.target.files)}
+                className="hidden"
+              />
+              <label htmlFor="productImagesUpload" className="cursor-pointer flex flex-col items-center justify-center space-y-2">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-xs">
+                  <UploadCloud size={24} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Max Price *</label>
-                  <input type="text" name="priceMax" required placeholder="e.g. 500" className="w-full border border-gray-300 rounded-md p-2" />
+                  <span className="text-sm font-bold text-blue-600 hover:underline">Click to browse images</span>
+                  <span className="text-sm text-slate-500"> or drag and drop files here</span>
                 </div>
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Price Note</label>
-                <input type="text" name="priceNote" placeholder="e.g. Per unit / Per meter / Per piece" className="w-full border border-gray-300 rounded-md p-2" />
-              </div>
+                <p className="text-xs text-slate-400">First image will serve as primary catalog cover</p>
+              </label>
             </div>
-          </section>
 
-          {/* Descriptions */}
-          <section className="bg-gray-50 p-5 rounded-lg border border-gray-200">
-            <h2 className="text-lg font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">Descriptions</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Short Description *</label>
-                <textarea name="shortDescription" required rows="2" className="w-full border border-gray-300 rounded-md p-2"></textarea>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Detailed Description *</label>
-                <textarea name="detailedDescription" required rows="4" className="w-full border border-gray-300 rounded-md p-2"></textarea>
-              </div>
-            </div>
-          </section>
-
-          {/* Media */}
-          <section className="bg-gray-50 p-5 rounded-lg border border-gray-200">
-            <h2 className="text-lg font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">Media</h2>
-            
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Product Images (Max 10) *</label>
-              <input type="file" multiple accept="image/*" onChange={handleImageChange} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-4" />
-              
-              <div className="flex flex-wrap gap-4">
-                {imagePreviews.map((img, idx) => (
-                  <div key={idx} className="relative group w-24 h-24 border border-gray-200 rounded-md overflow-hidden bg-white">
-                    <img src={img.url} alt="preview" className="w-full h-full object-cover" />
-                    <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* Thumbnail Gallery Preview */}
+            {imagePreviews.length > 0 && (
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                {imagePreviews.map((preview, idx) => (
+                  <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 bg-white shadow-xs">
+                    <img src={preview.url} alt={preview.name} className="w-full h-full object-cover" />
+                    {idx === 0 && (
+                      <span className="absolute bottom-1.5 left-1.5 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs">
+                        Cover
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeImage(idx)}
+                      className="absolute top-1.5 right-1.5 p-1 rounded-lg bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-rose-700"
+                    >
                       <X size={14} />
                     </button>
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Product Videos (Max 5)</label>
-              <input type="file" multiple accept="video/*" onChange={e => setVideos(Array.from(e.target.files))} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">YouTube Links</label>
-                  <button type="button" onClick={() => addLink(setYoutubeLinks)} className="text-blue-600 text-xs flex items-center hover:underline"><Plus size={12} className="mr-1"/> Add Link</button>
-                </div>
-                <div className="space-y-2">
-                  {youtubeLinks.map((link, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <input type="url" value={link} onChange={e => updateLink(setYoutubeLinks, idx, e.target.value)} placeholder="https://youtube.com/..." className="flex-1 border border-gray-300 rounded-md p-2 text-sm" />
-                      {youtubeLinks.length > 1 && (
-                        <button type="button" onClick={() => removeLink(setYoutubeLinks, idx)} className="text-red-500 p-2"><X size={16}/></button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">Article Links</label>
-                  <button type="button" onClick={() => addLink(setArticleLinks)} className="text-blue-600 text-xs flex items-center hover:underline"><Plus size={12} className="mr-1"/> Add Link</button>
-                </div>
-                <div className="space-y-2">
-                  {articleLinks.map((link, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <input type="url" value={link} onChange={e => updateLink(setArticleLinks, idx, e.target.value)} placeholder="https://..." className="flex-1 border border-gray-300 rounded-md p-2 text-sm" />
-                      {articleLinks.length > 1 && (
-                        <button type="button" onClick={() => removeLink(setArticleLinks, idx)} className="text-red-500 p-2"><X size={16}/></button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <div className="flex justify-end pt-4 border-t border-gray-200">
-            <button
-              type="submit"
-              disabled={loading || images.length === 0}
-              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2.5 px-8 rounded-lg flex items-center transition-colors"
-            >
-              {loading ? (
-                <><Loader2 className="animate-spin mr-2" size={18} /> Uploading Media & Saving...</>
-              ) : (
-                'Save Product'
-              )}
-            </button>
+            )}
           </div>
-        </form>
-      </div>
+
+          {/* Videos Upload Section */}
+          <div className="pt-4 border-t border-slate-100">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Product Video Files (Optional, Max 5)
+              </label>
+              <span className="text-xs text-slate-400">MP4, WebM up to 50MB</span>
+            </div>
+
+            <input
+              type="file"
+              multiple
+              accept="video/*"
+              onChange={handleVideoFiles}
+              className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"
+            />
+
+            {videos.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {videos.map((vid, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700">
+                    <div className="flex items-center gap-2 truncate">
+                      <Video size={16} className="text-indigo-600 flex-shrink-0" />
+                      <span className="font-medium truncate">{vid.name}</span>
+                      <span className="text-slate-400 font-mono">({(vid.size / (1024 * 1024)).toFixed(1)} MB)</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeVideo(idx)}
+                      className="text-rose-600 hover:text-rose-800 p-1"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* External Links Section */}
+          <div className="pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  YouTube Demonstrations
+                </label>
+                <button
+                  type="button"
+                  onClick={() => addLink(setYoutubeLinks)}
+                  className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1"
+                >
+                  <Plus size={12} /> Add Link
+                </button>
+              </div>
+              <div className="space-y-2">
+                {youtubeLinks.map((link, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <input
+                      type="url"
+                      value={link}
+                      onChange={e => updateLink(setYoutubeLinks, idx, e.target.value)}
+                      placeholder="https://youtube.com/watch?v=..."
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                    />
+                    {youtubeLinks.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeLink(setYoutubeLinks, idx)}
+                        className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Technical Articles & Specs
+                </label>
+                <button
+                  type="button"
+                  onClick={() => addLink(setArticleLinks)}
+                  className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1"
+                >
+                  <Plus size={12} /> Add Link
+                </button>
+              </div>
+              <div className="space-y-2">
+                {articleLinks.map((link, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <input
+                      type="url"
+                      value={link}
+                      onChange={e => updateLink(setArticleLinks, idx, e.target.value)}
+                      placeholder="https://..."
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                    />
+                    {articleLinks.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeLink(setArticleLinks, idx)}
+                        className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Submit Actions */}
+        <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-200/80 shadow-sm">
+          <div className="text-xs text-slate-500">
+            {images.length === 0 ? (
+              <span className="text-amber-600 font-medium">⚠️ At least 1 image is required to submit</span>
+            ) : (
+              <span className="text-emerald-700 font-medium">✓ Ready to publish to digital catalogue</span>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || images.length === 0}
+            className="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-md shadow-blue-600/20 active:scale-95 flex items-center gap-2"
+          >
+            {loading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Uploading Media & Listing Product...</span>
+              </>
+            ) : (
+              <span>Publish Product to Catalogue</span>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

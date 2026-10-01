@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import AddProduct from './pages/AddProduct';
 import UserApproval from './pages/UserApproval';
 import UserManagement from './pages/UserManagement';
@@ -29,7 +30,13 @@ import {
   X,
   ChevronRight,
   ShieldCheck,
-  Store
+  Store,
+  ArrowRight,
+  Clock,
+  CheckCircle2,
+  Sparkles,
+  TrendingUp,
+  FileText
 } from 'lucide-react';
 
 // Dynamic Document Title Sync
@@ -66,27 +73,45 @@ function TitleUpdater() {
   return null;
 }
 
-function NavItem({ to, icon: Icon, label, color = "text-slate-400" }) {
+function NavItem({ to, icon: Icon, label, color = "text-slate-400", badge = null }) {
   const location = useLocation();
   const isActive = location.pathname === to;
 
   return (
     <Link
       to={to}
-      className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+      className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
         isActive
           ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
           : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
       }`}
     >
-      <Icon size={18} className={isActive ? 'text-white' : color} />
-      <span>{label}</span>
+      <div className="flex items-center gap-3">
+        <Icon size={18} className={isActive ? 'text-white' : color} />
+        <span>{label}</span>
+      </div>
+      {badge > 0 && (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950">
+          {badge}
+        </span>
+      )}
     </Link>
   );
 }
 
 function AdminLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    axios.get('/api/admin/userApproval')
+      .then(res => {
+        if (res.data && res.data.users) {
+          setPendingCount(res.data.users.length);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-800 overflow-hidden">
@@ -104,7 +129,7 @@ function AdminLayout({ children }) {
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="p-5 border-b border-slate-850 flex items-center justify-between">
+        <div className="p-5 border-b border-slate-800 flex items-center justify-between">
           <Link to="/admin" className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-blue-500 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-blue-500/20">
               NZ
@@ -113,7 +138,7 @@ function AdminLayout({ children }) {
               <h2 className="text-base font-black tracking-tight text-white flex items-center gap-1.5">
                 <span>NetZeroMart</span>
               </h2>
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-900/60 text-blue-300 border border-blue-850">
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-900/60 text-blue-300 border border-blue-800">
                 Master Admin
               </span>
             </div>
@@ -127,31 +152,31 @@ function AdminLayout({ children }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
-          <p className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider px-3 mb-2">Main Menu</p>
+          <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mb-2">Main Menu</p>
           <NavItem to="/admin" icon={LayoutDashboard} label="Dashboard" color="text-blue-400" />
 
-          <p className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider px-3 mt-5 mb-2">Vendor Relations</p>
-          <NavItem to="/admin/userApproval" icon={UserCheck} label="Pending Approvals" color="text-emerald-400" />
+          <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mt-5 mb-2">Vendor Relations</p>
+          <NavItem to="/admin/userApproval" icon={UserCheck} label="Pending Approvals" color="text-emerald-400" badge={pendingCount} />
           <NavItem to="/admin/userManagement" icon={Users} label="Active Vendors" color="text-indigo-400" />
 
-          <p className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider px-3 mt-5 mb-2">Catalog Operations</p>
+          <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mt-5 mb-2">Catalog Operations</p>
           <NavItem to="/admin/addProduct" icon={PlusCircle} label="Add Product" color="text-sky-400" />
           <NavItem to="/admin/updateProduct" icon={Edit3} label="Update Product" color="text-amber-400" />
           <NavItem to="/admin/removeProduct" icon={Trash2} label="Remove Product" color="text-rose-400" />
 
-          <p className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider px-3 mt-5 mb-2">Publishing & Content</p>
+          <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mt-5 mb-2">Publishing & Content</p>
           <NavItem to="/admin/addArticle" icon={FilePlus} label="Publish Article" color="text-teal-400" />
           <NavItem to="/admin/removeArticle" icon={FileMinus} label="Manage Articles" color="text-orange-400" />
 
-          <p className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider px-3 mt-5 mb-2">System Security</p>
+          <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mt-5 mb-2">System Security</p>
           <NavItem to="/admin/resetPassword" icon={KeyRound} label="Change Password" color="text-violet-400" />
         </nav>
 
-        <div className="p-4 border-t border-slate-850 bg-slate-950/80">
+        <div className="p-4 border-t border-slate-800 bg-slate-950/80">
           <form action="/admin/logout" method="POST">
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all active:scale-95"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all active:scale-95 cursor-pointer"
             >
               <LogOut size={16} />
               <span>Sign Out Session</span>
@@ -180,10 +205,12 @@ function AdminLayout({ children }) {
           <div className="flex items-center gap-3">
             <a
               href="/home"
-              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition shadow-sm"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition shadow-xs"
             >
               <Store size={14} className="text-blue-600" />
-              <span className="hidden sm:inline">View Public Storefront</span>
+              <span className="hidden sm:inline">Live Storefront</span>
               <ExternalLink size={12} className="text-slate-400" />
             </a>
           </div>
@@ -257,7 +284,7 @@ function UserLayout({ children }) {
           <form action="/userPanel/logout" method="POST">
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all active:scale-95"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all active:scale-95 cursor-pointer"
             >
               <LogOut size={16} />
               <span>Log Out Portal</span>
@@ -286,10 +313,12 @@ function UserLayout({ children }) {
           <div className="flex items-center gap-3">
             <a
               href="/home"
-              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition shadow-sm"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition shadow-xs"
             >
               <Store size={14} className="text-emerald-600" />
-              <span className="hidden sm:inline">View Public Storefront</span>
+              <span className="hidden sm:inline">Live Storefront</span>
               <ExternalLink size={12} className="text-slate-400" />
             </a>
           </div>
@@ -304,6 +333,31 @@ function UserLayout({ children }) {
 }
 
 function AdminDashboardOverview() {
+  const [stats, setStats] = useState({
+    products: 0,
+    pendingUsers: 0,
+    activeUsers: 0,
+    articles: 0,
+    loading: true
+  });
+
+  useEffect(() => {
+    Promise.allSettled([
+      axios.get('/api/admin/removeProduct'),
+      axios.get('/api/admin/userApproval'),
+      axios.get('/api/admin/userManagement'),
+      axios.get('/api/admin/removeArticle')
+    ]).then(([prodRes, pendRes, userRes, artRes]) => {
+      setStats({
+        products: prodRes.status === 'fulfilled' ? (prodRes.value.data.products?.length || 0) : 0,
+        pendingUsers: pendRes.status === 'fulfilled' ? (pendRes.value.data.users?.length || 0) : 0,
+        activeUsers: userRes.status === 'fulfilled' ? (userRes.value.data.users?.length || 0) : 0,
+        articles: artRes.status === 'fulfilled' ? (artRes.value.data.articles?.length || 0) : 0,
+        loading: false
+      });
+    });
+  }, []);
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Welcome Banner */}
@@ -314,10 +368,10 @@ function AdminDashboardOverview() {
             Master Administration
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
-            Welcome to the Central Command
+            Central Command Dashboard
           </h1>
           <p className="text-slate-300 text-sm max-w-xl">
-            Review incoming vendor requests, oversee verified digital catalog products, and curate educational articles.
+            Oversee digital catalog items, manage vendor registrations, and publish clean-tech editorial articles.
           </p>
         </div>
 
@@ -339,6 +393,75 @@ function AdminDashboardOverview() {
         </div>
       </div>
 
+      {/* Attention alert if pending applications exist */}
+      {stats.pendingUsers > 0 && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-sm flex items-center justify-between shadow-xs animate-fade-in">
+          <div className="flex items-center gap-3">
+            <Clock size={20} className="text-amber-600 flex-shrink-0" />
+            <div>
+              <span className="font-bold">{stats.pendingUsers} vendor application(s)</span> are waiting for your verification and approval.
+            </div>
+          </div>
+          <Link
+            to="/admin/userApproval"
+            className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-xs flex-shrink-0"
+          >
+            Review Now →
+          </Link>
+        </div>
+      )}
+
+      {/* Live Metric Counters */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+            <Package size={22} />
+          </div>
+          <div>
+            <div className="text-2xl font-black text-slate-900">
+              {stats.loading ? '...' : stats.products}
+            </div>
+            <div className="text-xs font-bold text-slate-400">Products in Catalogue</div>
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+            <UserCheck size={22} />
+          </div>
+          <div>
+            <div className="text-2xl font-black text-slate-900">
+              {stats.loading ? '...' : stats.pendingUsers}
+            </div>
+            <div className="text-xs font-bold text-slate-400">Pending Approvals</div>
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+            <Users size={22} />
+          </div>
+          <div>
+            <div className="text-2xl font-black text-slate-900">
+              {stats.loading ? '...' : stats.activeUsers}
+            </div>
+            <div className="text-xs font-bold text-slate-400">Verified Vendors</div>
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0">
+            <Layers size={22} />
+          </div>
+          <div>
+            <div className="text-2xl font-black text-slate-900">
+              {stats.loading ? '...' : stats.articles}
+            </div>
+            <div className="text-xs font-bold text-slate-400">Published Articles</div>
+          </div>
+        </div>
+      </div>
+
       {/* Main Feature Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
@@ -350,7 +473,7 @@ function AdminDashboardOverview() {
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Catalogue Management</h3>
               <p className="text-slate-900 font-black text-lg mt-0.5">Products & Innovations</p>
               <p className="text-xs text-slate-500 mt-1">
-                Upload new clean-tech items, modify specifications, or delete legacy listings.
+                Upload clean-tech products with high-res photos and video demos, update specifications, or prune legacy listings.
               </p>
             </div>
           </div>
@@ -372,7 +495,7 @@ function AdminDashboardOverview() {
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Vendor Operations</h3>
               <p className="text-slate-900 font-black text-lg mt-0.5">Verification & Access</p>
               <p className="text-xs text-slate-500 mt-1">
-                Verify business certificates, approve incoming vendor signups, or terminate access.
+                Inspect business certificates, approve incoming vendor signups, or terminate active access.
               </p>
             </div>
           </div>
@@ -408,6 +531,25 @@ function AdminDashboardOverview() {
 }
 
 function UserDashboardOverview() {
+  const [stats, setStats] = useState({
+    products: 0,
+    articles: 0,
+    loading: true
+  });
+
+  useEffect(() => {
+    Promise.allSettled([
+      axios.get('/api/userPanel/removeProduct'),
+      axios.get('/api/userPanel/removeArticle')
+    ]).then(([prodRes, artRes]) => {
+      setStats({
+        products: prodRes.status === 'fulfilled' ? (prodRes.value.data.products?.length || 0) : 0,
+        articles: artRes.status === 'fulfilled' ? (artRes.value.data.articles?.length || 0) : 0,
+        loading: false
+      });
+    });
+  }, []);
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Welcome Banner */}
@@ -421,7 +563,7 @@ function UserDashboardOverview() {
             Manage Your Sustainable Catalogue
           </h1>
           <p className="text-emerald-100/80 text-sm max-w-xl">
-            Promote your eco-friendly products, update specifications, and share technical research articles.
+            Promote your eco-friendly products, update specifications, and publish case studies for sustainability architects.
           </p>
         </div>
 
@@ -443,6 +585,33 @@ function UserDashboardOverview() {
         </div>
       </div>
 
+      {/* Live Metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+            <Package size={22} />
+          </div>
+          <div>
+            <div className="text-2xl font-black text-slate-900">
+              {stats.loading ? '...' : stats.products}
+            </div>
+            <div className="text-xs font-bold text-slate-400">My Active Catalogue Listings</div>
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0">
+            <Layers size={22} />
+          </div>
+          <div>
+            <div className="text-2xl font-black text-slate-900">
+              {stats.loading ? '...' : stats.articles}
+            </div>
+            <div className="text-xs font-bold text-slate-400">My Published Articles & Guides</div>
+          </div>
+        </div>
+      </div>
+
       {/* Feature Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
@@ -454,7 +623,7 @@ function UserDashboardOverview() {
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Product Inventory</h3>
               <p className="text-slate-900 font-black text-lg mt-0.5">My Listed Catalog</p>
               <p className="text-xs text-slate-500 mt-1">
-                Keep your product specs, price estimations, brochure links, and imagery up to date.
+                Keep your product specs, price estimations, brochure links, and imagery up to date to maximize customer inquiries.
               </p>
             </div>
           </div>

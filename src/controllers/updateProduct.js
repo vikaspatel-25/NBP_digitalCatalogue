@@ -70,63 +70,36 @@ function extractPublicId(url) {
 
 async function updateProductPageController(req, res) {
   try {
-    const requester = getRequester(req);
-    if (!requester) {
-      return res.redirect("/login");
-    }
-
-    const basePath = requester.role === "admin" ? "/admin" : "/userPanel";
-
-    // Query products accessible to this user/admin
-    let query = {};
-    if (requester.role !== "admin") {
-      query = {
-        $or: [
-          { creatorId: requester.id },
-          { email: requester.email }
-        ]
-      };
-    }
-
-    const products = await Product.find(query)
-      .sort({ updatedAt: -1, createdAt: -1 })
-      .select("productName priceMin priceMax images order createdAt updatedAt");
-
-    const selectedId = req.query.id;
-    let selectedProduct = null;
-
-    if (selectedId && mongoose.Types.ObjectId.isValid(selectedId)) {
-      if (requester.role === "admin") {
-        selectedProduct = await Product.findById(selectedId);
-      } else {
-        selectedProduct = await Product.findOne({
-          _id: new mongoose.Types.ObjectId(selectedId),
-          $or: [
-            { creatorId: requester.id },
-            { email: requester.email }
-          ]
-        });
-      }
-    }
-
     res.sendFile(path.resolve(process.cwd(), "frontend/dist/index.html"));
   } catch (error) {
-    console.error("Error rendering Update Product page:", error);
     res.status(500).send("Internal Server Error");
   }
 }
 
 async function updateProductController(req, res) {
+  const isJsonRequest = Boolean(
+    req.xhr ||
+    req.is("json") ||
+    (req.headers.accept && req.headers.accept.includes("application/json")) ||
+    (req.originalUrl && req.originalUrl.startsWith("/api/"))
+  );
+
   try {
     const requester = getRequester(req);
     if (!requester) {
+      if (isJsonRequest) {
+        return res.status(401).json({ success: false, error: "Unauthorized session. Please sign in." });
+      }
       return res.redirect("/login");
     }
 
     const basePath = requester.role === "admin" ? "/admin" : "/userPanel";
-    const { productId } = req.body;
+    const productId = req.body.productId || req.query.id;
 
     if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+      if (isJsonRequest) {
+        return res.status(400).json({ success: false, error: "Invalid product ID" });
+      }
       return res.redirect(`${basePath}/updateProduct?error=Invalid%20product%20ID`);
     }
 
@@ -144,6 +117,9 @@ async function updateProductController(req, res) {
     }
 
     if (!product) {
+      if (isJsonRequest) {
+        return res.status(403).json({ success: false, error: "You are not authorized to update this product, or it does not exist." });
+      }
       return res.status(403).send(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -218,6 +194,9 @@ async function updateProductController(req, res) {
 
     const finalImages = [...preservedImages, ...uploadedImages];
     if (finalImages.length === 0) {
+      if (isJsonRequest) {
+        return res.status(400).json({ success: false, error: "At least one product image is required." });
+      }
       return res.redirect(`${basePath}/updateProduct?id=${productId}&error=At%20least%20one%20image%20is%20required`);
     }
 
@@ -249,50 +228,66 @@ async function updateProductController(req, res) {
 
     const finalVideos = [...preservedVideos, ...uploadedVideos];
 
-    // Compute order placement if explicitly changed
-    let orderValue = product.order;
-    if (listingPlacement === "top") {
-      const firstProduct = await Product.findOne().sort({ order: 1 }).select("order");
-      orderValue = firstProduct ? firstProduct.order - 1 : 0;
-    } else if (listingPlacement === "bottom") {
-      const lastProduct = await Product.findOne().sort({ order: -1 }).select("order");
-      orderValue = lastProduct ? lastProduct.order + 1 : 0;
+    // Ensure links are stored as arrays
+    let finalYoutube = [];
+    if (youtubeLinks) {
+      finalYoutube = Array.isArray(youtubeLinks) ? youtubeLinks.filter(Boolean) : [youtubeLinks].filter(Boolean);
     }
 
-    // Normalize youtubeLinks and articleLinks arrays (strip empty strings)
-    const cleanYoutubeLinks = (Array.isArray(youtubeLinks) ? youtubeLinks : [youtubeLinks])
-      .map(l => l?.trim())
-      .filter(Boolean);
+    let finalArticles = [];
+    if (articleLinks) {
+      finalArticles = Array.isArray(articleLinks) ? articleLinks.filter(Boolean) : [articleLinks].filter(Boolean);
+    }
 
-    const cleanArticleLinks = (Array.isArray(articleLinks) ? articleLinks : [articleLinks])
-      .map(l => l?.trim())
-      .filter(Boolean);
+    // Handle listing placement repositioning if changed
+    if (listingPlacement === "top") {
+      const newestProduct = await Product.findOne({}, { createdAt: 1 }).sort({ createdAt: -1 });
+      if (newestProduct && newestProduct.createdAt) {
+        product.createdAt = new Date(newestProduct.createdAt.getTime() + 1000);
+      } else {
+        product.createdAt = new Date();
+      }
+    } else if (listingPlacement === "bottom") {
+      const oldestProduct = await Product.findOne({}, { createdAt: 1 }).sort({ createdAt: 1 });
+      if (oldestProduct && oldestProduct.createdAt) {
+        product.createdAt = new Date(oldestProduct.createdAt.getTime() - 1000);
+      } else {
+        product.createdAt = new Date(Date.now() - 10000000);
+      }
+    }
 
-    // Apply updates
-    if (productName) product.productName = productName.trim();
-    if (oneLineDescription !== undefined) product.oneLineDescription = oneLineDescription.trim();
-    if (shortDescription) product.shortDescription = shortDescription.trim();
-    if (detailedDescription) product.detailedDescription = detailedDescription.trim();
-    if (priceMin !== undefined && priceMin !== "") product.priceMin = Number(priceMin);
-    if (priceMax !== undefined && priceMax !== "") product.priceMax = Number(priceMax);
-    if (priceNote !== undefined) product.priceNote = priceNote.trim();
+    // Apply updated fields
+    if (productName) product.productName = productName;
+    if (oneLineDescription !== undefined) product.oneLineDescription = oneLineDescription;
+    if (shortDescription !== undefined) product.shortDescription = shortDescription;
+    if (detailedDescription !== undefined) product.detailedDescription = detailedDescription;
+    if (priceMin !== undefined) product.priceMin = priceMin;
+    if (priceMax !== undefined) product.priceMax = priceMax;
+    if (priceNote !== undefined) product.priceNote = priceNote;
+
     product.images = finalImages;
     product.videos = finalVideos;
-    product.youtubeLinks = cleanYoutubeLinks;
-    product.articleLinks = cleanArticleLinks;
-    product.order = orderValue;
-    product.updatedAt = new Date();
+    product.youtubeLinks = finalYoutube;
+    product.articleLinks = finalArticles;
 
-    // Backfill legacy products that lack creator metadata
-    if (!product.creatorId && requester) product.creatorId = requester.id;
-    if (!product.creatorRole && requester) product.creatorRole = requester.role;
-    if (!product.companyName && requester) product.companyName = requester.companyName || "NetZeroMart";
-    if (!product.userName && requester) product.userName = requester.userName || "Admin";
-    if (!product.email && requester) product.email = requester.email || "netzeromart@gmail.com";
+    // Preserve critical ownership metadata
+    if (!product.creatorId) product.creatorId = requester.id;
+    if (!product.creatorRole) product.creatorRole = requester.role;
+    if (!product.userName) product.userName = requester.userName || (requester.role === "admin" ? "netzeromart" : "User");
+    if (!product.companyName) product.companyName = requester.companyName || (requester.role === "admin" ? "NetZeroMart" : "Company");
+    if (!product.email) product.email = requester.email || (requester.role === "admin" ? "netzeromart@gmail.com" : "user@netzeromart.com");
 
-    await product.save({ validateModifiedOnly: true });
+    await product.save();
 
-    res.send(`<!DOCTYPE html>
+    if (isJsonRequest) {
+      return res.json({
+        success: true,
+        message: `Product "${product.productName}" updated successfully`,
+        product
+      });
+    }
+
+    return res.send(`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -306,7 +301,7 @@ async function updateProductController(req, res) {
       --muted: #6b7280;
       --header-bg: #1e3a8a;
       --header-text: #ffffff;
-      --success: #22c55e;
+      --primary: #2563eb;
     }
     * { box-sizing: border-box; }
     body {
@@ -345,7 +340,6 @@ async function updateProductController(req, res) {
       margin-top: 0;
       font-size: 1.1rem;
       font-weight: 600;
-      color: #15803d;
     }
     .panel-body p {
       font-size: 0.9rem;
@@ -395,16 +389,17 @@ async function updateProductController(req, res) {
 </html>`);
   } catch (error) {
     console.error("Error updating product:", error);
+    if (isJsonRequest) {
+      return res.status(500).json({ success: false, error: error.message || "Internal Server Error" });
+    }
     res.status(500).send("Internal Server Error");
   }
 }
 
 export { updateProductPageController, updateProductController };
 
-
 export async function apiUpdateProductPageController(req, res) {
   try {
-    const Product = (await import('../models/product.model.js')).default;
     const { id } = req.query;
     if (id) {
       const product = await Product.findById(id);
@@ -412,7 +407,7 @@ export async function apiUpdateProductPageController(req, res) {
     }
     const requester = getRequester(req);
     const filter = requester && requester.role === "admin" ? {} : { creatorId: requester.id };
-    const products = await Product.find(filter).select('productName shortDescription images _id').sort({ createdAt: -1 });
+    const products = await Product.find(filter).sort({ createdAt: -1 });
     res.json({ success: true, products });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Internal Server Error' });
@@ -420,23 +415,5 @@ export async function apiUpdateProductPageController(req, res) {
 }
 
 export async function apiUpdateProductController(req, res) {
-  try {
-    // Basic logic mapping existing controller
-    const { id } = req.query;
-    if (!id) return res.status(400).json({ success: false, error: 'Missing product ID' });
-    const Product = (await import('../models/product.model.js')).default;
-    const product = await Product.findById(id);
-    if (!product) return res.status(404).json({ success: false, error: 'Product not found' });
-
-    // Assuming body is JSON for API, no multipart form yet, or it is multipart
-    // If multipart, we need the cloudinary logic.
-    // Given the prompt, just a basic stub that works or full logic is needed.
-    // For simplicity, we assume we receive json.
-    const updates = req.body;
-    Object.assign(product, updates);
-    await product.save();
-    res.json({ success: true, message: 'Product updated successfully' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: 'Internal Server Error' });
-  }
+  return updateProductController(req, res);
 }
