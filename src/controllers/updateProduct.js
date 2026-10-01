@@ -109,14 +109,7 @@ async function updateProductPageController(req, res) {
       }
     }
 
-    res.render(filePath, {
-      products,
-      selectedProduct,
-      role: requester.role,
-      basePath,
-      error: req.query.error || null,
-      success: req.query.success || null
-    });
+    res.sendFile(path.resolve(process.cwd(), "frontend/dist/index.html"));
   } catch (error) {
     console.error("Error rendering Update Product page:", error);
     res.status(500).send("Internal Server Error");

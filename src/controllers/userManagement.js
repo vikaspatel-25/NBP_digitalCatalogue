@@ -6,12 +6,11 @@ import User from "../models/approved.user.model.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const filePath = path.join(__dirname, "../views/pages/userManagement.ejs");
+const reactIndexPath = path.resolve(process.cwd(), "frontend/dist/index.html");
 
 async function userManagementPageController(req, res) {
   try {
-    const users = await User.find({});
-    res.render(filePath, { users });
+    res.sendFile(reactIndexPath);
   } catch (error) {
     res.status(500).send("Internal Server Error");
   }

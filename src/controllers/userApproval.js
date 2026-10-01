@@ -18,14 +18,11 @@ const transporter = nodemailer.createTransport({
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const userApprovalPagePath = path.join(__dirname, '../views/pages/userApproval.ejs');
+const reactIndexPath = path.resolve(process.cwd(), "frontend/dist/index.html");
 
 async function userApprovalPageController(req, res) {
   try {
-    const users = await Company.find({
-      $or: [{ approved: false }, { approved: { $exists: false } }]
-    }).sort({ createdAt: -1 });
-    res.render(userApprovalPagePath, { users });
+    res.sendFile(reactIndexPath);
   } catch (error) {
     res.status(500).send('Internal Server Error');
   }

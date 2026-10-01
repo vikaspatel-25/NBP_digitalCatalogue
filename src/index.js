@@ -59,7 +59,8 @@ app.use(
 app.use(express.static(path.resolve(__dirname, '../frontend/dist'), { index: false }));
 
 app.get(['/v2/admin*', '/v2/userPanel*'], (req, res) => {
-  res.sendFile(path.resolve(__dirname, '../frontend/dist/index.html'));
+  const newPath = req.originalUrl.replace(/^\/v2/, '') || '/';
+  res.redirect(newPath);
 });
 
 app.use('/', router)

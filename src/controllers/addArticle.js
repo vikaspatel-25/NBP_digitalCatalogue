@@ -12,7 +12,7 @@ const filePath = path.join(__dirname, "../views/pages/addArticle.ejs");
 
 async function addArticlePageController(req, res) {
   try {
-    res.render(filePath);
+    res.sendFile(path.resolve(process.cwd(), "frontend/dist/index.html"));
   } catch (error) {
     console.error("Error rendering Add Article page:", error);
     res.status(500).send("Internal Server Error");

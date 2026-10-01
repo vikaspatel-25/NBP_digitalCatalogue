@@ -11,7 +11,7 @@ const filePath = path.join(__dirname, "../views/pages/removeProduct.ejs");
 
 async function removeProductPageController(req, res) {
   try {
-    res.render(filePath);
+    res.sendFile(path.resolve(process.cwd(), "frontend/dist/index.html"));
   } catch (error) {
     res.redirect("/admin/removeProduct");
   }

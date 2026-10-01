@@ -1,16 +1,12 @@
 import path from "path";
-import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const filePath = path.join(__dirname, "../views/pages/userPanel.ejs");
+const reactIndexPath = path.resolve(process.cwd(), "frontend/dist/index.html");
 
 async function userPanelPageController(req, res) {
   try {
-    res.render(filePath);
+    res.sendFile(reactIndexPath);
   } catch (error) {
-    console.error("Error rendering admin page:", error);
+    console.error("Error rendering user panel page:", error);
     res.status(500).send("Internal Server Error");
   }
 }
