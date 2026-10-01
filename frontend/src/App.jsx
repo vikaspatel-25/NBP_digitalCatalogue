@@ -130,19 +130,21 @@ function AdminLayout({ children }) {
         }`}
       >
         <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-          <Link to="/admin" className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-blue-500 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-blue-500/20">
-              NZ
-            </div>
+          <a href="/home" className="flex items-center space-x-3 group no-underline" title="Go to NetZeroMart Storefront">
+            <img
+              src="/assets/netZeroStickerIcon.png"
+              alt="NetZeroMart"
+              className="w-10 h-10 object-contain group-hover:scale-105 transition-transform"
+            />
             <div>
-              <h2 className="text-base font-black tracking-tight text-white flex items-center gap-1.5">
+              <h2 className="text-base font-black tracking-tight text-white flex items-center gap-1.5 group-hover:text-blue-400 transition-colors">
                 <span>NetZeroMart</span>
               </h2>
               <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-900/60 text-blue-300 border border-blue-800">
                 Master Admin
               </span>
             </div>
-          </Link>
+          </a>
           <button
             onClick={() => setMobileOpen(false)}
             className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
@@ -205,13 +207,12 @@ function AdminLayout({ children }) {
           <div className="flex items-center gap-3">
             <a
               href="/home"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition shadow-xs"
+              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 hover:border-blue-600 transition-all shadow-xs group"
+              title="Visit Live Storefront"
             >
-              <Store size={14} className="text-blue-600" />
-              <span className="hidden sm:inline">Live Storefront</span>
-              <ExternalLink size={12} className="text-slate-400" />
+              <Store size={15} className="text-blue-600 group-hover:text-white transition-colors" />
+              <span>Storefront</span>
+              <ExternalLink size={12} className="text-blue-400 group-hover:text-white transition-colors" />
             </a>
           </div>
         </header>
@@ -244,17 +245,21 @@ function UserLayout({ children }) {
         }`}
       >
         <div className="p-5 border-b border-blue-900/40 flex items-center justify-between">
-          <Link to="/userPanel" className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-emerald-500/20">
-              VP
-            </div>
+          <a href="/home" className="flex items-center space-x-3 group no-underline" title="Go to NetZeroMart Storefront">
+            <img
+              src="/assets/netZeroStickerIcon.png"
+              alt="NetZeroMart"
+              className="w-10 h-10 object-contain group-hover:scale-105 transition-transform"
+            />
             <div>
-              <h2 className="text-base font-black tracking-tight text-white">Vendor Portal</h2>
+              <h2 className="text-base font-black tracking-tight text-white group-hover:text-emerald-400 transition-colors">
+                <span>NetZeroMart</span>
+              </h2>
               <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-800/40">
-                Verified Vendor
+                Vendor Portal
               </span>
             </div>
-          </Link>
+          </a>
           <button
             onClick={() => setMobileOpen(false)}
             className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
@@ -313,13 +318,12 @@ function UserLayout({ children }) {
           <div className="flex items-center gap-3">
             <a
               href="/home"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition shadow-xs"
+              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 transition-all shadow-xs group"
+              title="Visit Live Storefront"
             >
-              <Store size={14} className="text-emerald-600" />
-              <span className="hidden sm:inline">Live Storefront</span>
-              <ExternalLink size={12} className="text-slate-400" />
+              <Store size={15} className="text-emerald-600 group-hover:text-white transition-colors" />
+              <span>Storefront</span>
+              <ExternalLink size={12} className="text-emerald-400 group-hover:text-white transition-colors" />
             </a>
           </div>
         </header>
