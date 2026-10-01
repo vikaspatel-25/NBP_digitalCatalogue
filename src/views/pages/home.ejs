@@ -57,8 +57,8 @@
     <%- include('../components/header.ejs') %>
 
     <main class="w-full flex-grow">
-      <!-- Modern Hero Banner -->
-      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
+      <!-- Modern Hero Banner (Desktop / Tablet only) -->
+      <section class="hidden md:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
         <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-8 sm:p-12 md:p-16 shadow-xl border border-slate-800">
           <div class="absolute -right-20 -bottom-20 w-80 h-80 rounded-full bg-blue-600/20 blur-3xl pointer-events-none"></div>
           <div class="absolute -left-20 -top-20 w-80 h-80 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none"></div>
@@ -96,7 +96,7 @@
       </section>
 
       <!-- Navigation Segment Tabs -->
-      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2 sm:py-4">
         <div class="flex items-center justify-center">
           <div class="inline-flex p-1.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs gap-1.5">
             <button
@@ -121,9 +121,9 @@
 
       <!-- Main Catalogue Content Area -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <!-- Featured Articles Horizontal Carousel -->
+        <!-- Featured Articles Horizontal Carousel (Desktop / Tablet) -->
         <% if (articles && articles.length > 0) { %>
-          <div class="mb-10 w-full article-slider relative">
+          <div class="hidden md:block mb-10 w-full article-slider relative">
             <div class="flex items-center justify-between mb-4">
               <h2 class="text-sm uppercase tracking-wider font-extrabold text-slate-400">Featured Insights & Stories</h2>
               <span class="text-xs text-slate-400">Scroll to explore</span>
@@ -140,8 +140,8 @@
           </div>
         <% } %>
 
-        <!-- Products Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 product-grid" id="product-grid">
+        <!-- Products Grid (2 columns on mobile for multi-product visibility) -->
+        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6 product-grid" id="product-grid">
           <% if (products && products.length > 0) { %>
             <% for (const product of products) { %>
               <%- include('../components/prodCard.ejs', { product }) %>
@@ -213,11 +213,11 @@
         const articleSlider = document.querySelector('.article-slider');
 
         if (tabClickedId === 'tab1') {
-          articleGrid.className = 'hidden grid-cols-1 md:grid-cols-2 gap-6 article-grid';
-          productGrid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 product-grid';
-          if (articleSlider) articleSlider.style.display = 'block';
+          articleGrid.className = 'hidden grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 article-grid';
+          productGrid.className = 'grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6 product-grid';
+          if (articleSlider) articleSlider.style.display = '';
         } else if (tabClickedId === 'tab2') {
-          articleGrid.className = 'grid grid-cols-1 md:grid-cols-2 gap-6 article-grid';
+          articleGrid.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 article-grid';
           productGrid.className = 'hidden product-grid';
           if (articleSlider) articleSlider.style.display = 'none';
         }

@@ -44,7 +44,7 @@ export default function UserLogin() {
         document.body.appendChild(form);
         form.submit();
       } catch (fErr) {
-        setError(err.response?.data || 'Invalid email or password. Please verify your credentials.');
+        setError(err.response?.data?.error || err.response?.data || 'Invalid email or password. Please verify your credentials.');
         setLoading(false);
       }
     }
@@ -66,22 +66,31 @@ export default function UserLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-emerald-950 flex flex-col justify-center items-center p-4">
-      {/* Brand Header */}
-      <div className="text-center mb-8">
-        <a href="/home" className="inline-flex items-center gap-3 mb-3 group">
-          <img src="/assets/netZeroStickerIcon.png" alt="NetZeroMart" className="h-12 w-auto object-contain transition-transform group-hover:scale-105" />
-          <img src="/assets/netZeroText.png" alt="NetZeroMart" className="h-7 w-auto object-contain brightness-0 invert" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 flex flex-col justify-center items-center py-12 px-4 sm:px-6">
+      {/* Brand Header with Pixel-Perfect Alignment */}
+      <div className="flex flex-col items-center justify-center text-center mb-8">
+        <a href="/home" className="flex items-center justify-center gap-3 mb-3 group no-underline">
+          <img 
+            src="/assets/netZeroStickerIcon.png" 
+            alt="NetZeroMart" 
+            className="w-11 h-11 object-contain transition-transform group-hover:scale-105" 
+          />
+          <span className="text-2xl sm:text-3xl font-black tracking-tight text-white select-none">
+            NetZeroMart
+          </span>
         </a>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-semibold">
-          <Building2 size={14} /> Vendor & Partner Portal
+        <div className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold shadow-xs">
+          <Building2 size={14} className="flex-shrink-0" />
+          <span>Vendor & Partner Portal</span>
         </div>
       </div>
 
       {/* Login Box */}
-      <div className="max-w-md w-full bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 p-8 sm:p-10">
-        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Vendor Sign In</h2>
-        <p className="text-xs text-slate-500 mt-1 mb-6">Enter your registered email and password / passkey.</p>
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 sm:p-10">
+        <div className="mb-6">
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Vendor Sign In</h2>
+          <p className="text-xs text-slate-500 mt-1">Enter your registered email and password or temporary passkey.</p>
+        </div>
 
         {error && (
           <div className="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
@@ -91,10 +100,10 @@ export default function UserLogin() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Registered Email
             </label>
-            <div className="relative rounded-xl shadow-sm">
+            <div className="relative rounded-xl shadow-xs">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <Mail size={18} />
               </div>
@@ -110,10 +119,10 @@ export default function UserLogin() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Password or Temporary Passkey
             </label>
-            <div className="relative rounded-xl shadow-sm">
+            <div className="relative rounded-xl shadow-xs">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <Lock size={18} />
               </div>
@@ -128,7 +137,7 @@ export default function UserLogin() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -139,7 +148,7 @@ export default function UserLogin() {
             <button
               type="button"
               onClick={() => { setForgotModal(true); setForgotEmail(gmail); }}
-              className="text-xs font-medium text-emerald-700 hover:underline"
+              className="text-xs font-bold text-emerald-700 hover:underline cursor-pointer"
             >
               Forgot Passkey?
             </button>
@@ -148,7 +157,7 @@ export default function UserLogin() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition shadow-md flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold transition shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer active:scale-98"
           >
             {loading ? (
               <>
@@ -161,11 +170,11 @@ export default function UserLogin() {
           </button>
         </form>
 
-        <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <a href="/home" className="inline-flex items-center gap-1 hover:text-slate-800 font-medium">
-            <ArrowLeft size={14} /> Back to Storefront
+        <div className="mt-8 pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 text-center sm:text-left">
+          <a href="/home" className="inline-flex items-center gap-1.5 hover:text-slate-900 font-semibold text-slate-600 transition">
+            <ArrowLeft size={14} /> <span>Back to Storefront</span>
           </a>
-          <a href="/register" className="text-emerald-700 font-semibold hover:underline">
+          <a href="/register" className="text-emerald-700 hover:text-emerald-800 font-bold transition">
             New partner? Register here →
           </a>
         </div>
@@ -173,9 +182,9 @@ export default function UserLogin() {
 
       {/* Forgot Passkey Modal */}
       {forgotModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 animate-scale-up">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
               <KeyRound size={24} />
             </div>
             <h3 className="text-lg font-bold text-slate-900 mb-1">Recover Vendor Passkey</h3>
@@ -184,7 +193,7 @@ export default function UserLogin() {
             </p>
 
             {forgotMessage && (
-              <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs">
+              <div className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs">
                 {forgotMessage}
               </div>
             )}
@@ -196,20 +205,20 @@ export default function UserLogin() {
                 onChange={(e) => setForgotEmail(e.target.value)}
                 placeholder="contact@company.com"
                 required
-                className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600"
               />
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => { setForgotModal(false); setForgotMessage(''); }}
-                  className="w-1/2 py-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  className="w-1/2 py-2.5 text-xs font-bold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer"
                 >
                   Close
                 </button>
                 <button
                   type="submit"
                   disabled={forgotLoading}
-                  className="w-1/2 py-2 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+                  className="w-1/2 py-2.5 text-xs font-bold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 cursor-pointer"
                 >
                   {forgotLoading ? 'Sending...' : 'Send Passkey'}
                 </button>

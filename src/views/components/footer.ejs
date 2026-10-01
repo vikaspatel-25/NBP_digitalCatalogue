@@ -4,9 +4,9 @@
       
       <!-- Brand & Mission (2 Cols on md) -->
       <div class="md:col-span-2 space-y-4">
-        <a href="/home" class="inline-flex items-center gap-2.5">
-          <img src="/assets/netZeroStickerIcon.png" alt="NetZeroMart" class="h-8 w-auto object-contain" />
-          <img src="/assets/netZeroText.png" alt="NetZeroMart" class="h-5 w-auto object-contain" />
+        <a href="/home" class="inline-flex items-center gap-2 group cursor-pointer no-underline select-none">
+          <img src="/assets/netZeroStickerIcon.png" alt="NetZeroMart" class="h-8 w-8 object-contain" />
+          <span class="text-xl sm:text-2xl font-black tracking-tight text-white">NetZero<span class="text-emerald-400">Mart</span></span>
         </a>
         <p class="text-xs sm:text-sm text-slate-400 max-w-sm leading-relaxed">
           The curated digital directory accelerating the transition to net-zero solutions, verified sustainable materials, and industrial decarbonization technologies.
@@ -28,11 +28,17 @@
 
       <!-- Access Portals -->
       <div class="space-y-3">
-        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Portals</h3>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Portals & Admin</h3>
         <ul class="space-y-2 text-xs text-slate-400 list-none p-0 m-0">
           <li><a href="/userPanel" class="hover:text-white transition-colors">Vendor Dashboard</a></li>
           <li><a href="/userLogin" class="hover:text-white transition-colors">Vendor Login</a></li>
           <li><a href="/adminLogin" class="hover:text-white transition-colors">Administrator Access</a></li>
+          <li>
+            <a href="/admin" class="inline-flex items-center gap-1.5 px-3 py-1.5 mt-1 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 font-semibold transition-all">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+              <span>Admin Dashboard</span>
+            </a>
+          </li>
         </ul>
       </div>
 
@@ -40,7 +46,11 @@
 
     <!-- Copyright Subfooter -->
     <div class="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-      <p>© <%= new Date().getFullYear() %> NetZeroMart. All rights reserved.</p>
+      <div class="flex items-center gap-2">
+        <p>© <%= new Date().getFullYear() %> NetZeroMart. All rights reserved.</p>
+        <span class="text-slate-700">•</span>
+        <a href="/admin" class="hover:text-slate-300 transition-colors">Admin Portal</a>
+      </div>
       <p>Building a cleaner, transparent, and net-zero future.</p>
     </div>
   </div>

@@ -8,7 +8,6 @@ import {
   AlertCircle, 
   CheckCircle2, 
   Image as ImageIcon, 
-  Video, 
   Link2, 
   Sparkles,
   ArrowRight,
@@ -35,7 +34,6 @@ export default function AddProduct({ apiEndpoint = '/api/admin/addProduct', role
   // Media states
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
-  const [videos, setVideos] = useState([]);
   const [youtubeLinks, setYoutubeLinks] = useState(['']);
   const [articleLinks, setArticleLinks] = useState(['']);
 
@@ -65,19 +63,6 @@ export default function AddProduct({ apiEndpoint = '/api/admin/addProduct', role
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleVideoFiles = (e) => {
-    const files = Array.from(e.target.files).filter(f => f.type.startsWith('video/'));
-    if (videos.length + files.length > 5) {
-      alert('Maximum 5 product videos allowed.');
-      return;
-    }
-    setVideos(prev => [...prev, ...files]);
-  };
-
-  const removeVideo = (index) => {
-    setVideos(prev => prev.filter((_, i) => i !== index));
-  };
-
   const addLink = (setter) => setter(prev => [...prev, '']);
   const updateLink = (setter, index, value) => {
     setter(prev => {
@@ -99,7 +84,6 @@ export default function AddProduct({ apiEndpoint = '/api/admin/addProduct', role
     setListingPlacement('top');
     setImages([]);
     setImagePreviews([]);
-    setVideos([]);
     setYoutubeLinks(['']);
     setArticleLinks(['']);
     setError(null);
@@ -133,7 +117,6 @@ export default function AddProduct({ apiEndpoint = '/api/admin/addProduct', role
     formData.append('listingPlacement', listingPlacement);
 
     images.forEach(img => formData.append('images', img));
-    videos.forEach(vid => formData.append('videos', vid));
 
     youtubeLinks.filter(Boolean).forEach(link => formData.append('youtubeLinks[]', link.trim()));
     articleLinks.filter(Boolean).forEach(link => formData.append('articleLinks[]', link.trim()));
@@ -425,44 +408,7 @@ export default function AddProduct({ apiEndpoint = '/api/admin/addProduct', role
             )}
           </div>
 
-          {/* Videos Upload Section */}
-          <div className="pt-4 border-t border-slate-100">
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Product Video Files (Optional, Max 5)
-              </label>
-              <span className="text-xs text-slate-400">MP4, WebM up to 50MB</span>
-            </div>
 
-            <input
-              type="file"
-              multiple
-              accept="video/*"
-              onChange={handleVideoFiles}
-              className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"
-            />
-
-            {videos.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {videos.map((vid, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700">
-                    <div className="flex items-center gap-2 truncate">
-                      <Video size={16} className="text-indigo-600 flex-shrink-0" />
-                      <span className="font-medium truncate">{vid.name}</span>
-                      <span className="text-slate-400 font-mono">({(vid.size / (1024 * 1024)).toFixed(1)} MB)</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeVideo(idx)}
-                      className="text-rose-600 hover:text-rose-800 p-1"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
 
           {/* External Links Section */}
           <div className="pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6">

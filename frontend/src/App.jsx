@@ -412,52 +412,52 @@ function AdminDashboardOverview() {
       )}
 
       {/* Live Metric Counters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-            <Package size={22} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+            <Package className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900">
+          <div className="min-w-0">
+            <div className="text-xl sm:text-2xl font-black text-slate-900 truncate">
               {stats.loading ? '...' : stats.products}
             </div>
-            <div className="text-xs font-bold text-slate-400">Products in Catalogue</div>
+            <div className="text-[10px] sm:text-xs font-bold text-slate-400 truncate">Products</div>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
-            <UserCheck size={22} />
+        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+            <UserCheck className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900">
+          <div className="min-w-0">
+            <div className="text-xl sm:text-2xl font-black text-slate-900 truncate">
               {stats.loading ? '...' : stats.pendingUsers}
             </div>
-            <div className="text-xs font-bold text-slate-400">Pending Approvals</div>
+            <div className="text-[10px] sm:text-xs font-bold text-slate-400 truncate">Pending Approvals</div>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
-            <Users size={22} />
+        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+            <Users className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900">
+          <div className="min-w-0">
+            <div className="text-xl sm:text-2xl font-black text-slate-900 truncate">
               {stats.loading ? '...' : stats.activeUsers}
             </div>
-            <div className="text-xs font-bold text-slate-400">Verified Vendors</div>
+            <div className="text-[10px] sm:text-xs font-bold text-slate-400 truncate">Verified Vendors</div>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0">
-            <Layers size={22} />
+        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0">
+            <Layers className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900">
+          <div className="min-w-0">
+            <div className="text-xl sm:text-2xl font-black text-slate-900 truncate">
               {stats.loading ? '...' : stats.articles}
             </div>
-            <div className="text-xs font-bold text-slate-400">Published Articles</div>
+            <div className="text-[10px] sm:text-xs font-bold text-slate-400 truncate">Articles</div>
           </div>
         </div>
       </div>
@@ -473,7 +473,7 @@ function AdminDashboardOverview() {
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Catalogue Management</h3>
               <p className="text-slate-900 font-black text-lg mt-0.5">Products & Innovations</p>
               <p className="text-xs text-slate-500 mt-1">
-                Upload clean-tech products with high-res photos and video demos, update specifications, or prune legacy listings.
+                Upload clean-tech products with high-res photos and YouTube links, update specifications, or prune legacy listings.
               </p>
             </div>
           </div>
@@ -586,28 +586,28 @@ function UserDashboardOverview() {
       </div>
 
       {/* Live Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
-            <Package size={22} />
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+            <Package className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900">
+          <div className="min-w-0">
+            <div className="text-xl sm:text-2xl font-black text-slate-900 truncate">
               {stats.loading ? '...' : stats.products}
             </div>
-            <div className="text-xs font-bold text-slate-400">My Active Catalogue Listings</div>
+            <div className="text-[10px] sm:text-xs font-bold text-slate-400 truncate">My Listings</div>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0">
-            <Layers size={22} />
+        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0">
+            <Layers className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900">
+          <div className="min-w-0">
+            <div className="text-xl sm:text-2xl font-black text-slate-900 truncate">
               {stats.loading ? '...' : stats.articles}
             </div>
-            <div className="text-xs font-bold text-slate-400">My Published Articles & Guides</div>
+            <div className="text-[10px] sm:text-xs font-bold text-slate-400 truncate">My Articles</div>
           </div>
         </div>
       </div>

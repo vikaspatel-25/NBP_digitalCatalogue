@@ -61,20 +61,27 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 flex flex-col justify-center items-center p-4">
-      {/* Brand Header */}
-      <div className="text-center mb-8">
-        <a href="/home" className="inline-flex items-center gap-3 mb-3 group">
-          <img src="/assets/netZeroStickerIcon.png" alt="NetZeroMart" className="h-12 w-auto object-contain transition-transform group-hover:scale-105" />
-          <img src="/assets/netZeroText.png" alt="NetZeroMart" className="h-7 w-auto object-contain brightness-0 invert" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 flex flex-col justify-center items-center py-12 px-4 sm:px-6">
+      {/* Brand Header with Pixel-Perfect Alignment */}
+      <div className="flex flex-col items-center justify-center text-center mb-8">
+        <a href="/home" className="flex items-center justify-center gap-3 mb-3 group no-underline">
+          <img 
+            src="/assets/netZeroStickerIcon.png" 
+            alt="NetZeroMart" 
+            className="w-11 h-11 object-contain transition-transform group-hover:scale-105" 
+          />
+          <span className="text-2xl sm:text-3xl font-black tracking-tight text-white select-none">
+            NetZeroMart
+          </span>
         </a>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold">
-          <Shield size={14} /> System Administrator
+        <div className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold shadow-xs">
+          <Shield size={14} className="flex-shrink-0" />
+          <span>System Administrator</span>
         </div>
       </div>
 
       {/* Login Box */}
-      <div className="max-w-md w-full bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 p-8 sm:p-10">
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 sm:p-10">
         <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Admin Sign In</h2>
         <p className="text-xs text-slate-500 mt-1 mb-6">Enter your master password or security passkey.</p>
 
@@ -137,11 +144,11 @@ export default function AdminLogin() {
           </button>
         </form>
 
-        <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <a href="/home" className="inline-flex items-center gap-1 hover:text-slate-800 font-medium">
-            <ArrowLeft size={14} /> Back to Storefront
+        <div className="mt-8 pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 text-center sm:text-left">
+          <a href="/home" className="inline-flex items-center gap-1.5 hover:text-slate-900 font-semibold text-slate-600 transition">
+            <ArrowLeft size={14} /> <span>Back to Storefront</span>
           </a>
-          <a href="/userLogin" className="text-blue-600 font-semibold hover:underline">
+          <a href="/userLogin" className="text-blue-600 hover:text-blue-700 font-bold transition">
             Vendor Sign In →
           </a>
         </div>

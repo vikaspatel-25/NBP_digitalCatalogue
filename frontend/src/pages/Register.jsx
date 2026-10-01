@@ -125,12 +125,18 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-emerald-50/20 py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-center">
       {/* Brand Header */}
-      <div className="text-center mb-8">
-        <a href="/home" className="inline-flex items-center gap-2 mb-3 group">
-          <img src="/assets/netZeroStickerIcon.png" alt="NetZeroMart" className="h-10 w-auto object-contain transition-transform group-hover:scale-105" />
-          <img src="/assets/netZeroText.png" alt="NetZeroMart" className="h-6 w-auto object-contain" />
+      <div className="flex flex-col items-center justify-center text-center mb-8">
+        <a href="/home" className="flex items-center justify-center gap-3 mb-3 group no-underline">
+          <img 
+            src="/assets/netZeroStickerIcon.png" 
+            alt="NetZeroMart" 
+            className="w-11 h-11 object-contain transition-transform group-hover:scale-105" 
+          />
+          <span className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 select-none">
+            NetZeroMart
+          </span>
         </a>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Vendor & Partner Registration</h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Vendor & Partner Registration</h1>
         <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
           Join the NetZeroMart sustainable commerce network and showcase your green solutions.
         </p>

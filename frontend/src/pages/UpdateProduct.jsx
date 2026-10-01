@@ -11,7 +11,6 @@ import {
   ExternalLink, 
   ArrowLeft, 
   Loader2,
-  Video,
   FileText,
   RotateCcw,
   CheckCircle2,
@@ -40,8 +39,6 @@ export default function UpdateProduct({ basePath = '/api/admin' }) {
   const [existingImages, setExistingImages] = useState([]);
   const [newImageFiles, setNewImageFiles] = useState([]);
   const [newImagePreviews, setNewImagePreviews] = useState([]);
-  const [existingVideos, setExistingVideos] = useState([]);
-  const [newVideoFiles, setNewVideoFiles] = useState([]);
   const [youtubeLinks, setYoutubeLinks] = useState([]);
   const [articleLinks, setArticleLinks] = useState([]);
 
@@ -81,8 +78,6 @@ export default function UpdateProduct({ basePath = '/api/admin' }) {
     setExistingImages(prod.images || []);
     setNewImageFiles([]);
     setNewImagePreviews([]);
-    setExistingVideos(prod.videos || []);
-    setNewVideoFiles([]);
     setYoutubeLinks(prod.youtubeLinks && prod.youtubeLinks.length ? prod.youtubeLinks : ['']);
     setArticleLinks(prod.articleLinks && prod.articleLinks.length ? prod.articleLinks : ['']);
     setFeedback({ type: '', message: '' });
@@ -103,14 +98,6 @@ export default function UpdateProduct({ basePath = '/api/admin' }) {
   const removeNewImage = (index) => {
     setNewImageFiles(prev => prev.filter((_, i) => i !== index));
     setNewImagePreviews(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const removeExistingVideo = (urlToRemove) => {
-    setExistingVideos(prev => prev.filter(url => url !== urlToRemove));
-  };
-
-  const removeNewVideo = (index) => {
-    setNewVideoFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const addLink = (setter) => setter(prev => [...prev, '']);
@@ -152,8 +139,6 @@ export default function UpdateProduct({ basePath = '/api/admin' }) {
 
       existingImages.forEach(img => data.append('existingImages', img));
       newImageFiles.forEach(f => data.append('images', f));
-      existingVideos.forEach(vid => data.append('existingVideos', vid));
-      newVideoFiles.forEach(f => data.append('videos', f));
       youtubeLinks.filter(Boolean).forEach(y => data.append('youtubeLinks', y.trim()));
       articleLinks.filter(Boolean).forEach(a => data.append('articleLinks', a.trim()));
 
@@ -199,7 +184,7 @@ export default function UpdateProduct({ basePath = '/api/admin' }) {
             Update Existing Product
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Search and select any catalogued item to modify specifications, prices, images, and videos.
+            Search and select any catalogued item to modify specifications, prices, images, and links.
           </p>
         </div>
 
@@ -427,7 +412,7 @@ export default function UpdateProduct({ basePath = '/api/admin' }) {
             </div>
           </div>
 
-          {/* Images & Videos Card */}
+          {/* Images & Media Card */}
           <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-5">
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2 pb-3 border-b border-slate-100">
               <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
@@ -491,39 +476,7 @@ export default function UpdateProduct({ basePath = '/api/admin' }) {
               )}
             </div>
 
-            {/* Videos Section */}
-            <div className="pt-4 border-t border-slate-100">
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                Video Assets
-              </label>
-              {existingVideos.length > 0 && (
-                <div className="mb-3 space-y-2">
-                  {existingVideos.map((url, i) => (
-                    <div key={i} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-                      <div className="flex items-center gap-2 truncate">
-                        <Video size={16} className="text-indigo-600" />
-                        <span className="truncate">{url}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeExistingVideo(url)}
-                        className="text-rose-600 hover:text-rose-800 text-xs font-bold ml-2"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
 
-              <input
-                type="file"
-                multiple
-                accept="video/*"
-                onChange={e => setNewVideoFiles(Array.from(e.target.files))}
-                className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"
-              />
-            </div>
 
             {/* Links */}
             <div className="pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-5">
