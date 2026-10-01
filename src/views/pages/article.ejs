@@ -1,106 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= article.title %></title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="icon" href="/assets/netZeroStickerIcon.png" type="image/png">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              brand: {
-                blue: '#0158a0',
-                green: '#529f23',
-                darkBlue: '#004a87',
-                darkGreen: '#044202'
-              }
-            },
-            fontFamily: {
-              sans: ['Inter', 'system-ui', 'sans-serif'],
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= article.title %> | NetZeroMart Insights</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <link rel="icon" type="image/png" href="/assets/netZeroStickerIcon.png" />
+  <link rel="apple-touch-icon" href="/assets/netZeroStickerIcon.png" />
+
+  <meta name="description" content="<%= article.title %> - Read about sustainable industry practices and eco-technologies." />
+  <meta property="og:title" content="<%= article.title %> - NetZeroMart" />
+  <meta property="og:image" content="<%= article.coverImage || '/assets/netZeroStickerIcon.png' %>" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              blue: '#0158a0',
+              green: '#529f23',
+              darkBlue: '#004a87',
+              darkGreen: '#044202'
             }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
           }
         }
       }
-    </script>
+    }
+  </script>
 </head>
-<body class="bg-white text-gray-900 antialiased font-sans flex flex-col min-h-screen">
-    <%- include('../components/header.ejs') %>
-    <main class="flex-grow w-full">
-        <div class="max-w-[1320px] mx-auto p-2.5 min-h-screen">
-            <div class="bg-gray-50 rounded-xl p-5 md:p-8 max-w-[98%] mx-auto my-5 shadow-sm border border-gray-100">
-                <div class="relative pl-3.5 mb-6 cursor-pointer group" onclick="copyId('<%= article._id %>')">
-                    <div class="absolute left-0 top-0 w-1 h-full bg-brand-blue rounded-full"></div>
-                    <h1 class="text-2xl md:text-3xl font-semibold leading-snug m-0 text-gray-900 group-hover:text-brand-blue transition-colors">
-                        <%= article.title %>
-                    </h1>
-                </div>
+<body class="bg-slate-50 text-slate-900 antialiased font-sans flex flex-col min-h-screen selection:bg-blue-600 selection:text-white">
+  <%- include('../components/header.ejs') %>
 
-                <% if(article.coverImage){ %>
-                    <div class="w-full rounded-lg overflow-hidden bg-gray-100 mb-6">
-                        <img src="<%= article.coverImage %>" class="w-full h-auto block object-cover">
-                    </div>
-                <% } %>
+  <main class="flex-grow w-full py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Breadcrumb Navigation -->
+      <nav class="flex items-center gap-2 text-xs text-slate-500 font-medium mb-6">
+        <a href="/home" class="hover:text-blue-600 transition-colors no-underline">Catalogue</a>
+        <span>/</span>
+        <span class="text-slate-400">Articles</span>
+        <span>/</span>
+        <span class="text-slate-800 font-bold truncate max-w-xs"><%= article.title %></span>
+      </nav>
 
-                <div class="text-base leading-relaxed text-gray-700 max-w-none flex flex-col gap-4">
-                    <%- article.content %>
-                </div>
-            </div>
-
-            <% if(article.productLinks?.length){ %>
-                <div class="bg-gray-50 rounded-xl p-5 md:p-8 max-w-[98%] mx-auto mt-8 shadow-sm border border-gray-100">
-                    <h2 class="text-2xl font-semibold mb-4">Related Products</h2>
-                    <ul class="list-none p-0 m-0 flex flex-col gap-2.5">
-                        <% article.productLinks.forEach(link=>{ %>
-                            <li>
-                                <a href="<%= link %>" target="_blank" class="text-[15px] text-gray-700 no-underline hover:text-brand-blue hover:underline break-all">
-                                    <%= link %>
-                                </a>
-                            </li>
-                        <% }) %>
-                    </ul>
-                </div>
-            <% } %>
-
-            <div class="w-full mt-8 py-3 text-center text-sm text-gray-600 font-medium">
-                Posted By <%= article.userName == 'admin' || "Admin" ? 'NetZeroMart' : article.userName %>
-            </div>
+      <!-- Main Article Card -->
+      <article class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-10 shadow-sm space-y-6">
+        <div class="space-y-3">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 text-teal-700 text-xs font-bold border border-teal-100 uppercase tracking-wider">
+            Educational Case Study
+          </div>
+          <h1 class="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-snug">
+            <%= article.title %>
+          </h1>
+          <div class="flex items-center gap-3 text-xs text-slate-400 font-medium pt-1">
+            <span>Authored by: <strong class="text-slate-700"><%= article.userName === 'admin' ? 'NetZeroMart Editorial' : (article.userName || 'NetZeroMart') %></strong></span>
+          </div>
         </div>
-    </main>
 
-    <script>
-        function copyId(id) {
-            const tooltip = document.createElement('div');
-            tooltip.textContent = 'Copied ID';
-            tooltip.className = 'fixed top-5 left-1/2 -translate-x-1/2 bg-green-700 text-white px-3 py-1.5 rounded shadow-md z-50 transition-opacity';
-            document.body.appendChild(tooltip);
-            navigator.clipboard.writeText(id);
-            setTimeout(() => { 
-                tooltip.style.opacity = '0';
-                setTimeout(() => document.body.removeChild(tooltip), 300);
-            }, 1500);
-        }
+        <!-- Cover Image -->
+        <% if (article.coverImage) { %>
+          <div class="rounded-2xl overflow-hidden bg-slate-100 max-h-[480px] shadow-sm">
+            <img src="<%= article.coverImage %>" alt="<%= article.title %>" class="w-full h-full object-cover" />
+          </div>
+        <% } %>
 
-        function askQuery() {
-            const title = `<%= article.title.replace(/"/g,'\\"') %>`;
-            const pageUrl = window.location.href;
-            const subject = `Query about article: ${title}`;
-            const body = `Hello, I have a query about the article: ${title}.\n\nPage link: ${pageUrl}`;
-            const email = "netzeromart@gmail.com";
-            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-            if (isMobile) {
-                window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            } else {
-                window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, "_blank");
-            }
-        }
-    </script>
-    <%- include('../components/footer.ejs') %>
+        <!-- Article Prose Content -->
+        <div class="prose max-w-none text-slate-700 text-sm sm:text-base leading-relaxed space-y-4 pt-2">
+          <%- article.content %>
+        </div>
+
+        <!-- Linked Catalog Products -->
+        <% if (article.productLinks && article.productLinks.length) { %>
+          <div class="mt-8 pt-6 border-t border-slate-100 space-y-3">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Referenced Product Listings</h2>
+            <ul class="flex flex-col gap-2 p-0 m-0 list-none">
+              <% article.productLinks.forEach(link => { %>
+                <li class="p-3 bg-slate-50 rounded-xl border border-slate-100 hover:bg-slate-100 transition-colors">
+                  <a href="<%= link %>" target="_blank" rel="noreferrer" class="text-xs font-semibold text-blue-600 hover:underline break-all">
+                    <%= link %> ↗
+                  </a>
+                </li>
+              <% }) %>
+            </ul>
+          </div>
+        <% } %>
+      </article>
+
+    </div>
+  </main>
+
+  <%- include('../components/footer.ejs') %>
 </body>
 </html>

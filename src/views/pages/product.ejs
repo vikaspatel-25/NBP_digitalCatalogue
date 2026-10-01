@@ -1,215 +1,302 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NetZeroMart - <%= product.productName %></title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= product.productName %> | NetZeroMart Catalogue</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="icon" href="/assets/netZeroStickerIcon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <link rel="icon" type="image/png" href="/assets/netZeroStickerIcon.png" />
+  <link rel="apple-touch-icon" href="/assets/netZeroStickerIcon.png" />
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              brand: {
-                blue: '#0158a0',
-                green: '#529f23',
-                darkBlue: '#004a87',
-                darkGreen: '#044202',
-                greenHover: '#1ebe57'
-              }
-            },
-            fontFamily: {
-              sans: ['Inter', 'system-ui', 'sans-serif'],
+  <meta name="description" content="<%= product.shortDescription || 'View specifications, pricing and details for ' + product.productName %>" />
+  <meta property="og:title" content="<%= product.productName %> - NetZeroMart" />
+  <meta property="og:image" content="<%= (product.images && product.images[0]) || '/assets/netZeroStickerIcon.png' %>" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              blue: '#0158a0',
+              green: '#529f23',
+              darkBlue: '#004a87',
+              darkGreen: '#044202',
+              greenHover: '#1ebe57'
             }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
           }
         }
       }
-    </script>
-    <% function toYouTubeEmbed(url) { try { const u = new URL(url); if
-    (u.hostname === 'youtu.be') return 'https://www.youtube.com/embed/' +
-    u.pathname.slice(1); if (u.searchParams.get('v')) return
-    'https://www.youtube.com/embed/' + u.searchParams.get('v'); if
-    (u.pathname.startsWith('/shorts/')) return 'https://www.youtube.com/embed/'
-    + u.pathname.split('/')[2]; return null; } catch { return null; } } %>
+    }
+  </script>
+  <% 
+    function toYouTubeEmbed(url) { 
+      try { 
+        const u = new URL(url); 
+        if (u.hostname === 'youtu.be') return 'https://www.youtube.com/embed/' + u.pathname.slice(1); 
+        if (u.searchParams.get('v')) return 'https://www.youtube.com/embed/' + u.searchParams.get('v'); 
+        if (u.pathname.startsWith('/shorts/')) return 'https://www.youtube.com/embed/' + u.pathname.split('/')[2]; 
+        return null; 
+      } catch { 
+        return null; 
+      } 
+    } 
+  %>
 </head>
-<body class="bg-white text-gray-900 antialiased font-sans flex flex-col min-h-screen">
-    <%- include('../components/header.ejs') %>
-    <main class="flex-grow w-full">
-      <div class="max-w-[800px] w-full md:w-[99%] mx-auto min-h-screen p-2.5">
-        <div class="product-page">
-          <!-- Gallery Section -->
-          <div class="mt-4">
-            <div class="bg-gray-50 rounded-xl p-5 shadow-sm border border-gray-100">
-              <div class="flex flex-row justify-between items-center mb-4">
-                  <h2 class="text-[22px] font-semibold relative pl-4 m-0 before:content-[''] before:absolute before:left-0 before:top-0 before:w-1 before:h-full before:bg-brand-blue before:rounded-full">
-                    <%= product.companyName && product.companyName.toLowerCase() !== 'admin' 
-                          ? product.companyName 
-                          : 'Gallery' %>
-                  </h2>    
-                  <button class="bg-brand-green text-white font-semibold border-none rounded-md px-4 py-2 cursor-pointer hover:bg-brand-greenHover transition-colors text-sm max-h-[36px] flex items-center" onclick="askQuery()">
-                    Ask Query
-                  </button>
+<body class="bg-slate-50 text-slate-900 antialiased font-sans flex flex-col min-h-screen selection:bg-blue-600 selection:text-white">
+  <%- include('../components/header.ejs') %>
+
+  <main class="flex-grow w-full py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Breadcrumb Navigation -->
+      <nav class="flex items-center gap-2 text-xs text-slate-500 font-medium mb-6">
+        <a href="/home" class="hover:text-blue-600 transition-colors no-underline">Catalogue</a>
+        <span>/</span>
+        <span class="text-slate-400">Products</span>
+        <span>/</span>
+        <span class="text-slate-800 font-bold truncate max-w-xs"><%= product.productName %></span>
+      </nav>
+
+      <!-- Main Product Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left Column: Media Gallery (7 Cols) -->
+        <div class="lg:col-span-7 space-y-6">
+          <div class="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  <%= product.companyName && product.companyName.toLowerCase() !== 'admin' ? product.companyName : 'Product Media Showcase' %>
+                </span>
               </div>
-              <div class="relative overflow-hidden rounded-lg bg-gray-200 w-full h-[300px] md:h-[420px] group">
-                <div class="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2.5 py-1.5 rounded-md pointer-events-none z-10">Click to expand image</div>
-                <div class="flex transition-transform duration-300 ease-in-out h-full" id="carousel-track">
-                  <% (product.images || []).forEach(img=> { %>
-                  <div class="min-w-full flex justify-center items-center h-full carousel-slide shrink-0">
-                    <img src="<%= img %>" onclick="openFullscreen(this.src)" class="w-full h-full object-contain bg-black cursor-zoom-in" />
+              <span class="text-[11px] text-slate-400">Click preview to enlarge</span>
+            </div>
+
+            <!-- Carousel Frame -->
+            <div class="relative overflow-hidden rounded-2xl bg-slate-950 w-full aspect-[4/3] max-h-[480px] group shadow-inner">
+              <div class="flex transition-transform duration-300 ease-in-out h-full" id="carousel-track">
+                <% (product.images || []).forEach(img => { %>
+                  <div class="min-w-full flex justify-center items-center h-full carousel-slide shrink-0 p-4">
+                    <img
+                      src="<%= img %>"
+                      onclick="openFullscreen(this.src)"
+                      alt="<%= product.productName %>"
+                      class="max-w-full max-h-full object-contain cursor-zoom-in group-hover:scale-102 transition-transform"
+                    />
                   </div>
-                  <% }) %> <% (product.videos || []).forEach(video=> { %>
-                  <div class="min-w-full flex justify-center items-center h-full carousel-slide shrink-0">
-                    <video controls class="w-full h-full object-contain bg-black">
+                <% }) %>
+                <% (product.videos || []).forEach(video => { %>
+                  <div class="min-w-full flex justify-center items-center h-full carousel-slide shrink-0 p-4">
+                    <video controls class="max-w-full max-h-full object-contain">
                       <source src="<%= video %>" />
                     </video>
                   </div>
-                  <% }) %>
-                </div>
-                <% const mediaCount=(product.images?.length || 0) + (product.videos?.length || 0); %> 
-                <% if (mediaCount > 1) { %>
-                  <button class="absolute top-1/2 -translate-y-1/2 left-3 w-11 h-11 rounded-full border-none bg-black/45 text-white text-xl cursor-pointer z-10 hover:bg-black/70 transition-colors flex items-center justify-center" onclick="slideCarousel(-1)">
-                    ‹
-                  </button>
-                  <button class="absolute top-1/2 -translate-y-1/2 right-3 w-11 h-11 rounded-full border-none bg-black/45 text-white text-xl cursor-pointer z-10 hover:bg-black/70 transition-colors flex items-center justify-center" onclick="slideCarousel(1)">
-                    ›
-                  </button>
+                <% }) %>
+              </div>
+
+              <% const mediaCount = (product.images?.length || 0) + (product.videos?.length || 0); %>
+              <% if (mediaCount > 1) { %>
+                <button
+                  type="button"
+                  onclick="slideCarousel(-1)"
+                  class="absolute top-1/2 -translate-y-1/2 left-3 w-10 h-10 rounded-full bg-slate-900/60 hover:bg-slate-900 text-white flex items-center justify-center backdrop-blur-xs transition-all shadow-md active:scale-95 cursor-pointer"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  onclick="slideCarousel(1)"
+                  class="absolute top-1/2 -translate-y-1/2 right-3 w-10 h-10 rounded-full bg-slate-900/60 hover:bg-slate-900 text-white flex items-center justify-center backdrop-blur-xs transition-all shadow-md active:scale-95 cursor-pointer"
+                >
+                  ›
+                </button>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- YouTube Embeds Section -->
+          <% if (product.youtubeLinks?.length) { %>
+            <div class="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-sm space-y-4">
+              <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-red-600"></span>
+                <span>Video Demonstrations</span>
+              </h2>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <% product.youtubeLinks.map(toYouTubeEmbed).filter(Boolean).forEach(src => { %>
+                  <div class="aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-sm">
+                    <iframe src="<%= src %>" allowfullscreen class="w-full h-full border-none"></iframe>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- Related Article References -->
+          <% if (product.articleLinks?.length) { %>
+            <div class="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-sm space-y-3">
+              <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-teal-600"></span>
+                <span>Technical Whitepapers & References</span>
+              </h2>
+              <ul class="flex flex-col gap-2.5 p-0 m-0 list-none">
+                <% product.articleLinks.forEach(link => { %>
+                  <li class="bg-slate-50 rounded-xl p-3 border border-slate-100 hover:bg-slate-100 transition-colors">
+                    <a href="<%= link %>" target="_blank" rel="noreferrer" class="text-xs font-semibold text-blue-600 hover:underline break-all">
+                      <%= link %> ↗
+                    </a>
+                  </li>
+                <% }) %>
+              </ul>
+            </div>
+          <% } %>
+        </div>
+
+        <!-- Right Column: Product Overview & Inquiries (5 Cols) -->
+        <div class="lg:col-span-5 space-y-6">
+          <div class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-5">
+            <!-- Header with ID copy -->
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-100">
+                  Verified Specification
+                </span>
+                <button
+                  type="button"
+                  onclick="copyProductId('<%= product._id %>')"
+                  id="idTooltip"
+                  class="text-xs text-slate-400 hover:text-slate-700 font-mono transition-colors cursor-pointer"
+                  title="Click to copy product ID"
+                >
+                  ID: <%= product._id.toString().slice(-6) %> (Copy)
+                </button>
+              </div>
+
+              <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
+                <%= product.productName %>
+              </h1>
+
+              <% if (product.oneLineDescription) { %>
+                <p class="text-sm font-medium text-slate-500 mt-2">
+                  <%= product.oneLineDescription %>
+                </p>
+              <% } %>
+            </div>
+
+            <!-- Price Highlight Box -->
+            <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/60">
+              <div class="text-[10px] uppercase font-bold text-emerald-800 tracking-wider">Estimated Pricing</div>
+              <div class="text-xl sm:text-2xl font-black text-emerald-900 mt-0.5">
+                ₹<%= Number(product.priceMin || 0).toLocaleString('en-IN') %> - ₹<%= Number(product.priceMax || 0).toLocaleString('en-IN') %>
+                <% if (product.priceNote) { %>
+                  <span class="text-xs font-medium text-emerald-700 ml-1">(<%= product.priceNote %>)</span>
                 <% } %>
               </div>
             </div>
-          </div>
 
-          <!-- Product Info Section -->
-          <div class="mt-14">
-            <div class="bg-gray-50 rounded-xl p-5 shadow-sm border border-gray-100">
-              <div class="flex flex-col items-start justify-center gap-2 h-full">
-                <!-- Product ID & Title -->
-                <div class="relative inline-flex items-center cursor-pointer shrink-0 group">
-                  <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none" id="idTooltip">Copy ID</div>
-                  <h1 class="text-[26px] font-semibold leading-tight m-0 text-gray-900 hover:text-brand-blue relative pl-4 before:content-[''] before:absolute before:left-0 before:top-0 before:w-1 before:h-full before:bg-brand-blue before:rounded-full" onclick="copyProductId('<%= product._id %>')">
-                    <%= product.productName %>
-                  </h1>
-                </div>
+            <!-- Inquire CTA Button -->
+            <button
+              type="button"
+              onclick="askQuery()"
+              class="w-full py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition-all shadow-md shadow-emerald-600/20 active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+              <span>Submit Direct Inquiry to Vendor</span>
+            </button>
 
-                <!-- Price Range -->
-                <div class="text-base font-semibold my-3 text-gray-800 text-left">
-                  ₹ <%= product.priceMin %> - ₹ <%= product.priceMax %>
-                  <% if (product.priceNote) { %>
-                    <span class="font-normal text-gray-500">(<%= product.priceNote %>)</span>
-                  <% } %>
-                </div>
-
-                <!-- Product Description -->
-                <div class="mt-4 text-[15px] leading-[1.75] text-gray-700 text-left flex flex-col gap-2 w-full max-w-none">
-                  <%- product.detailedDescription.replace(/\r?\n/g, '<br /><br />') %> 
-                </div>
+            <!-- Detailed Specifications -->
+            <div class="pt-4 border-t border-slate-100 space-y-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Detailed Product Description</h3>
+              <div class="text-sm leading-relaxed text-slate-700 space-y-3">
+                <%- (product.detailedDescription || product.shortDescription || '').replace(/\r?\n/g, '<br />') %>
               </div>
             </div>
-          </div>
 
-          <!-- Videos Section -->
-          <% if (product.youtubeLinks?.length) { %>
-          <div class="mt-14">
-            <div class="bg-gray-50 rounded-xl p-5 shadow-sm border border-gray-100">
-              <h2 class="text-[22px] font-semibold mb-4 relative pl-4 m-0 before:content-[''] before:absolute before:left-0 before:top-0 before:w-1 before:h-full before:bg-brand-blue before:rounded-full">Videos</h2>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <% product.youtubeLinks.map(toYouTubeEmbed).filter(Boolean).forEach(src => { %>
-                <iframe src="<%= src %>" allowfullscreen class="w-full h-[260px] rounded-lg border-none shadow-sm bg-black"></iframe>
-                <% }) %>
-              </div>
+            <!-- Vendor Credential Footer -->
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span>Catalogued by: <strong class="text-slate-800"><%= product.companyName || 'NetZeroMart' %></strong></span>
+              <span class="text-emerald-700 font-semibold">Active Listing</span>
             </div>
           </div>
-          <% } %> 
-          
-          <!-- Articles Section -->
-          <% if (product.articleLinks?.length) { %>
-          <div class="mt-14">
-            <div class="bg-gray-50 rounded-xl p-5 shadow-sm border border-gray-100">
-              <h2 class="text-[22px] font-semibold mb-4 relative pl-4 m-0 before:content-[''] before:absolute before:left-0 before:top-0 before:w-1 before:h-full before:bg-brand-blue before:rounded-full">Articles</h2>
-              <ul class="flex flex-col gap-3.5 p-0 m-0 list-none">
-                <% product.articleLinks.forEach(link=> { %>
-                <li class="bg-white rounded-lg p-3.5 px-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                  <a href="<%= link %>" target="_blank" class="text-[15px] italic text-gray-700 no-underline break-all hover:text-brand-blue hover:underline"><%= link %></a>
-                </li>
-                <% }) %>
-              </ul>
-              <button class="block mx-auto mt-6 bg-brand-green text-white font-semibold border-none rounded-md px-4 py-2 cursor-pointer hover:bg-brand-greenHover transition-colors" onclick="askQuery()">
-                Ask Query
-              </button>
-            </div>
-          </div>
-          <% } %>
-
-          <div class="w-full mt-6 py-3 text-center font-sans text-sm text-gray-700 font-medium">
-            Posted By <%= product.userName == 'admin' || "Admin" ? 'NetZeroMart' : product.userName %>       
-          </div>
-
-          <!-- Fullscreen overlay -->
-          <div class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[9999]" id="fullscreenOverlay" onclick="closeFullscreen()">
-            <button class="absolute top-5 right-5 text-3xl text-white bg-transparent border-none cursor-pointer hover:text-gray-300 transition-colors" onclick="closeFullscreen()">×</button>
-            <img id="fullscreenImage" class="max-w-[92%] max-h-[92%] object-contain" />
-          </div>
-
-          <script>
-            let currentSlide = 0;
-            function slideCarousel(dir) {
-              const slides = document.querySelectorAll(".carousel-slide");
-              if (!slides.length) return;
-              currentSlide = (currentSlide + dir + slides.length) % slides.length;
-              document.getElementById("carousel-track").style.transform = `translateX(-${currentSlide * 100}%)`;
-            }
-
-            function copyProductId(prodId) {
-              const tooltip = document.getElementById("idTooltip");
-              navigator.clipboard.writeText(prodId);
-              tooltip.textContent = "Copied";
-              tooltip.classList.add("bg-green-700");
-              setTimeout(() => {
-                tooltip.textContent = "Copy ID";
-                tooltip.classList.remove("bg-green-700");
-              }, 1500);
-            }
-
-            function openFullscreen(src) {
-              document.getElementById("fullscreenImage").src = src;
-              const overlay = document.getElementById("fullscreenOverlay");
-              overlay.classList.remove("hidden");
-              overlay.classList.add("flex");
-              document.body.style.overflow = "hidden";
-            }
-
-            function closeFullscreen() {
-              const overlay = document.getElementById("fullscreenOverlay");
-              overlay.classList.remove("flex");
-              overlay.classList.add("hidden");
-              document.body.style.overflow = "";
-            }
-
-            function askQuery() {
-              const productName = `<%= product.productName.replace(/"/g, '\\"') %>`;
-              const pageUrl = window.location.href;
-              const subject = `Query about ${productName}`;
-              const body = `Hello, I have a query about the product: ${productName}.\n\nPage link: ${pageUrl}`;
-              const email = `<%= product.email %>` || "netzeromart@gmail.com";  
-              const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-              if (isMobile) {
-                const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                window.location.href = mailtoUrl;
-              } else {
-                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                window.open(gmailUrl, "_blank");
-              }
-            }
-          </script>
         </div>
+
       </div>
-    </main>
-    <%- include('../components/footer.ejs') %>
+    </div>
+
+    <!-- Fullscreen Lightbox Overlay -->
+    <div
+      class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[9999]"
+      id="fullscreenOverlay"
+      onclick="closeFullscreen()"
+    >
+      <button
+        class="absolute top-6 right-6 text-3xl text-white bg-transparent border-none cursor-pointer hover:text-slate-300 transition-colors"
+        onclick="closeFullscreen()"
+      >
+        ✕
+      </button>
+      <img id="fullscreenImage" class="max-w-[90%] max-h-[90%] object-contain rounded-lg" />
+    </div>
+
+    <script>
+      let currentSlide = 0;
+      function slideCarousel(dir) {
+        const slides = document.querySelectorAll(".carousel-slide");
+        if (!slides.length) return;
+        currentSlide = (currentSlide + dir + slides.length) % slides.length;
+        document.getElementById("carousel-track").style.transform = `translateX(-${currentSlide * 100}%)`;
+      }
+
+      function copyProductId(prodId) {
+        const tooltip = document.getElementById("idTooltip");
+        navigator.clipboard.writeText(prodId);
+        tooltip.textContent = "ID Copied!";
+        setTimeout(() => {
+          tooltip.textContent = "ID: " + prodId.slice(-6) + " (Copy)";
+        }, 2000);
+      }
+
+      function openFullscreen(src) {
+        document.getElementById("fullscreenImage").src = src;
+        const overlay = document.getElementById("fullscreenOverlay");
+        overlay.classList.remove("hidden");
+        overlay.classList.add("flex");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeFullscreen() {
+        const overlay = document.getElementById("fullscreenOverlay");
+        overlay.classList.remove("flex");
+        overlay.classList.add("hidden");
+        document.body.style.overflow = "";
+      }
+
+      function askQuery() {
+        const productName = `<%= product.productName.replace(/"/g, '\\"') %>`;
+        const pageUrl = window.location.href;
+        const subject = `Product Inquiry: ${productName}`;
+        const body = `Hello,\n\nI am interested in receiving more information, pricing specifications, or availability for: ${productName}.\n\nListing Reference: ${pageUrl}`;
+        const email = `<%= product.email %>` || "netzeromart@gmail.com";  
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        if (isMobile) {
+          window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        } else {
+          window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, "_blank");
+        }
+      }
+    </script>
+  </main>
+
+  <%- include('../components/footer.ejs') %>
 </body>
 </html>

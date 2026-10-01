@@ -1,12 +1,47 @@
-<footer class="bg-[#00050f] text-white text-center py-4 px-3 text-xs">
-  <div class="flex justify-center items-center gap-1.5 mb-2">
-      <img src="/assets/netZeroStickerIcon.png" alt="NetZeroMart Logo" class="h-8 w-auto object-contain" />
-      <img src="/assets/netZeroText.png" alt="NetZeroMart" class="h-[22px] w-auto object-contain" />
-  </div>
-  <div class="opacity-90">
-      © 2026 NetZeroMart. All rights reserved | Contact:
-      <a href="mailto:netzeromart@gmail.com" class="text-white no-underline hover:underline">
-        netzeromart@gmail.com
-      </a>
+<footer class="bg-slate-950 text-white mt-auto border-t border-slate-900">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+      
+      <!-- Brand & Mission (2 Cols on md) -->
+      <div class="md:col-span-2 space-y-4">
+        <a href="/home" class="inline-flex items-center gap-2.5">
+          <img src="/assets/netZeroStickerIcon.png" alt="NetZeroMart" class="h-8 w-auto object-contain" />
+          <img src="/assets/netZeroText.png" alt="NetZeroMart" class="h-5 w-auto object-contain" />
+        </a>
+        <p class="text-xs sm:text-sm text-slate-400 max-w-sm leading-relaxed">
+          The curated digital directory accelerating the transition to net-zero solutions, verified sustainable materials, and industrial decarbonization technologies.
+        </p>
+        <div class="text-xs text-slate-500">
+          Inquiries: <a href="mailto:netzeromart@gmail.com" class="text-blue-400 hover:underline">netzeromart@gmail.com</a>
+        </div>
+      </div>
+
+      <!-- Quick Platform Links -->
+      <div class="space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Catalogue</h3>
+        <ul class="space-y-2 text-xs text-slate-400 list-none p-0 m-0">
+          <li><a href="/home" class="hover:text-white transition-colors">Sustainable Products</a></li>
+          <li><a href="/home" class="hover:text-white transition-colors">Technical Articles</a></li>
+          <li><a href="/register" class="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">Become a Vendor</a></li>
+        </ul>
+      </div>
+
+      <!-- Access Portals -->
+      <div class="space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Portals</h3>
+        <ul class="space-y-2 text-xs text-slate-400 list-none p-0 m-0">
+          <li><a href="/userPanel" class="hover:text-white transition-colors">Vendor Dashboard</a></li>
+          <li><a href="/userLogin" class="hover:text-white transition-colors">Vendor Login</a></li>
+          <li><a href="/adminLogin" class="hover:text-white transition-colors">Administrator Access</a></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Copyright Subfooter -->
+    <div class="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+      <p>© <%= new Date().getFullYear() %> NetZeroMart. All rights reserved.</p>
+      <p>Building a cleaner, transparent, and net-zero future.</p>
+    </div>
   </div>
 </footer>

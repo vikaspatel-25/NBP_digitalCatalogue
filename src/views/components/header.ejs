@@ -1,70 +1,111 @@
-<header class="w-full bg-white border-b border-gray-200 shadow-sm relative z-50">
-  <div class="max-w-[1400px] mx-auto h-[72px] px-6 flex items-center justify-between w-full md:w-[95%]">
-    <div class="flex items-center h-full cursor-pointer" onclick="window.location.href='/'">
-      <img src="/assets/netZeroStickerIcon.png" alt="Brand Logo" class="p-1.5 pr-0 h-full max-h-full w-auto object-contain" />
-      <img src="/assets/netZeroText.png" alt="Brand Logo" class="py-[15px] pl-0 h-full max-h-full w-auto object-contain" />
-    </div>
-    <div class="hidden md:flex items-center gap-2.5">
-      <button class="px-4 py-2 text-[13px] font-medium rounded-md cursor-pointer border border-gray-200 bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors" onclick="location.href='/userPanel'">
-          User Panel
-      </button>
-      <button class="px-4 py-2 text-[13px] font-medium rounded-md cursor-pointer border border-gray-200 bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors" onclick="location.href='/register'">
-          Register Yourself
-      </button>
-      <a href="javascript:void(0);" onclick="contactUsEmail()" class="px-4 py-2 text-[13px] font-medium rounded-md border border-gray-200 bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors no-underline inline-block">
-          Contact Us
+<header class="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs transition-all">
+  <div class="max-w-7xl mx-auto h-[72px] px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+    <!-- Brand Logo -->
+    <a href="/home" class="flex items-center gap-2.5 group cursor-pointer no-underline select-none">
+      <img src="/assets/netZeroStickerIcon.png" alt="NetZeroMart Icon" class="h-9 w-auto object-contain group-hover:scale-105 transition-transform" />
+      <img src="/assets/netZeroText.png" alt="NetZeroMart" class="h-6 w-auto object-contain hidden sm:block" />
+    </a>
+
+    <!-- Desktop Navigation Actions -->
+    <nav class="hidden md:flex items-center gap-3">
+      <a href="/home" class="px-3.5 py-2 text-xs font-semibold text-slate-700 hover:text-blue-600 rounded-xl hover:bg-slate-100 transition-all no-underline">
+        Catalogue
       </a>
-    </div>
-    <div class="md:hidden flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 cursor-pointer text-xl" onclick="openDrawer()">
-      ☰
+      <a href="/register" class="px-3.5 py-2 text-xs font-semibold text-slate-700 hover:text-blue-600 rounded-xl hover:bg-slate-100 transition-all no-underline">
+        Become a Vendor
+      </a>
+      <a href="/userPanel" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 rounded-xl transition-all no-underline">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        Vendor Portal
+      </a>
+      <button onclick="contactUsEmail()" class="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-sm shadow-blue-600/20 cursor-pointer">
+        Contact Us
+      </button>
+    </nav>
+
+    <!-- Mobile Drawer Trigger -->
+    <div class="md:hidden flex items-center gap-2">
+      <button onclick="openDrawer()" aria-label="Open Navigation Menu" class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-700 hover:bg-slate-100 cursor-pointer transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
     </div>
   </div>
 </header>
 
-<div class="fixed inset-0 z-40 bg-black/25 hidden" id="overlay" onclick="closeDrawer()"></div>
+<!-- Mobile Overlay -->
+<div class="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs hidden transition-opacity" id="overlay" onclick="closeDrawer()"></div>
 
-<div class="fixed z-50 top-0 -right-[280px] w-[280px] h-full bg-white border-l border-gray-200 transition-all duration-300 flex flex-col" id="drawer">
-  <div class="h-[72px] px-5 border-b border-gray-200 flex justify-between items-center">
-    <button class="text-xl cursor-pointer bg-transparent border-none text-gray-600 hover:text-black" onclick="closeDrawer()">×</button>
-    <div class="flex items-center h-full">
-      <img src="/assets/netZeroStickerIcon.png" alt="Brand Logo" class="p-1.5 pr-0 h-full max-h-full w-auto object-contain" />
-      <img src="/assets/netZeroText.png" alt="Brand Logo" class="py-5 pl-0 h-full max-h-full w-auto object-contain" />
+<!-- Mobile Drawer -->
+<div class="fixed z-50 top-0 -right-[300px] w-[300px] h-full bg-white border-l border-slate-200 shadow-2xl transition-all duration-300 ease-in-out flex flex-col justify-between" id="drawer">
+  <div>
+    <!-- Drawer Header -->
+    <div class="h-[72px] px-6 border-b border-slate-100 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <img src="/assets/netZeroStickerIcon.png" alt="NetZeroMart" class="h-8 w-auto object-contain" />
+        <span class="font-bold text-slate-900 text-sm tracking-tight">NetZeroMart</span>
+      </div>
+      <button onclick="closeDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center cursor-pointer transition-colors">
+        ✕
+      </button>
+    </div>
+
+    <!-- Drawer Links -->
+    <div class="p-6 flex flex-col gap-2.5">
+      <a href="/home" class="px-4 py-2.5 text-sm font-semibold text-slate-800 rounded-xl hover:bg-slate-100 transition-colors no-underline">
+        Digital Catalogue
+      </a>
+      <a href="/register" class="px-4 py-2.5 text-sm font-semibold text-blue-600 rounded-xl bg-blue-50 border border-blue-100 transition-colors no-underline">
+        Register as Vendor
+      </a>
+      <a href="/userPanel" class="px-4 py-2.5 text-sm font-semibold text-emerald-700 rounded-xl bg-emerald-50 border border-emerald-100 transition-colors no-underline">
+        Vendor Portal Login
+      </a>
+      <a href="/adminLogin" class="px-4 py-2.5 text-sm font-semibold text-slate-700 rounded-xl hover:bg-slate-100 transition-colors no-underline">
+        Administrator Portal
+      </a>
+      <button onclick="contactUsEmail(); closeDrawer();" class="mt-2 w-full py-2.5 px-4 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-sm text-center cursor-pointer">
+        Contact Us
+      </button>
     </div>
   </div>
-  <div class="p-7 px-5 flex flex-col gap-3.5">
-    <a href="javascript:void(0);" onclick="contactUsEmail()" class="text-sm font-medium text-gray-800 p-2.5 rounded-md bg-gray-100 no-underline hover:bg-gray-200">Contact Us</a>
-    <a href="/userPanel" class="text-sm font-medium text-gray-800 p-2.5 rounded-md bg-gray-100 no-underline hover:bg-gray-200">User Panel</a>
-    <a href="/register" class="text-sm font-medium text-gray-800 p-2.5 rounded-md bg-gray-100 no-underline hover:bg-gray-200">Register Yourself</a>
+
+  <div class="p-6 border-t border-slate-100 text-xs text-slate-400 text-center">
+    Empowering Net-Zero Sustainable Living
   </div>
 </div>
+
 <script>
   function contactUsEmail() {
-      const email = "netzeromart@gmail.com";
-      const subject = "General Inquiry";
-      const body = "Hello,\n\nI would like to get in touch.";
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      if (isMobile) {
-          window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      } else {
-          window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, "_blank");
-      }
+    const email = "netzeromart@gmail.com";
+    const subject = "Inquiry regarding NetZeroMart Catalogue";
+    const body = "Hello NetZeroMart Team,\n\nI would like to inquire about your sustainable products and vendor listings.";
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    } else {
+      window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, "_blank");
+    }
   }
 
   function openDrawer() {
     const drawer = document.getElementById("drawer");
-    drawer.classList.remove("-right-[280px]");
+    drawer.classList.remove("-right-[300px]");
     drawer.classList.add("right-0");
     const overlay = document.getElementById("overlay");
     overlay.classList.remove("hidden");
     overlay.classList.add("block");
+    document.body.style.overflow = "hidden";
   }
 
   function closeDrawer() {
     const drawer = document.getElementById("drawer");
     drawer.classList.remove("right-0");
-    drawer.classList.add("-right-[280px]");
+    drawer.classList.add("-right-[300px]");
     const overlay = document.getElementById("overlay");
     overlay.classList.remove("block");
     overlay.classList.add("hidden");
+    document.body.style.overflow = "";
   }
 </script>

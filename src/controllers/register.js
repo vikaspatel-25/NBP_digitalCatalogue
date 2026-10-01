@@ -1,20 +1,40 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { v2 as cloudinary } from 'cloudinary';
 import User from '../models/company.model.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const reactIndexPath = path.resolve(process.cwd(), 'frontend/dist/index.html');
+
 export const registerPageController = async (req, res) => {
   try {
-    return res.render('pages/register', { error: null, success: null });
+    return res.sendFile(reactIndexPath);
   } catch (error) {
     return res.status(500).send('Internal Server Error');
   }
 };
 
 export const registerCompany = async (req, res) => {
+  const isJsonRequest = Boolean(
+    req.xhr ||
+    req.is('json') ||
+    (req.headers.accept && req.headers.accept.includes('application/json')) ||
+    req.headers['content-type']?.includes('multipart/form-data')
+  );
+
   try {
     const { userName, companyName, mobile, email } = req.body;
 
     // Ensure required fields exist
     if (!userName || !companyName || !mobile || !email) {
+      if (isJsonRequest) {
+        return res.status(400).json({
+          success: false,
+          error: 'All required fields (Contact Name, Company Name, Mobile Number, Email) must be provided.'
+        });
+      }
       return res.render('pages/register', {
         error: 'All required fields must be provided.',
         success: null
@@ -61,6 +81,13 @@ export const registerCompany = async (req, res) => {
     // Create user
     await User.create(userData);
 
+    if (isJsonRequest) {
+      return res.json({
+        success: true,
+        message: 'Registration submitted successfully. Our administration team will review and approve your vendor profile shortly.'
+      });
+    }
+
     return res.send(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -99,6 +126,12 @@ export const registerCompany = async (req, res) => {
 
   } catch (error) {
     console.error('Error registering company:', error);
+    if (isJsonRequest) {
+      return res.status(500).json({
+        success: false,
+        error: 'Something went wrong processing your registration. Please try again later.'
+      });
+    }
     return res.render('pages/register', {
       error: 'Something went wrong. Please try again later.',
       success: null

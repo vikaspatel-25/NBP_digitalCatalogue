@@ -1,17 +1,44 @@
-<a href="/home/article?id=<%= article._id %>" class="w-full flex gap-3.5 border border-gray-200 rounded-md overflow-hidden no-underline text-inherit bg-white transition-shadow duration-200 hover:shadow-[0_4px_10px_rgba(0,0,0,0.1)] group">
-  <div class="w-[140px] h-[110px] shrink-0 bg-gray-50 flex items-center justify-start pl-1.5 overflow-hidden">
-    <% if(article.coverImage){ %>
-      <img src="<%= article.coverImage %>" loading="lazy" alt="<%= article.title %>" class="max-w-full max-h-full object-cover rounded-sm group-hover:scale-105 transition-transform duration-300">
+<div class="group relative flex flex-col sm:flex-row bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer w-full" onclick="window.location.href='/home/article?id=<%= article._id %>'">
+  <!-- Thumbnail Container -->
+  <div class="w-full sm:w-[160px] h-[140px] sm:h-auto shrink-0 bg-slate-100 relative overflow-hidden flex items-center justify-center">
+    <% if (article.coverImage) { %>
+      <img
+        src="<%= article.coverImage %>"
+        alt="<%= article.title %>"
+        loading="lazy"
+        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+      />
     <% } else { %>
-      <img src="/images/placeholder.png" loading="lazy" alt="No image" class="max-w-full max-h-full object-cover">
+      <img
+        src="/images/placeholder.png"
+        alt="Article thumbnail"
+        loading="lazy"
+        class="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-300"
+      />
     <% } %>
   </div>
-  <div class="py-2.5 pr-3 flex flex-col justify-center gap-1.5 overflow-hidden">
-    <h3 class="text-[clamp(14px,1.1vw,17px)] font-semibold m-0 leading-snug line-clamp-2 text-gray-900 group-hover:text-[#0158a0] transition-colors">
-      <%= article.title %>
-    </h3>
-    <p class="text-[clamp(13px,0.95vw,14px)] text-gray-600 m-0 leading-relaxed line-clamp-3">
-      <%= article.content.replace(/<[^>]*>?/gm,'').substring(0,140) %>...
-    </p>
+
+  <!-- Content Body -->
+  <div class="p-4 sm:p-5 flex flex-col justify-between flex-1 gap-2">
+    <div>
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="text-[10px] uppercase font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-100">
+          Insight & Guide
+        </span>
+      </div>
+      <h3 class="text-sm sm:text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">
+        <%= article.title %>
+      </h3>
+      <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed mt-1.5">
+        <%= article.content.replace(/<[^>]*>?/gm, '').substring(0, 150) %>...
+      </p>
+    </div>
+
+    <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-[11px] text-slate-400 font-medium">
+      <span>By <%= article.userName === 'admin' ? 'NetZeroMart' : (article.userName || 'NetZeroMart') %></span>
+      <span class="text-blue-600 font-semibold group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+        Read article →
+      </span>
+    </div>
   </div>
-</a>
+</div>

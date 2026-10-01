@@ -8,11 +8,11 @@ import bcrypt from "bcrypt";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const filePath = path.join(__dirname, "../views/pages/login.ejs");
+const reactIndexPath = path.resolve(process.cwd(), "frontend/dist/index.html");
 
 async function loginPageController(req, res) {
   try {
-    res.render(filePath);
+    res.sendFile(reactIndexPath);
   } catch (error) {
     console.error("Error rendering login page:", error);
     res.status(500).send("Internal Server Error");
@@ -21,19 +21,29 @@ async function loginPageController(req, res) {
 
 async function userLoginPageController(req, res) {
   try {
-    const filePath = path.join(__dirname, "../views/pages/userLogin.ejs");
-    res.render(filePath);
+    res.sendFile(reactIndexPath);
   } catch (error) {
-    console.error("Error rendering login page:", error);
+    console.error("Error rendering user login page:", error);
     res.status(500).send("Internal Server Error");
   }
 }
 
 async function loginController(req, res) {
   try {
+    const isJsonRequest = Boolean(
+      req.xhr ||
+      req.is("json") ||
+      (req.headers.accept && req.headers.accept.includes("application/json"))
+    );
+
     const pwd = req.body.password;
     const admin = await Admin.findOne({});
-    if (!admin) return res.status(500).send("Admin not configured");
+    if (!admin) {
+      if (isJsonRequest) {
+        return res.status(500).json({ success: false, error: "Admin not configured" });
+      }
+      return res.status(500).send("Admin not configured");
+    }
 
     let isMatch = false;
 
@@ -48,6 +58,9 @@ async function loginController(req, res) {
     }
 
     if (!isMatch) {
+      if (isJsonRequest) {
+        return res.status(401).json({ success: false, error: "Invalid administrator credentials" });
+      }
       return res.status(401).send(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -66,7 +79,7 @@ async function loginController(req, res) {
 <body>
   <div class="card">
     <h2>Invalid Credentials</h2>
-    <p>The email or password you entered is incorrect.</p>
+    <p>The password you entered is incorrect.</p>
     <a href="/login" class="btn">Back to Login</a>
   </div>
 </body>
@@ -92,18 +105,34 @@ async function loginController(req, res) {
       sameSite: "strict",
     });
 
+    if (isJsonRequest) {
+      return res.json({ success: true, redirectUrl: "/admin" });
+    }
+
     res.redirect("/admin");
   } catch (error) {
     console.error("Login error:", error);
+    if (req.xhr || req.is("json") || (req.headers.accept && req.headers.accept.includes("application/json"))) {
+      return res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
     res.status(500).send("Internal Server Error");
   }
 }
 
 async function userLoginController(req, res) {
   try {
+    const isJsonRequest = Boolean(
+      req.xhr ||
+      req.is("json") ||
+      (req.headers.accept && req.headers.accept.includes("application/json"))
+    );
+
     const { gmail, password } = req.body;
 
     if (!gmail || !password) {
+      if (isJsonRequest) {
+        return res.status(400).json({ success: false, error: "Email and password are required" });
+      }
       return res.status(400).send("Email and password are required");
     }
 
@@ -111,6 +140,9 @@ async function userLoginController(req, res) {
     const user = await Users.findOne({ email: normalizedEmail });
 
     if (!user) {
+      if (isJsonRequest) {
+        return res.status(401).json({ success: false, error: "Invalid email or credentials" });
+      }
       return res.status(401).send(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -137,6 +169,9 @@ async function userLoginController(req, res) {
     }
 
     if (user.status !== "active") {
+      if (isJsonRequest) {
+        return res.status(403).json({ success: false, error: "Account application is pending approval or inactive." });
+      }
       return res.status(403).send("Account is not active");
     }
 
@@ -152,6 +187,9 @@ async function userLoginController(req, res) {
     }
 
     if (!isMatch) {
+      if (isJsonRequest) {
+        return res.status(401).json({ success: false, error: "Invalid password or passkey" });
+      }
       return res.status(401).send(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -196,9 +234,16 @@ async function userLoginController(req, res) {
       sameSite: "strict",
     });
 
+    if (isJsonRequest) {
+      return res.json({ success: true, redirectUrl: "/userPanel" });
+    }
+
     res.redirect("/userPanel");
   } catch (error) {
     console.error("User login error:", error);
+    if (req.xhr || req.is("json") || (req.headers.accept && req.headers.accept.includes("application/json"))) {
+      return res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
     res.status(500).send("Internal Server Error");
   }
 }

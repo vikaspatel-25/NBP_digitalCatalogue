@@ -204,6 +204,12 @@ Router.post(
   addApiProductController
 );
 
+// Public API Routes for React Registration & Sign In
+Router.post("/api/register", upload.single("document"), registerCompany);
+Router.post("/api/adminLogin", loginController);
+Router.post("/api/login", loginController);
+Router.post("/api/userLogin", userLoginController);
+
 // Admin API Routes
 Router.get("/api/admin/userApproval", auth, async (req, res) => {
   const { apiUserApprovalPageController } = await import("../controllers/userApproval.js");
