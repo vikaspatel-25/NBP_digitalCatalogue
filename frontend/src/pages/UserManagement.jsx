@@ -313,25 +313,29 @@ export default function UserManagement() {
                 </div>
 
                 {/* Document badge */}
-                {user.document?.url ? (
-                  <a
-                    href={user.document.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center justify-between p-2.5 rounded-xl bg-blue-50/60 border border-blue-100 hover:bg-blue-100/70 transition-colors text-xs text-blue-800 font-medium group"
-                  >
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-blue-600" />
-                      <span>Business Registration Document</span>
+                {(() => {
+                  const docUrl = typeof user.document === 'string' ? user.document : user.document?.url;
+                  return docUrl ? (
+                    <a
+                      href={docUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-2.5 rounded-xl bg-blue-50/60 border border-blue-100 hover:bg-blue-100/70 transition-colors text-xs text-blue-800 font-medium group"
+                      title="Open business document in a new tab"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-blue-600" />
+                        <span>Business Registration Document</span>
+                      </div>
+                      <ExternalLink className="w-3.5 h-3.5 text-blue-500 group-hover:translate-x-0.5 transition-transform" />
+                    </a>
+                  ) : (
+                    <div className="p-2 rounded-xl bg-slate-50 text-slate-400 text-xs italic flex items-center gap-2">
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>No legal document attached</span>
                     </div>
-                    <ExternalLink className="w-3.5 h-3.5 text-blue-500 group-hover:translate-x-0.5 transition-transform" />
-                  </a>
-                ) : (
-                  <div className="p-2 rounded-xl bg-slate-50 text-slate-400 text-xs italic flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5" />
-                    <span>No legal document attached</span>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
 
               {/* Action buttons */}

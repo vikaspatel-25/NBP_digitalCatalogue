@@ -252,68 +252,101 @@ export default function UserApproval() {
                   </div>
 
                   {/* Attached Legal Document Preview */}
-                  {user.document && user.document.url ? (
-                    <div className="p-3 rounded-xl bg-blue-50/60 border border-blue-100 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2 text-blue-900 font-semibold truncate">
-                        <FileText size={16} className="text-blue-600 flex-shrink-0" />
-                        <span className="truncate">Registration Document / Certificate</span>
+                  {(() => {
+                    const docUrl = typeof user.document === 'string' ? user.document : user.document?.url;
+                    return docUrl ? (
+                      <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                        <div className="flex items-center gap-2.5 text-slate-800 font-medium min-w-0">
+                          <FileText size={18} className="text-blue-600 shrink-0" />
+                          <div className="min-w-0">
+                            <span className="font-semibold text-slate-900 block truncate">Company Registration Document</span>
+                            <span className="text-[11px] text-slate-500 block truncate">Uploaded during vendor registration</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setDocModal(docUrl)}
+                            className="px-2.5 py-1.5 rounded-lg bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 text-xs font-semibold flex items-center gap-1.5 transition shadow-2xs"
+                            title="Quick modal preview"
+                          >
+                            <Eye size={13} />
+                            <span>Preview</span>
+                          </button>
+                          <a
+                            href={docUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-2xs"
+                            title="Open document in a new tab"
+                          >
+                            <ExternalLink size={13} />
+                            <span>View Doc (New Tab)</span>
+                          </a>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setDocModal(user.document.url)}
-                          className="px-2 py-1 rounded-lg bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 text-[11px] font-bold flex items-center gap-1 transition"
-                        >
-                          <Eye size={12} />
-                          <span>Preview</span>
-                        </button>
-                        <a
-                          href={user.document.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="p-1 text-blue-600 hover:text-blue-800"
-                          title="Open in new tab"
-                        >
-                          <ExternalLink size={14} />
-                        </a>
+                    ) : (
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-400 text-xs italic flex items-center gap-2">
+                        <FileText size={15} />
+                        <span>No document uploaded with this registration</span>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-slate-400 text-xs italic flex items-center gap-2">
-                      <FileText size={14} />
-                      <span>No document attached with submission</span>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
 
                 {/* Actions Row */}
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-                  <button
-                    disabled={isProcessing}
-                    onClick={() => setRejectModal(user)}
-                    className="px-4 py-2 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-rose-600 font-bold text-xs transition active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
-                  >
-                    <X size={14} />
-                    <span>Reject</span>
-                  </button>
+                {(() => {
+                  const docUrl = typeof user.document === 'string' ? user.document : user.document?.url;
+                  return (
+                    <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        {docUrl ? (
+                          <a
+                            href={docUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-700 font-semibold text-xs transition shadow-2xs"
+                            title="Open document in a new tab to review before approving"
+                          >
+                            <ExternalLink size={14} className="text-blue-600" />
+                            <span>View Document (New Tab)</span>
+                          </a>
+                        ) : (
+                          <span className="text-[11px] text-slate-400 italic">No document attached</span>
+                        )}
+                      </div>
 
-                  <button
-                    disabled={isProcessing}
-                    onClick={() => handleApprove(user)}
-                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-md shadow-emerald-600/20 active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <Loader2 size={14} className="animate-spin" />
-                        <span>Approving...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Check size={14} />
-                        <span>Approve Vendor</span>
-                      </>
-                    )}
-                  </button>
-                </div>
+                      <div className="flex items-center gap-2.5 justify-end">
+                        <button
+                          disabled={isProcessing}
+                          onClick={() => setRejectModal(user)}
+                          className="px-4 py-2 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-rose-600 font-semibold text-xs transition active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
+                        >
+                          <X size={14} />
+                          <span>Reject</span>
+                        </button>
+
+                        <button
+                          disabled={isProcessing}
+                          onClick={() => handleApprove(user)}
+                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition shadow-2xs active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
+                        >
+                          {isProcessing ? (
+                            <>
+                              <Loader2 size={14} className="animate-spin" />
+                              <span>Approving...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Check size={14} />
+                              <span>Approve Vendor</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}
