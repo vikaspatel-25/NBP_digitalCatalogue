@@ -26,6 +26,7 @@ export default function UserApproval() {
   const [actionLoading, setActionLoading] = useState(null); // id of user currently being processed
   const [feedback, setFeedback] = useState({ type: '', message: '' });
   const [rejectModal, setRejectModal] = useState(null);
+  const [modalError, setModalError] = useState('');
 
   const loadPending = () => {
     setLoading(true);
@@ -53,7 +54,7 @@ export default function UserApproval() {
 
     try {
       const res = await axios.post('/api/admin/userApproval/approve', { userId: user._id });
-      setUsers(prev => prev.filter(u => u._id !== user._id));
+      setUsers(prev => prev.filter(u => String(u._id) !== String(user._id)));
       setFeedback({ 
         type: 'success', 
         message: `Approved ${user.companyName}! Temporary passkey has been generated and dispatched to ${user.email}.` 
@@ -71,23 +72,41 @@ export default function UserApproval() {
 
   const handleReject = async () => {
     if (!rejectModal) return;
-    setActionLoading(rejectModal._id);
+    const targetId = rejectModal._id;
+    const targetName = rejectModal.companyName;
+    setActionLoading(targetId);
+    setModalError('');
     setFeedback({ type: '', message: '' });
 
     try {
-      await axios.post('/api/admin/userApproval/reject', { userId: rejectModal._id });
-      setUsers(prev => prev.filter(u => u._id !== rejectModal._id));
-      setFeedback({ 
-        type: 'success', 
-        message: `Rejected registration for ${rejectModal.companyName}.` 
-      });
-      setRejectModal(null);
+      const res = await axios.post('/api/admin/userApproval/reject', { userId: targetId });
+      if (res.data?.success !== false) {
+        setUsers(prev => prev.filter(u => String(u._id) !== String(targetId)));
+        setFeedback({ 
+          type: 'success', 
+          message: `Rejected registration for ${targetName || 'vendor'}.` 
+        });
+        setRejectModal(null);
+      } else {
+        setModalError(res.data?.error || res.data?.message || 'Failed to reject registration.');
+      }
     } catch (err) {
       console.error('Reject user error:', err);
-      setFeedback({ 
-        type: 'error', 
-        message: err.response?.data?.message || err.response?.data?.error || 'Failed to reject registration.' 
-      });
+      if (err.response?.status === 404) {
+        setUsers(prev => prev.filter(u => String(u._id) !== String(targetId)));
+        setFeedback({ 
+          type: 'success', 
+          message: `Rejected registration for ${targetName || 'vendor'}.` 
+        });
+        setRejectModal(null);
+      } else {
+        const errMsg = err.response?.data?.message || err.response?.data?.error || 'Failed to reject registration. Please try again.';
+        setModalError(errMsg);
+        setFeedback({ 
+          type: 'error', 
+          message: errMsg 
+        });
+      }
     } finally {
       setActionLoading(null);
     }
@@ -322,14 +341,22 @@ export default function UserApproval() {
 
       {/* Reject Confirmation Dialog */}
       {rejectModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-scale-up">
+        <div 
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !actionLoading) {
+              setRejectModal(null);
+              setModalError('');
+            }
+          }}
+        >
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-150">
             <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
               <ShieldAlert size={24} />
             </div>
 
             <div className="text-center space-y-1">
-              <h3 className="text-lg font-black text-slate-900">
+              <h3 className="text-lg font-bold text-slate-900">
                 Reject Vendor Registration?
               </h3>
               <p className="text-xs text-slate-500">
@@ -337,18 +364,42 @@ export default function UserApproval() {
               </p>
             </div>
 
+            {modalError && (
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+                <AlertCircle size={15} className="shrink-0 text-rose-500" />
+                <span>{modalError}</span>
+              </div>
+            )}
+
             <div className="flex gap-3 pt-2">
               <button
-                onClick={() => setRejectModal(null)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition"
+                type="button"
+                onClick={() => {
+                  setRejectModal(null);
+                  setModalError('');
+                }}
+                disabled={actionLoading === rejectModal._id}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition disabled:opacity-50 cursor-pointer"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleReject}
-                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition shadow-md shadow-rose-600/20"
+                disabled={actionLoading === rejectModal._id}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-98 text-white font-semibold text-xs transition shadow-sm shadow-rose-600/20 disabled:opacity-60 flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                Confirm Rejection
+                {actionLoading === rejectModal._id ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    <span>Rejecting...</span>
+                  </>
+                ) : (
+                  <>
+                    <X size={14} />
+                    <span>Confirm Rejection</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
