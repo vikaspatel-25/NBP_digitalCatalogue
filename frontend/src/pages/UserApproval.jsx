@@ -107,17 +107,17 @@ export default function UserApproval() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Header Banner */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header Banner - Standardized Minimal */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-800 text-xs font-semibold uppercase tracking-wider mb-2">
-            <Building2 size={14} />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold tracking-wide uppercase mb-1.5">
+            <Building2 size={13} />
             <span>Onboarding Queue</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
             Vendor Registrations Approval
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             Review incoming vendor applications, verify legal registration documents, and issue platform credentials.
           </p>
         </div>
@@ -125,7 +125,7 @@ export default function UserApproval() {
         <button
           onClick={loadPending}
           disabled={loading}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-sm active:scale-95 disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition shadow-2xs active:scale-95 disabled:opacity-50"
         >
           <RefreshCw size={14} className={loading ? 'animate-spin text-blue-600' : ''} />
           <span>Refresh List</span>

@@ -46,17 +46,24 @@ export default function ResetPassword({ role = 'admin' }) {
   };
 
   return (
-    <div className="max-w-xl mx-auto py-4">
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8">
-        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-            <Lock size={20} />
+    <div className="max-w-2xl mx-auto space-y-6">
+      {/* Header Banner - Standardized Minimal */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold tracking-wide uppercase mb-1.5">
+            <Lock size={13} />
+            <span>Account Security</span>
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-900">Change Password</h2>
-            <p className="text-xs text-slate-500">Update your security credentials for this account.</p>
-          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            Change Password
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Update your authentication credentials for secure portal access.
+          </p>
         </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 sm:p-6">
 
         {error && (
           <div className="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-center gap-2">

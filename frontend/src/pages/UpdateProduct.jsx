@@ -173,17 +173,17 @@ export default function UpdateProduct({ basePath = '/api/admin' }) {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      {/* Header Banner */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header Banner - Standardized Minimal */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-800 text-xs font-semibold uppercase tracking-wider mb-2">
-            <Edit3 size={14} />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold tracking-wide uppercase mb-1.5">
+            <Edit3 size={13} />
             <span>Catalogue Editor</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
             Update Existing Product
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             Search and select any catalogued item to modify specifications, prices, images, and links.
           </p>
         </div>
@@ -191,7 +191,7 @@ export default function UpdateProduct({ basePath = '/api/admin' }) {
         {selectedProduct && (
           <button
             onClick={() => setSelectedProduct(null)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-sm self-start sm:self-auto"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition shadow-2xs self-start sm:self-auto"
           >
             <ArrowLeft size={14} />
             <span>Choose Different Product</span>

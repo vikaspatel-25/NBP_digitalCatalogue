@@ -73,25 +73,25 @@ function TitleUpdater() {
   return null;
 }
 
-function NavItem({ to, icon: Icon, label, color = "text-slate-400", badge = null }) {
+function NavItem({ to, icon: Icon, label, badge = null }) {
   const location = useLocation();
   const isActive = location.pathname === to;
 
   return (
     <Link
       to={to}
-      className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+      className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all ${
         isActive
-          ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-          : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+          ? 'bg-slate-800 text-white font-semibold shadow-2xs'
+          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
       }`}
     >
-      <div className="flex items-center gap-3">
-        <Icon size={18} className={isActive ? 'text-white' : color} />
+      <div className="flex items-center gap-2.5">
+        <Icon size={16} className={isActive ? 'text-white' : 'text-slate-400'} />
         <span>{label}</span>
       </div>
       {badge > 0 && (
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950">
+        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-slate-950">
           {badge}
         </span>
       )}
@@ -125,22 +125,22 @@ function AdminLayout({ children }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static top-0 bottom-0 left-0 z-50 w-64 bg-slate-950 text-white flex flex-col h-full shadow-2xl transition-transform duration-300 ease-in-out ${
+        className={`fixed lg:static top-0 bottom-0 left-0 z-50 w-64 bg-slate-950 text-white flex flex-col h-full shadow-2xl transition-transform duration-300 ease-in-out border-r border-slate-900 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-          <a href="/home" className="flex items-center space-x-3 group no-underline" title="Go to NetZeroMart Storefront">
+        <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
+          <a href="/home" className="flex items-center space-x-2.5 group no-underline" title="Go to NetZeroMart Storefront">
             <img
               src="/assets/netZeroStickerIcon.png"
               alt="NetZeroMart"
-              className="w-10 h-10 object-contain group-hover:scale-105 transition-transform"
+              className="w-8 h-8 object-contain group-hover:scale-105 transition-transform"
             />
             <div>
-              <h2 className="text-base font-black tracking-tight text-white flex items-center gap-1.5 group-hover:text-blue-400 transition-colors">
+              <h2 className="text-sm font-bold tracking-tight text-white flex items-center gap-1.5 group-hover:text-blue-400 transition-colors">
                 <span>NetZeroMart</span>
               </h2>
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-900/60 text-blue-300 border border-blue-800">
+              <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-medium bg-slate-800 text-slate-300 border border-slate-700">
                 Master Admin
               </span>
             </div>
@@ -153,34 +153,32 @@ function AdminLayout({ children }) {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
-          <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mb-2">Main Menu</p>
-          <NavItem to="/admin" icon={LayoutDashboard} label="Dashboard" color="text-blue-400" />
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mb-1.5">Overview</p>
+          <NavItem to="/admin" icon={LayoutDashboard} label="Dashboard" />
 
-          <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mt-5 mb-2">Vendor Relations</p>
-          <NavItem to="/admin/userApproval" icon={UserCheck} label="Pending Approvals" color="text-emerald-400" badge={pendingCount} />
-          <NavItem to="/admin/userManagement" icon={Users} label="Active Vendors" color="text-indigo-400" />
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Vendor Relations</p>
+          <NavItem to="/admin/userApproval" icon={UserCheck} label="Pending Approvals" badge={pendingCount} />
+          <NavItem to="/admin/userManagement" icon={Users} label="Active Vendors" />
 
-          <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mt-5 mb-2">Catalog Operations</p>
-          <NavItem to="/admin/addProduct" icon={PlusCircle} label="Add Product" color="text-sky-400" />
-          <NavItem to="/admin/updateProduct" icon={Edit3} label="Update Product" color="text-amber-400" />
-          <NavItem to="/admin/removeProduct" icon={Trash2} label="Remove Product" color="text-rose-400" />
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Catalog Operations</p>
+          <NavItem to="/admin/updateProduct" icon={Edit3} label="Update Product" />
+          <NavItem to="/admin/removeProduct" icon={Trash2} label="Remove Product" />
 
-          <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mt-5 mb-2">Publishing & Content</p>
-          <NavItem to="/admin/addArticle" icon={FilePlus} label="Publish Article" color="text-teal-400" />
-          <NavItem to="/admin/removeArticle" icon={FileMinus} label="Manage Articles" color="text-orange-400" />
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Content Moderation</p>
+          <NavItem to="/admin/removeArticle" icon={FileMinus} label="Manage Articles" />
 
-          <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mt-5 mb-2">System Security</p>
-          <NavItem to="/admin/resetPassword" icon={KeyRound} label="Change Password" color="text-violet-400" />
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">System Security</p>
+          <NavItem to="/admin/resetPassword" icon={KeyRound} label="Change Password" />
         </nav>
 
-        <div className="p-4 border-t border-slate-800 bg-slate-950/80">
+        <div className="p-3 border-t border-slate-900 bg-slate-950/80">
           <form action="/admin/logout" method="POST">
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all active:scale-95 cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all cursor-pointer"
             >
-              <LogOut size={16} />
+              <LogOut size={15} />
               <span>Sign Out Session</span>
             </button>
           </form>
@@ -189,35 +187,35 @@ function AdminLayout({ children }) {
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto flex flex-col min-w-0">
-        <header className="h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-30">
-          <div className="flex items-center gap-3">
+        <header className="h-14 bg-white/95 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100"
+              className="lg:hidden p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100"
             >
               <Menu size={18} />
             </button>
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-500 font-medium">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
               <span className="hidden sm:inline">Administration</span>
-              <ChevronRight size={14} className="hidden sm:inline text-slate-400" />
-              <span className="font-bold text-slate-800">Control Panel</span>
+              <ChevronRight size={13} className="hidden sm:inline text-slate-400" />
+              <span className="font-semibold text-slate-800">Control Panel</span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <a
               href="/home"
-              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 hover:border-blue-600 transition-all shadow-xs group"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition shadow-2xs group"
               title="Visit Live Storefront"
             >
-              <Store size={15} className="text-blue-600 group-hover:text-white transition-colors" />
+              <Store size={14} className="text-slate-600 group-hover:text-blue-600 transition-colors" />
               <span>Storefront</span>
-              <ExternalLink size={12} className="text-blue-400 group-hover:text-white transition-colors" />
+              <ExternalLink size={11} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
             </a>
           </div>
         </header>
 
-        <div className="p-4 sm:p-8 flex-1">
+        <div className="p-4 sm:p-6 flex-1">
           {children}
         </div>
       </main>
@@ -240,22 +238,22 @@ function UserLayout({ children }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static top-0 bottom-0 left-0 z-50 w-64 bg-slate-950 text-white flex flex-col h-full shadow-2xl transition-transform duration-300 ease-in-out ${
+        className={`fixed lg:static top-0 bottom-0 left-0 z-50 w-64 bg-slate-950 text-white flex flex-col h-full shadow-2xl transition-transform duration-300 ease-in-out border-r border-slate-900 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="p-5 border-b border-blue-900/40 flex items-center justify-between">
-          <a href="/home" className="flex items-center space-x-3 group no-underline" title="Go to NetZeroMart Storefront">
+        <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
+          <a href="/home" className="flex items-center space-x-2.5 group no-underline" title="Go to NetZeroMart Storefront">
             <img
               src="/assets/netZeroStickerIcon.png"
               alt="NetZeroMart"
-              className="w-10 h-10 object-contain group-hover:scale-105 transition-transform"
+              className="w-8 h-8 object-contain group-hover:scale-105 transition-transform"
             />
             <div>
-              <h2 className="text-base font-black tracking-tight text-white group-hover:text-emerald-400 transition-colors">
+              <h2 className="text-sm font-bold tracking-tight text-white flex items-center gap-1.5 group-hover:text-emerald-400 transition-colors">
                 <span>NetZeroMart</span>
               </h2>
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-800/40">
+              <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-medium bg-slate-800 text-slate-300 border border-slate-700">
                 Vendor Portal
               </span>
             </div>
@@ -268,30 +266,30 @@ function UserLayout({ children }) {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
-          <p className="text-[11px] font-extrabold text-blue-200 uppercase tracking-wider px-3 mb-2">Overview</p>
-          <NavItem to="/userPanel" icon={LayoutDashboard} label="Vendor Dashboard" color="text-teal-400" />
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mb-1.5">Overview</p>
+          <NavItem to="/userPanel" icon={LayoutDashboard} label="Vendor Dashboard" />
 
-          <p className="text-[11px] font-extrabold text-blue-200 uppercase tracking-wider px-3 mt-5 mb-2">Catalogue Listings</p>
-          <NavItem to="/userPanel/addProduct" icon={PlusCircle} label="Add New Product" color="text-emerald-400" />
-          <NavItem to="/userPanel/updateProduct" icon={Edit3} label="Update Products" color="text-amber-400" />
-          <NavItem to="/userPanel/removeProduct" icon={Trash2} label="Remove Products" color="text-rose-400" />
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Catalogue Listings</p>
+          <NavItem to="/userPanel/addProduct" icon={PlusCircle} label="Add New Product" />
+          <NavItem to="/userPanel/updateProduct" icon={Edit3} label="Update Products" />
+          <NavItem to="/userPanel/removeProduct" icon={Trash2} label="Remove Products" />
 
-          <p className="text-[11px] font-extrabold text-blue-200 uppercase tracking-wider px-3 mt-5 mb-2">Content & Stories</p>
-          <NavItem to="/userPanel/addArticle" icon={FilePlus} label="Publish Article" color="text-cyan-400" />
-          <NavItem to="/userPanel/removeArticle" icon={FileMinus} label="Manage Articles" color="text-orange-400" />
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Content & Stories</p>
+          <NavItem to="/userPanel/addArticle" icon={FilePlus} label="Publish Article" />
+          <NavItem to="/userPanel/removeArticle" icon={FileMinus} label="Manage Articles" />
 
-          <p className="text-[11px] font-extrabold text-blue-200 uppercase tracking-wider px-3 mt-5 mb-2">Security</p>
-          <NavItem to="/userPanel/resetPassword" icon={KeyRound} label="Change Password" color="text-indigo-400" />
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Security</p>
+          <NavItem to="/userPanel/resetPassword" icon={KeyRound} label="Change Password" />
         </nav>
 
-        <div className="p-4 border-t border-blue-900/40 bg-slate-950/80">
+        <div className="p-3 border-t border-slate-900 bg-slate-950/80">
           <form action="/userPanel/logout" method="POST">
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all active:scale-95 cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all cursor-pointer"
             >
-              <LogOut size={16} />
+              <LogOut size={15} />
               <span>Log Out Portal</span>
             </button>
           </form>
@@ -300,35 +298,35 @@ function UserLayout({ children }) {
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto flex flex-col min-w-0">
-        <header className="h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-30">
-          <div className="flex items-center gap-3">
+        <header className="h-14 bg-white/95 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100"
+              className="lg:hidden p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100"
             >
               <Menu size={18} />
             </button>
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-500 font-medium">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
               <span className="hidden sm:inline">Vendor Center</span>
-              <ChevronRight size={14} className="hidden sm:inline text-slate-400" />
-              <span className="font-bold text-slate-800">Catalogue Management</span>
+              <ChevronRight size={13} className="hidden sm:inline text-slate-400" />
+              <span className="font-semibold text-slate-800">Catalogue Management</span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <a
               href="/home"
-              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 transition-all shadow-xs group"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition shadow-2xs group"
               title="Visit Live Storefront"
             >
-              <Store size={15} className="text-emerald-600 group-hover:text-white transition-colors" />
+              <Store size={14} className="text-slate-600 group-hover:text-emerald-600 transition-colors" />
               <span>Storefront</span>
-              <ExternalLink size={12} className="text-emerald-400 group-hover:text-white transition-colors" />
+              <ExternalLink size={11} className="text-slate-400 group-hover:text-emerald-600 transition-colors" />
             </a>
           </div>
         </header>
 
-        <div className="p-4 sm:p-8 flex-1">
+        <div className="p-4 sm:p-6 flex-1">
           {children}
         </div>
       </main>
@@ -364,51 +362,44 @@ function AdminDashboardOverview() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="relative z-10 space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold uppercase tracking-wider">
-            <ShieldCheck size={14} />
-            Master Administration
+      {/* Header Banner - Standardized Minimal */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold tracking-wide uppercase mb-1.5">
+            <ShieldCheck size={13} />
+            <span>Master Administration</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
             Central Command Dashboard
           </h1>
-          <p className="text-slate-300 text-sm max-w-xl">
-            Oversee digital catalog items, manage vendor registrations, and publish clean-tech editorial articles.
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Oversee catalogue listings, manage vendor registrations, and monitor platform health.
           </p>
         </div>
 
-        <div className="relative z-10 flex flex-wrap gap-3">
+        <div className="flex items-center gap-2.5">
           <Link
             to="/admin/userApproval"
-            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-emerald-600/30 flex items-center gap-2 active:scale-95"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition shadow-2xs active:scale-95"
           >
-            <UserCheck size={15} />
+            <UserCheck size={14} />
             <span>Review Applications</span>
-          </Link>
-          <Link
-            to="/admin/addProduct"
-            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-blue-600/30 flex items-center gap-2 active:scale-95"
-          >
-            <PlusCircle size={15} />
-            <span>Publish Product</span>
           </Link>
         </div>
       </div>
 
       {/* Attention alert if pending applications exist */}
       {stats.pendingUsers > 0 && (
-        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-sm flex items-center justify-between shadow-xs animate-fade-in">
-          <div className="flex items-center gap-3">
-            <Clock size={20} className="text-amber-600 flex-shrink-0" />
+        <div className="p-3.5 sm:p-4 rounded-xl bg-amber-50/80 border border-amber-200/70 text-amber-900 text-xs sm:text-sm flex items-center justify-between shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <Clock size={16} className="text-amber-600 flex-shrink-0" />
             <div>
-              <span className="font-bold">{stats.pendingUsers} vendor application(s)</span> are waiting for your verification and approval.
+              <span className="font-semibold">{stats.pendingUsers} vendor application(s)</span> awaiting your verification.
             </div>
           </div>
           <Link
             to="/admin/userApproval"
-            className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-xs flex-shrink-0"
+            className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium transition shadow-2xs flex-shrink-0"
           >
             Review Now →
           </Link>
@@ -417,116 +408,112 @@ function AdminDashboardOverview() {
 
       {/* Live Metric Counters */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3 sm:gap-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-            <Package className="w-5 h-5 sm:w-6 sm:h-6" />
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0">
+            <Package size={20} />
           </div>
           <div className="min-w-0">
-            <div className="text-xl sm:text-2xl font-black text-slate-900 truncate">
+            <div className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
               {stats.loading ? '...' : stats.products}
             </div>
-            <div className="text-[10px] sm:text-xs font-bold text-slate-400 truncate">Products</div>
+            <div className="text-[11px] font-medium text-slate-500 truncate">Products in Catalogue</div>
           </div>
         </div>
 
-        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3 sm:gap-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
-            <UserCheck className="w-5 h-5 sm:w-6 sm:h-6" />
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0">
+            <UserCheck size={20} />
           </div>
           <div className="min-w-0">
-            <div className="text-xl sm:text-2xl font-black text-slate-900 truncate">
+            <div className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
               {stats.loading ? '...' : stats.pendingUsers}
             </div>
-            <div className="text-[10px] sm:text-xs font-bold text-slate-400 truncate">Pending Approvals</div>
+            <div className="text-[11px] font-medium text-slate-500 truncate">Pending Approvals</div>
           </div>
         </div>
 
-        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3 sm:gap-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
-            <Users className="w-5 h-5 sm:w-6 sm:h-6" />
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0">
+            <Users size={20} />
           </div>
           <div className="min-w-0">
-            <div className="text-xl sm:text-2xl font-black text-slate-900 truncate">
+            <div className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
               {stats.loading ? '...' : stats.activeUsers}
             </div>
-            <div className="text-[10px] sm:text-xs font-bold text-slate-400 truncate">Verified Vendors</div>
+            <div className="text-[11px] font-medium text-slate-500 truncate">Verified Vendors</div>
           </div>
         </div>
 
-        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3 sm:gap-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0">
-            <Layers className="w-5 h-5 sm:w-6 sm:h-6" />
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0">
+            <Layers size={20} />
           </div>
           <div className="min-w-0">
-            <div className="text-xl sm:text-2xl font-black text-slate-900 truncate">
+            <div className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
               {stats.loading ? '...' : stats.articles}
             </div>
-            <div className="text-[10px] sm:text-xs font-bold text-slate-400 truncate">Articles</div>
+            <div className="text-[11px] font-medium text-slate-500 truncate">Published Articles</div>
           </div>
         </div>
       </div>
 
       {/* Main Feature Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Package size={24} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+          <div className="space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
+              <Package size={20} />
             </div>
             <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Catalogue Management</h3>
-              <p className="text-slate-900 font-black text-lg mt-0.5">Products & Innovations</p>
+              <h3 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Catalogue Management</h3>
+              <p className="text-slate-900 font-bold text-base mt-0.5">Products & Innovations</p>
               <p className="text-xs text-slate-500 mt-1">
-                Upload clean-tech products with high-res photos and YouTube links, update specifications, or prune legacy listings.
+                Maintain product specifications, review pricing estimates, and remove deprecated listings.
               </p>
             </div>
           </div>
-          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-3 text-xs font-bold">
-            <Link to="/admin/addProduct" className="text-blue-600 hover:text-blue-800">Add New</Link>
+          <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center gap-3 text-xs font-semibold">
+            <Link to="/admin/updateProduct" className="text-slate-700 hover:text-blue-600 transition">Update Products</Link>
             <span className="text-slate-300">•</span>
-            <Link to="/admin/updateProduct" className="text-amber-600 hover:text-amber-800">Update</Link>
-            <span className="text-slate-300">•</span>
-            <Link to="/admin/removeProduct" className="text-rose-600 hover:text-rose-800">Remove</Link>
+            <Link to="/admin/removeProduct" className="text-slate-700 hover:text-rose-600 transition">Remove Products</Link>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <UserCheck size={24} />
+        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+          <div className="space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
+              <UserCheck size={20} />
             </div>
             <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Vendor Operations</h3>
-              <p className="text-slate-900 font-black text-lg mt-0.5">Verification & Access</p>
+              <h3 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Vendor Operations</h3>
+              <p className="text-slate-900 font-bold text-base mt-0.5">Verification & Access</p>
               <p className="text-xs text-slate-500 mt-1">
-                Inspect business certificates, approve incoming vendor signups, or terminate active access.
+                Review legal registration documents, approve incoming vendor signups, and monitor directory accounts.
               </p>
             </div>
           </div>
-          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-3 text-xs font-bold">
-            <Link to="/admin/userApproval" className="text-emerald-600 hover:text-emerald-800">Approvals</Link>
+          <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center gap-3 text-xs font-semibold">
+            <Link to="/admin/userApproval" className="text-slate-700 hover:text-emerald-600 transition">Approvals</Link>
             <span className="text-slate-300">•</span>
-            <Link to="/admin/userManagement" className="text-indigo-600 hover:text-indigo-800">Active Directory</Link>
+            <Link to="/admin/userManagement" className="text-slate-700 hover:text-blue-600 transition">Active Directory</Link>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
-              <Layers size={24} />
+        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+          <div className="space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
+              <Layers size={20} />
             </div>
             <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Knowledge Base</h3>
-              <p className="text-slate-900 font-black text-lg mt-0.5">Articles & Insights</p>
+              <h3 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Knowledge Base</h3>
+              <p className="text-slate-900 font-bold text-base mt-0.5">Articles & Insights</p>
               <p className="text-xs text-slate-500 mt-1">
-                Publish case studies, sustainability guides, and technical whitepapers with product links.
+                Review and moderate published case studies, sustainability guides, and technical articles.
               </p>
             </div>
           </div>
-          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-3 text-xs font-bold">
-            <Link to="/admin/addArticle" className="text-teal-600 hover:text-teal-800">New Article</Link>
-            <span className="text-slate-300">•</span>
-            <Link to="/admin/removeArticle" className="text-rose-600 hover:text-rose-800">Manage Content</Link>
+          <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center gap-3 text-xs font-semibold">
+            <Link to="/admin/removeArticle" className="text-slate-700 hover:text-rose-600 transition">Manage Content</Link>
           </div>
         </div>
       </div>
@@ -556,107 +543,107 @@ function UserDashboardOverview() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="relative z-10 space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold uppercase tracking-wider">
-            <Store size={14} />
-            Verified Vendor Portal
+      {/* Header Banner - Standardized Minimal */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold tracking-wide uppercase mb-1.5">
+            <Store size={13} />
+            <span>Verified Vendor Portal</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
-            Manage Your Sustainable Catalogue
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            Vendor Dashboard
           </h1>
-          <p className="text-emerald-100/80 text-sm max-w-xl">
-            Promote your eco-friendly products, update specifications, and publish case studies for sustainability architects.
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Manage your sustainable products, keep specifications updated, and publish industry articles.
           </p>
         </div>
 
-        <div className="relative z-10 flex flex-wrap gap-3">
+        <div className="flex items-center gap-2.5">
           <Link
             to="/userPanel/addProduct"
-            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-emerald-600/30 flex items-center gap-2 active:scale-95"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition shadow-2xs active:scale-95"
           >
-            <PlusCircle size={15} />
+            <PlusCircle size={14} />
             <span>List New Product</span>
           </Link>
           <Link
             to="/userPanel/updateProduct"
-            className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition border border-white/20 flex items-center gap-2 active:scale-95"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition border border-slate-200 shadow-2xs active:scale-95"
           >
-            <Edit3 size={15} />
+            <Edit3 size={14} />
             <span>Update Existing</span>
           </Link>
         </div>
       </div>
 
-      {/* Live Metrics */}
+      {/* Live Metric Counters */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3 sm:gap-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
-            <Package className="w-5 h-5 sm:w-6 sm:h-6" />
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0">
+            <Package size={20} />
           </div>
           <div className="min-w-0">
-            <div className="text-xl sm:text-2xl font-black text-slate-900 truncate">
+            <div className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
               {stats.loading ? '...' : stats.products}
             </div>
-            <div className="text-[10px] sm:text-xs font-bold text-slate-400 truncate">My Listings</div>
+            <div className="text-[11px] font-medium text-slate-500 truncate">My Listed Products</div>
           </div>
         </div>
 
-        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3 sm:gap-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0">
-            <Layers className="w-5 h-5 sm:w-6 sm:h-6" />
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0">
+            <Layers size={20} />
           </div>
           <div className="min-w-0">
-            <div className="text-xl sm:text-2xl font-black text-slate-900 truncate">
+            <div className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
               {stats.loading ? '...' : stats.articles}
             </div>
-            <div className="text-[10px] sm:text-xs font-bold text-slate-400 truncate">My Articles</div>
+            <div className="text-[11px] font-medium text-slate-500 truncate">My Articles</div>
           </div>
         </div>
       </div>
 
       {/* Feature Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <Package size={24} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+          <div className="space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
+              <Package size={20} />
             </div>
             <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Product Inventory</h3>
-              <p className="text-slate-900 font-black text-lg mt-0.5">My Listed Catalog</p>
+              <h3 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Product Inventory</h3>
+              <p className="text-slate-900 font-bold text-base mt-0.5">My Listed Catalog</p>
               <p className="text-xs text-slate-500 mt-1">
                 Keep your product specs, price estimations, brochure links, and imagery up to date to maximize customer inquiries.
               </p>
             </div>
           </div>
-          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-3 text-xs font-bold">
-            <Link to="/userPanel/addProduct" className="text-emerald-600 hover:text-emerald-800">Add New</Link>
+          <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center gap-3 text-xs font-semibold">
+            <Link to="/userPanel/addProduct" className="text-slate-700 hover:text-emerald-600 transition">Add New</Link>
             <span className="text-slate-300">•</span>
-            <Link to="/userPanel/updateProduct" className="text-amber-600 hover:text-amber-800">Update Specs</Link>
+            <Link to="/userPanel/updateProduct" className="text-slate-700 hover:text-blue-600 transition">Update Specs</Link>
             <span className="text-slate-300">•</span>
-            <Link to="/userPanel/removeProduct" className="text-rose-600 hover:text-rose-800">Remove</Link>
+            <Link to="/userPanel/removeProduct" className="text-slate-700 hover:text-rose-600 transition">Remove</Link>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
-              <Layers size={24} />
+        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+          <div className="space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
+              <Layers size={20} />
             </div>
             <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Thought Leadership</h3>
-              <p className="text-slate-900 font-black text-lg mt-0.5">My Articles & Research</p>
+              <h3 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Thought Leadership</h3>
+              <p className="text-slate-900 font-bold text-base mt-0.5">My Articles & Research</p>
               <p className="text-xs text-slate-500 mt-1">
                 Publish case studies on your green engineering implementations and tag relevant products.
               </p>
             </div>
           </div>
-          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-3 text-xs font-bold">
-            <Link to="/userPanel/addArticle" className="text-teal-600 hover:text-teal-800">Write Article</Link>
+          <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center gap-3 text-xs font-semibold">
+            <Link to="/userPanel/addArticle" className="text-slate-700 hover:text-emerald-600 transition">Write Article</Link>
             <span className="text-slate-300">•</span>
-            <Link to="/userPanel/removeArticle" className="text-rose-600 hover:text-rose-800">Manage Articles</Link>
+            <Link to="/userPanel/removeArticle" className="text-slate-700 hover:text-rose-600 transition">Manage Articles</Link>
           </div>
         </div>
       </div>
@@ -675,14 +662,14 @@ function App() {
         <Route path="/userLogin" element={<UserLogin />} />
         <Route path="/login" element={<Navigate to="/adminLogin" replace />} />
 
-        {/* Master Admin Routes */}
+        {/* Master Admin Routes - creation restricted */}
         <Route path="/admin" element={<AdminLayout><AdminDashboardOverview /></AdminLayout>} />
         <Route path="/admin/userApproval" element={<AdminLayout><UserApproval /></AdminLayout>} />
         <Route path="/admin/userManagement" element={<AdminLayout><UserManagement /></AdminLayout>} />
-        <Route path="/admin/addProduct" element={<AdminLayout><AddProduct apiEndpoint="/api/admin/addProduct" role="admin" /></AdminLayout>} />
+        <Route path="/admin/addProduct" element={<Navigate to="/admin/updateProduct" replace />} />
         <Route path="/admin/updateProduct" element={<AdminLayout><UpdateProduct basePath="/api/admin" /></AdminLayout>} />
         <Route path="/admin/removeProduct" element={<AdminLayout><RemoveProduct basePath="/api/admin" /></AdminLayout>} />
-        <Route path="/admin/addArticle" element={<AdminLayout><AddArticle basePath="/api/admin" /></AdminLayout>} />
+        <Route path="/admin/addArticle" element={<Navigate to="/admin/removeArticle" replace />} />
         <Route path="/admin/removeArticle" element={<AdminLayout><RemoveArticle basePath="/api/admin" /></AdminLayout>} />
         <Route path="/admin/resetPassword" element={<AdminLayout><ResetPassword role="admin" /></AdminLayout>} />
         

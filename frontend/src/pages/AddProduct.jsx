@@ -182,17 +182,17 @@ export default function AddProduct({ apiEndpoint = '/api/admin/addProduct', role
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      {/* Header Banner */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header Banner - Standardized Minimal */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold uppercase tracking-wider mb-2">
-            {role === 'admin' ? <ShieldCheck size={14} /> : <Building2 size={14} />}
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold tracking-wide uppercase mb-1.5">
+            {role === 'admin' ? <ShieldCheck size={13} /> : <Building2 size={13} />}
             <span>{role === 'admin' ? 'Master Admin Listing' : 'Vendor Catalogue Listing'}</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
             Add New Product
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             Publish high-impact sustainable products, equipment specifications, pricing estimates, and brochures.
           </p>
         </div>

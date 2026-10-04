@@ -52,9 +52,20 @@ export default function RemoveProduct({ basePath = '/api/admin' }) {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      <div className="pb-4 border-b border-slate-200">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Remove Product</h1>
-        <p className="text-xs text-slate-500 mt-1">Select and delete products from the catalogue. Associated Cloudinary media will be cleaned up.</p>
+      {/* Header Banner - Standardized Minimal */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold tracking-wide uppercase mb-1.5">
+            <Trash2 size={13} />
+            <span>Catalogue Deletion</span>
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            Remove Product
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Select and delete products from the catalogue. Associated Cloudinary media will be cleaned up.
+          </p>
+        </div>
       </div>
 
       {feedback.message && (
