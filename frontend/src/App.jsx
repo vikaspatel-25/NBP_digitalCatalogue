@@ -102,6 +102,18 @@ function NavItem({ to, icon: Icon, label, badge = null }) {
 function AdminLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const location = useLocation();
+
+  const currentPath = location.pathname.replace(/\/+$/, '') || '/';
+  const adminTitles = {
+    '/admin': 'Dashboard Overview',
+    '/admin/userApproval': 'Pending Approvals',
+    '/admin/userManagement': 'Active Vendor Directory',
+    '/admin/removeProduct': 'Remove Products',
+    '/admin/removeArticle': 'Remove Articles',
+    '/admin/resetPassword': 'Change Password',
+  };
+  const currentTitle = adminTitles[currentPath] || 'Dashboard Overview';
 
   useEffect(() => {
     axios.get('/api/admin/userApproval')
@@ -184,7 +196,7 @@ function AdminLayout({ children }) {
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto flex flex-col min-w-0">
-        <header className="h-14 bg-white/95 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
+        <header className="h-14 bg-white/95 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30 flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => setMobileOpen(true)}
@@ -193,9 +205,9 @@ function AdminLayout({ children }) {
               <Menu size={18} />
             </button>
             <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-              <span className="hidden sm:inline">Administration</span>
+              <span className="hidden sm:inline">Admin Portal</span>
               <ChevronRight size={13} className="hidden sm:inline text-slate-400" />
-              <span className="font-semibold text-slate-800">Control Panel</span>
+              <span className="font-semibold text-slate-800">{currentTitle}</span>
             </div>
           </div>
 
@@ -222,6 +234,19 @@ function AdminLayout({ children }) {
 
 function UserLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
+
+  const currentPath = location.pathname.replace(/\/+$/, '') || '/';
+  const userTitles = {
+    '/userPanel': 'Vendor Dashboard',
+    '/userPanel/addProduct': 'Add New Product',
+    '/userPanel/updateProduct': 'Update Products',
+    '/userPanel/removeProduct': 'Remove Products',
+    '/userPanel/addArticle': 'Publish Article',
+    '/userPanel/removeArticle': 'Manage Articles',
+    '/userPanel/resetPassword': 'Change Password',
+  };
+  const currentTitle = userTitles[currentPath] || 'Vendor Dashboard';
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-800 overflow-hidden">
@@ -295,7 +320,7 @@ function UserLayout({ children }) {
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto flex flex-col min-w-0">
-        <header className="h-14 bg-white/95 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
+        <header className="h-14 bg-white/95 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30 flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => setMobileOpen(true)}
@@ -304,9 +329,9 @@ function UserLayout({ children }) {
               <Menu size={18} />
             </button>
             <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-              <span className="hidden sm:inline">Vendor Center</span>
+              <span className="hidden sm:inline">Vendor Portal</span>
               <ChevronRight size={13} className="hidden sm:inline text-slate-400" />
-              <span className="font-semibold text-slate-800">Catalogue Management</span>
+              <span className="font-semibold text-slate-800">{currentTitle}</span>
             </div>
           </div>
 
@@ -316,9 +341,9 @@ function UserLayout({ children }) {
               className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition shadow-2xs group"
               title="Visit Live Storefront"
             >
-              <Store size={14} className="text-slate-600 group-hover:text-emerald-600 transition-colors" />
+              <Store size={14} className="text-slate-600 group-hover:text-blue-600 transition-colors" />
               <span>Storefront</span>
-              <ExternalLink size={11} className="text-slate-400 group-hover:text-emerald-600 transition-colors" />
+              <ExternalLink size={11} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
             </a>
           </div>
         </header>
@@ -334,24 +359,24 @@ function UserLayout({ children }) {
 function AdminDashboardOverview() {
   const [stats, setStats] = useState({
     products: 0,
+    articles: 0,
     pendingUsers: 0,
     activeUsers: 0,
-    articles: 0,
     loading: true
   });
 
   useEffect(() => {
     Promise.allSettled([
       axios.get('/api/admin/removeProduct'),
+      axios.get('/api/admin/removeArticle'),
       axios.get('/api/admin/userApproval'),
-      axios.get('/api/admin/userManagement'),
-      axios.get('/api/admin/removeArticle')
-    ]).then(([prodRes, pendRes, userRes, artRes]) => {
+      axios.get('/api/admin/userManagement')
+    ]).then(([prodRes, artRes, pendRes, userRes]) => {
       setStats({
         products: prodRes.status === 'fulfilled' ? (prodRes.value.data.products?.length || 0) : 0,
+        articles: artRes.status === 'fulfilled' ? (artRes.value.data.articles?.length || 0) : 0,
         pendingUsers: pendRes.status === 'fulfilled' ? (pendRes.value.data.users?.length || 0) : 0,
         activeUsers: userRes.status === 'fulfilled' ? (userRes.value.data.users?.length || 0) : 0,
-        articles: artRes.status === 'fulfilled' ? (artRes.value.data.articles?.length || 0) : 0,
         loading: false
       });
     });
@@ -359,7 +384,7 @@ function AdminDashboardOverview() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header Banner - Standardized Minimal */}
+      {/* Header Banner - Minimal */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold tracking-wide uppercase mb-1.5">
@@ -403,7 +428,7 @@ function AdminDashboardOverview() {
         </div>
       )}
 
-      {/* Live Metric Counters */}
+      {/* Metric Counters - Ordered: Products, Articles, Approvals, Vendors */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3 sm:gap-4">
           <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0">
@@ -414,6 +439,18 @@ function AdminDashboardOverview() {
               {stats.loading ? '...' : stats.products}
             </div>
             <div className="text-[11px] font-medium text-slate-500 truncate">Products in Catalogue</div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0">
+            <Layers size={20} />
+          </div>
+          <div className="min-w-0">
+            <div className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
+              {stats.loading ? '...' : stats.articles}
+            </div>
+            <div className="text-[11px] font-medium text-slate-500 truncate">Published Articles</div>
           </div>
         </div>
 
@@ -440,138 +477,95 @@ function AdminDashboardOverview() {
             <div className="text-[11px] font-medium text-slate-500 truncate">Verified Vendors</div>
           </div>
         </div>
-
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3 sm:gap-4">
-          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0">
-            <Layers size={20} />
-          </div>
-          <div className="min-w-0">
-            <div className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
-              {stats.loading ? '...' : stats.articles}
-            </div>
-            <div className="text-[11px] font-medium text-slate-500 truncate">Published Articles</div>
-          </div>
-        </div>
       </div>
 
-      {/* Section 1: Vendor Relations & Access Control */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-bold text-slate-800 tracking-tight">Vendor Relations & Access Control</h2>
-            <p className="text-xs text-slate-500">Verify company registration certificates and oversee active vendor accounts.</p>
+      {/* Quick Action Panels - Clean & Non-Verbose */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Content Moderation */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+              <Trash2 size={16} />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900">Content Moderation</h2>
+              <p className="text-xs text-slate-400">Admin moderation and deletion only</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Link
+              to="/admin/removeProduct"
+              className="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition group"
+            >
+              <div className="flex items-center gap-2.5">
+                <Package size={16} className="text-slate-500 group-hover:text-rose-600 transition-colors" />
+                <span className="text-xs font-semibold text-slate-800">Remove Products</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <span>{stats.products} listed</span>
+                <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </Link>
+            <Link
+              to="/admin/removeArticle"
+              className="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition group"
+            >
+              <div className="flex items-center gap-2.5">
+                <FileMinus size={16} className="text-slate-500 group-hover:text-rose-600 transition-colors" />
+                <span className="text-xs font-semibold text-slate-800">Remove Articles</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <span>{stats.articles} published</span>
+                <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </Link>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
-                <UserCheck size={20} />
-              </div>
-              <div>
-                <h3 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Onboarding Queue</h3>
-                <p className="text-slate-900 font-bold text-base mt-0.5">Pending Registrations Approval</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  Inspect submitted company documents and business profiles, then approve or reject vendor access.
-                </p>
-              </div>
+        {/* Vendor Relations */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Users size={16} />
             </div>
-            <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs">
-              <Link to="/admin/userApproval" className="text-emerald-700 hover:text-emerald-900 font-semibold flex items-center gap-1 transition">
-                <span>Review Pending Applications</span>
-                <ChevronRight size={13} />
-              </Link>
-              {stats.pendingUsers > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200/80">
-                  {stats.pendingUsers} waiting
-                </span>
-              )}
+            <div>
+              <h2 className="text-sm font-bold text-slate-900">Vendor Management</h2>
+              <p className="text-xs text-slate-400">Registration approvals & vendor directory</p>
             </div>
           </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
-                <Users size={20} />
+          <div className="space-y-2">
+            <Link
+              to="/admin/userApproval"
+              className="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition group"
+            >
+              <div className="flex items-center gap-2.5">
+                <UserCheck size={16} className="text-slate-500 group-hover:text-emerald-600 transition-colors" />
+                <span className="text-xs font-semibold text-slate-800">Pending Approvals</span>
               </div>
-              <div>
-                <h3 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Account Directory</h3>
-                <p className="text-slate-900 font-bold text-base mt-0.5">Verified Vendor Management</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  Browse verified corporate vendors, view registration documents, copy contacts, and manage active directory accounts.
-                </p>
+              <div className="flex items-center gap-2 text-xs">
+                {stats.pendingUsers > 0 ? (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                    {stats.pendingUsers} waiting
+                  </span>
+                ) : (
+                  <span className="text-slate-400">0 waiting</span>
+                )}
+                <ChevronRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
               </div>
-            </div>
-            <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs">
-              <Link to="/admin/userManagement" className="text-blue-700 hover:text-blue-900 font-semibold flex items-center gap-1 transition">
-                <span>Manage Vendor Directory</span>
-                <ChevronRight size={13} />
-              </Link>
-              <span className="text-[11px] text-slate-400 font-medium">
-                {stats.activeUsers} active
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Section 2: Catalogue & Content Moderation (Deletion Only) */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-bold text-slate-800 tracking-tight">Catalogue & Content Moderation (Deletion Only)</h2>
-            <p className="text-xs text-slate-500">Admin privileges are strictly restricted to moderation and deletion. Product and article creation/updates are managed by verified vendors.</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-                <Trash2 size={20} />
+            </Link>
+            <Link
+              to="/admin/userManagement"
+              className="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition group"
+            >
+              <div className="flex items-center gap-2.5">
+                <Users size={16} className="text-slate-500 group-hover:text-blue-600 transition-colors" />
+                <span className="text-xs font-semibold text-slate-800">Active Vendor Directory</span>
               </div>
-              <div>
-                <h3 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Catalogue Moderation</h3>
-                <p className="text-slate-900 font-bold text-base mt-0.5">Remove Products</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  Search and permanently delete non-compliant, fraudulent, or outdated products from the public catalogue.
-                </p>
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <span>{stats.activeUsers} active</span>
+                <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
               </div>
-            </div>
-            <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs">
-              <Link to="/admin/removeProduct" className="text-rose-600 hover:text-rose-800 font-semibold flex items-center gap-1 transition">
-                <span>Remove Products from Catalogue</span>
-                <ChevronRight size={13} />
-              </Link>
-              <span className="text-[11px] text-slate-400 font-medium">
-                {stats.products} listed
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-                <FileMinus size={20} />
-              </div>
-              <div>
-                <h3 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Editorial Moderation</h3>
-                <p className="text-slate-900 font-bold text-base mt-0.5">Remove Articles</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  Review and permanently delete published case studies or educational articles that violate platform guidelines.
-                </p>
-              </div>
-            </div>
-            <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs">
-              <Link to="/admin/removeArticle" className="text-rose-600 hover:text-rose-800 font-semibold flex items-center gap-1 transition">
-                <span>Remove Articles from Knowledge Base</span>
-                <ChevronRight size={13} />
-              </Link>
-              <span className="text-[11px] text-slate-400 font-medium">
-                {stats.articles} published
-              </span>
-            </div>
+            </Link>
           </div>
         </div>
       </div>
@@ -601,7 +595,7 @@ function UserDashboardOverview() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header Banner - Standardized Minimal */}
+      {/* Header Banner - Minimal */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold tracking-wide uppercase mb-1.5">
@@ -612,7 +606,7 @@ function UserDashboardOverview() {
             Vendor Dashboard
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Manage your sustainable products, keep specifications updated, and publish industry articles.
+            Manage your catalogue listings and published industry articles.
           </p>
         </div>
 
@@ -656,56 +650,90 @@ function UserDashboardOverview() {
             <div className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
               {stats.loading ? '...' : stats.articles}
             </div>
-            <div className="text-[11px] font-medium text-slate-500 truncate">My Articles</div>
+            <div className="text-[11px] font-medium text-slate-500 truncate">My Published Articles</div>
           </div>
         </div>
       </div>
 
-      {/* Segregated Vendor Sections */}
-      <div className="space-y-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-          {/* Section 1: Product Inventory */}
-          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
-                <Package size={20} />
-              </div>
-              <div>
-                <h3 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Product Inventory</h3>
-                <p className="text-slate-900 font-bold text-base mt-0.5">My Listed Catalog</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  Keep your product specs, price estimations, brochure links, and imagery up to date to maximize customer inquiries.
-                </p>
-              </div>
+      {/* Quick Action Panels - Clean & Non-Verbose */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Product Catalogue */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+              <Package size={16} />
             </div>
-            <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center gap-3 text-xs font-semibold">
-              <Link to="/userPanel/addProduct" className="text-slate-700 hover:text-emerald-600 transition">Add New</Link>
-              <span className="text-slate-300">•</span>
-              <Link to="/userPanel/updateProduct" className="text-slate-700 hover:text-blue-600 transition">Update Specs</Link>
-              <span className="text-slate-300">•</span>
-              <Link to="/userPanel/removeProduct" className="text-slate-700 hover:text-rose-600 transition">Remove</Link>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900">Catalogue Management</h2>
+              <p className="text-xs text-slate-400">Create, edit and manage product listings</p>
             </div>
           </div>
+          <div className="space-y-2">
+            <Link
+              to="/userPanel/addProduct"
+              className="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition group"
+            >
+              <div className="flex items-center gap-2.5">
+                <PlusCircle size={16} className="text-slate-500 group-hover:text-emerald-600 transition-colors" />
+                <span className="text-xs font-semibold text-slate-800">Add New Product</span>
+              </div>
+              <ChevronRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link
+              to="/userPanel/updateProduct"
+              className="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition group"
+            >
+              <div className="flex items-center gap-2.5">
+                <Edit3 size={16} className="text-slate-500 group-hover:text-blue-600 transition-colors" />
+                <span className="text-xs font-semibold text-slate-800">Update Specifications</span>
+              </div>
+              <ChevronRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link
+              to="/userPanel/removeProduct"
+              className="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition group"
+            >
+              <div className="flex items-center gap-2.5">
+                <Trash2 size={16} className="text-slate-500 group-hover:text-rose-600 transition-colors" />
+                <span className="text-xs font-semibold text-slate-800">Remove Listed Products</span>
+              </div>
+              <ChevronRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          </div>
+        </div>
 
-          {/* Section 2: Articles & Research */}
-          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
-                <Layers size={20} />
-              </div>
-              <div>
-                <h3 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Thought Leadership</h3>
-                <p className="text-slate-900 font-bold text-base mt-0.5">My Articles & Research</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  Publish case studies on your green engineering implementations and tag relevant products.
-                </p>
-              </div>
+        {/* Content & Articles */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+              <Layers size={16} />
             </div>
-            <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center gap-3 text-xs font-semibold">
-              <Link to="/userPanel/addArticle" className="text-slate-700 hover:text-emerald-600 transition">Write Article</Link>
-              <span className="text-slate-300">•</span>
-              <Link to="/userPanel/removeArticle" className="text-slate-700 hover:text-rose-600 transition">Manage Articles</Link>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900">Articles & Insights</h2>
+              <p className="text-xs text-slate-400">Publish and manage sustainability articles</p>
             </div>
+          </div>
+          <div className="space-y-2">
+            <Link
+              to="/userPanel/addArticle"
+              className="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition group"
+            >
+              <div className="flex items-center gap-2.5">
+                <FilePlus size={16} className="text-slate-500 group-hover:text-emerald-600 transition-colors" />
+                <span className="text-xs font-semibold text-slate-800">Publish New Article</span>
+              </div>
+              <ChevronRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link
+              to="/userPanel/removeArticle"
+              className="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition group"
+            >
+              <div className="flex items-center gap-2.5">
+                <FileMinus size={16} className="text-slate-500 group-hover:text-rose-600 transition-colors" />
+                <span className="text-xs font-semibold text-slate-800">Manage Published Articles</span>
+              </div>
+              <ChevronRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
           </div>
         </div>
       </div>
