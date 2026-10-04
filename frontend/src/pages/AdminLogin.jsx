@@ -62,7 +62,7 @@ export default function AdminLogin() {
       <div className="w-full max-w-sm">
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center mb-6">
-          <a href="/home" className="inline-flex items-center justify-center gap-2.5 mb-2 group no-underline" title="Go to NetZeroMart Storefront">
+          <a href="/home" className="inline-flex items-center justify-center gap-2.5 group no-underline" title="Go to NetZeroMart Storefront">
             <img 
               src="/assets/netZeroStickerIcon.png" 
               alt="NetZeroMart" 
@@ -72,12 +72,15 @@ export default function AdminLogin() {
               NetZeroMart
             </span>
           </a>
-          <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-snug">Admin Sign In</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Master administrator access</p>
         </div>
 
         {/* Card */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-7 shadow-2xs">
+          <div className="text-center mb-5">
+            <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-snug">Admin Sign In</h1>
+            <p className="text-xs text-slate-500 mt-0.5">Master administrator access</p>
+          </div>
+
           {error && (
             <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
               {error}
