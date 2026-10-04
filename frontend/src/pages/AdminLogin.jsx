@@ -61,18 +61,18 @@ export default function AdminLogin() {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center py-12 px-4 sm:px-6 font-sans text-slate-800">
       <div className="w-full max-w-sm">
         {/* Brand Header */}
-        <div className="text-center mb-6">
-          <a href="/home" className="inline-flex items-center gap-2 group mb-3 no-underline">
+        <div className="flex flex-col items-center text-center mb-6">
+          <a href="/home" className="inline-flex items-center justify-center gap-2.5 mb-2 group no-underline" title="Go to NetZeroMart Storefront">
             <img 
               src="/assets/netZeroStickerIcon.png" 
               alt="NetZeroMart" 
-              className="w-9 h-9 object-contain group-hover:scale-105 transition-transform" 
+              className="w-8 h-8 object-contain shrink-0 group-hover:scale-105 transition-transform" 
             />
-            <span className="text-xl font-bold tracking-tight text-slate-900">
+            <span className="text-xl font-bold tracking-tight text-slate-900 leading-none">
               NetZeroMart
             </span>
           </a>
-          <h1 className="text-lg font-bold text-slate-900 tracking-tight">Admin Sign In</h1>
+          <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-snug">Admin Sign In</h1>
           <p className="text-xs text-slate-500 mt-0.5">Master administrator access</p>
         </div>
 

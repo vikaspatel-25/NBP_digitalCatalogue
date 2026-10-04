@@ -44,12 +44,18 @@ export default function Register() {
     try {
       const res = await axios.get(`/api/register/check-email?email=${encodeURIComponent(trimmed)}`);
       if (res.data && res.data.available === false) {
-        setEmailWarning(res.data.message);
+        const msg = res.data.error || res.data.message || 'This email address is already registered or awaiting approval.';
+        setEmailWarning(msg);
         return false;
       }
       setEmailWarning('');
       return true;
     } catch (e) {
+      const serverMsg = e.response?.data?.error || e.response?.data?.message;
+      if (e.response?.status === 400 && serverMsg) {
+        setEmailWarning(serverMsg);
+        return false;
+      }
       return true;
     } finally {
       setEmailChecking(false);
@@ -75,17 +81,14 @@ export default function Register() {
 
     const emailTrimmed = formData.email.trim().toLowerCase();
 
-    // Check availability first before uploading file
-    try {
-      const checkRes = await axios.get(`/api/register/check-email?email=${encodeURIComponent(emailTrimmed)}`);
-      if (checkRes.data && checkRes.data.available === false) {
-        setError(checkRes.data.message);
-        setEmailWarning(checkRes.data.message);
-        setLoading(false);
-        return;
-      }
-    } catch (checkErr) {
-      // Continue to submission if check fails
+    // 1. Strict pre-submission check: Verify if email is already taken
+    const isEmailValid = await checkEmail(emailTrimmed);
+    if (!isEmailValid) {
+      const blockedMsg = emailWarning || 'This email address is already in use by a registered vendor or pending application.';
+      setError(blockedMsg);
+      setLoading(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
 
     try {
@@ -105,16 +108,22 @@ export default function Register() {
       if (res.data?.success) {
         setSubmitted(true);
       } else {
-        setError(res.data?.error || res.data?.message || 'Failed to submit registration.');
+        const errText = res.data?.error || res.data?.message || 'Failed to submit registration.';
+        setError(errText);
+        if (errText.toLowerCase().includes('email') || errText.toLowerCase().includes('vendor') || errText.toLowerCase().includes('application')) {
+          setEmailWarning(errText);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } catch (err) {
       console.error('Registration error:', err);
       const serverError = err.response?.data?.error || err.response?.data?.message || (typeof err.response?.data === 'string' ? err.response.data : '');
-      if (serverError) {
-        setError(serverError);
-      } else {
-        setError('Failed to submit registration. Please verify all fields.');
+      const finalErr = serverError || 'Failed to submit registration. Please verify all fields.';
+      setError(finalErr);
+      if (finalErr.toLowerCase().includes('email') || finalErr.toLowerCase().includes('vendor') || finalErr.toLowerCase().includes('application')) {
+        setEmailWarning(finalErr);
       }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setLoading(false);
     }
@@ -160,19 +169,21 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-emerald-50/20 py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-center">
       {/* Brand Header */}
-      <div className="flex flex-col items-center justify-center text-center mb-8">
-        <a href="/home" className="flex items-center justify-center gap-3 mb-3 group no-underline">
+      <div className="flex flex-col items-center text-center mb-7">
+        <a href="/home" className="inline-flex items-center justify-center gap-2.5 mb-2.5 group no-underline" title="Go to NetZeroMart Storefront">
           <img 
             src="/assets/netZeroStickerIcon.png" 
             alt="NetZeroMart" 
-            className="w-11 h-11 object-contain transition-transform group-hover:scale-105" 
+            className="w-9 h-9 object-contain shrink-0 group-hover:scale-105 transition-transform" 
           />
-          <span className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 select-none">
+          <span className="text-2xl font-bold tracking-tight text-slate-900 leading-none select-none">
             NetZeroMart
           </span>
         </a>
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Vendor & Partner Registration</h1>
-        <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight leading-snug">
+          Vendor & Partner Registration
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-md mx-auto">
           Join the NetZeroMart sustainable commerce network and showcase your green solutions.
         </p>
       </div>
@@ -272,7 +283,13 @@ export default function Register() {
                   } text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition`}
                 />
               </div>
-              {emailWarning && (
+              {emailChecking && (
+                <p className="mt-1.5 text-xs text-slate-500 flex items-center gap-1.5 animate-in fade-in duration-150">
+                  <Loader2 size={13} className="animate-spin text-slate-400 shrink-0" />
+                  <span>Verifying email availability...</span>
+                </p>
+              )}
+              {emailWarning && !emailChecking && (
                 <p className="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1.5 animate-in fade-in duration-200">
                   <AlertCircle size={13} className="shrink-0" />
                   <span>{emailWarning}</span>
@@ -328,7 +345,7 @@ export default function Register() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 bg-brand-blue hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition shadow-md flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-semibold transition active:scale-98 shadow-sm flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
           >
             {loading ? (
               <>

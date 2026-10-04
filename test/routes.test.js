@@ -70,6 +70,31 @@ describe('Express HTTP Routes & Endpoint Integration', () => {
       const data = await res.json();
       assert.equal(data.available, true);
     });
+
+    test('GET /api/register/check-email rejects reserved admin email', async () => {
+      const res = await fetch(`${baseUrl}/api/register/check-email?email=netzeromart@gmail.com`);
+      assert.equal(res.status, 200);
+      const data = await res.json();
+      assert.equal(data.available, false);
+      assert.ok(data.message.includes('reserved'));
+    });
+
+    test('POST /api/register rejects registration with reserved email with 400', async () => {
+      const res = await fetch(`${baseUrl}/api/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          companyName: 'Test Inc',
+          userName: 'Tester',
+          mobile: '9999999999',
+          email: 'netzeromart@gmail.com'
+        })
+      });
+      assert.equal(res.status, 400);
+      const data = await res.json();
+      assert.equal(data.success, false);
+      assert.ok(data.message.includes('reserved') || data.error.includes('reserved'));
+    });
   });
 
   describe('Route Aliases for Products & Articles', () => {

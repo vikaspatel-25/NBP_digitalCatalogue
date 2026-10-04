@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { v2 as cloudinary } from 'cloudinary';
 import Company from '../models/company.model.js';
 import ApprovedUser from '../models/approved.user.model.js';
+import Users from '../models/user.model.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,6 +19,92 @@ export const registerPageController = async (req, res) => {
   }
 };
 
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Robust helper to verify if an email is already associated with any entity
+ * (Pending Company applications, Approved Vendors in User/Users collections, or Admin)
+ */
+export async function findExistingAccountByEmail(email) {
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  if (!cleanEmail) return null;
+
+  // 1. Reserved Admin Email check
+  const adminEmail = (process.env.ADMIN_GMAIL || 'netzeromart@gmail.com').trim().toLowerCase();
+  if (cleanEmail === adminEmail) {
+    return {
+      type: 'admin',
+      message: 'This email address is reserved for system administration. Please use your business email address.'
+    };
+  }
+
+  // 2. Database lookup (checks both email and gmail field, case-insensitive and trimmed)
+  if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+    const emailPattern = new RegExp(`^\\s*${escapeRegex(cleanEmail)}\\s*$`, 'i');
+    const query = {
+      $or: [
+        { email: cleanEmail },
+        { email: emailPattern },
+        { gmail: cleanEmail },
+        { gmail: emailPattern }
+      ]
+    };
+
+    const [existingCompany, existingApproved, existingUsers] = await Promise.all([
+      Company.findOne(query).lean().catch(() => null),
+      ApprovedUser.findOne(query).lean().catch(() => null),
+      Users.findOne(query).lean().catch(() => null)
+    ]);
+
+    const activeVendor = existingApproved || existingUsers;
+    if (activeVendor) {
+      return {
+        type: 'user',
+        record: activeVendor,
+        message: 'A registered vendor account with this email address already exists. Please sign in to your vendor portal.'
+      };
+    }
+
+    if (existingCompany) {
+      return {
+        type: 'company',
+        record: existingCompany,
+        message: 'A vendor registration application with this email address has already been submitted and is currently awaiting administrator review.'
+      };
+    }
+
+    // Direct collection query fallback in case collections contain documents outside mongoose schemas
+    if (mongoose.connection.db) {
+      try {
+        const [rawVendor, rawCompany] = await Promise.all([
+          mongoose.connection.db.collection('users').findOne(query).catch(() => null),
+          mongoose.connection.db.collection('companies').findOne(query).catch(() => null)
+        ]);
+        if (rawVendor) {
+          return {
+            type: 'user',
+            record: rawVendor,
+            message: 'A registered vendor account with this email address already exists. Please sign in to your vendor portal.'
+          };
+        }
+        if (rawCompany) {
+          return {
+            type: 'company',
+            record: rawCompany,
+            message: 'A vendor registration application with this email address has already been submitted and is currently awaiting administrator review.'
+          };
+        }
+      } catch (err) {
+        // Fallback silently
+      }
+    }
+  }
+
+  return null;
+}
+
 export const checkEmailAvailability = async (req, res) => {
   try {
     const rawEmail = req.query.email || req.body?.email || '';
@@ -27,28 +114,17 @@ export const checkEmailAvailability = async (req, res) => {
       return res.status(400).json({ available: false, error: 'Email parameter is required.' });
     }
 
-    if (mongoose.connection.readyState === 1) {
-      const [existingCompany, existingApproved] = await Promise.all([
-        Company.findOne({ email }),
-        ApprovedUser.findOne({ email })
-      ]);
+    const existing = await findExistingAccountByEmail(email);
 
-      if (existingApproved) {
-        return res.json({
-          available: false,
-          message: 'An approved vendor account with this email address already exists. Please sign in instead.'
-        });
-      }
-
-      if (existingCompany) {
-        return res.json({
-          available: false,
-          message: 'A vendor application with this email address has already been submitted and is awaiting administrator review.'
-        });
-      }
+    if (existing) {
+      return res.status(200).json({
+        available: false,
+        error: existing.message,
+        message: existing.message
+      });
     }
 
-    return res.json({
+    return res.status(200).json({
       available: true,
       message: 'Email is available for registration.'
     });
@@ -63,6 +139,8 @@ export const checkEmailAvailability = async (req, res) => {
 
 export const registerCompany = async (req, res) => {
   const isJsonRequest = Boolean(
+    req.path?.startsWith('/api') ||
+    req.originalUrl?.includes('/api') ||
     req.xhr ||
     req.is('json') ||
     (req.headers.accept && req.headers.accept.includes('application/json')) ||
@@ -82,7 +160,7 @@ export const registerCompany = async (req, res) => {
           message: requiredMsg
         });
       }
-      return res.render('pages/register', {
+      return res.status(400).render('pages/register', {
         error: requiredMsg,
         success: null
       });
@@ -90,41 +168,21 @@ export const registerCompany = async (req, res) => {
 
     const normalizedEmail = String(email).trim().toLowerCase();
 
-    if (mongoose.connection.readyState === 1) {
-      const [existingCompany, existingApproved] = await Promise.all([
-        Company.findOne({ email: normalizedEmail }),
-        ApprovedUser.findOne({ email: normalizedEmail })
-      ]);
-
-      if (existingApproved) {
-        const errorMsg = 'An approved vendor account with this email address already exists. Please sign in instead.';
-        if (isJsonRequest) {
-          return res.status(400).json({
-            success: false,
-            error: errorMsg,
-            message: errorMsg
-          });
-        }
-        return res.render('pages/register', {
-          error: errorMsg,
-          success: null
+    // Check if email already exists in Company or User collections BEFORE processing upload
+    const existing = await findExistingAccountByEmail(normalizedEmail);
+    if (existing) {
+      console.warn(`[Registration Blocked] Duplicate email rejected: "${normalizedEmail}" (${existing.type})`);
+      if (isJsonRequest) {
+        return res.status(400).json({
+          success: false,
+          error: existing.message,
+          message: existing.message
         });
       }
-
-      if (existingCompany) {
-        const errorMsg = 'A vendor application with this email address has already been submitted and is awaiting administrator review.';
-        if (isJsonRequest) {
-          return res.status(400).json({
-            success: false,
-            error: errorMsg,
-            message: errorMsg
-          });
-        }
-        return res.render('pages/register', {
-          error: errorMsg,
-          success: null
-        });
-      }
+      return res.status(400).render('pages/register', {
+        error: existing.message,
+        success: null
+      });
     }
 
     let documentData = undefined;
