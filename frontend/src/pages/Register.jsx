@@ -26,10 +26,34 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [emailWarning, setEmailWarning] = useState('');
+  const [emailChecking, setEmailChecking] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
+  };
+
+  const checkEmail = async (emailToCheck) => {
+    const trimmed = (emailToCheck !== undefined ? emailToCheck : formData.email).trim().toLowerCase();
+    if (!trimmed || !trimmed.includes('@')) {
+      setEmailWarning('');
+      return true;
+    }
+    setEmailChecking(true);
+    try {
+      const res = await axios.get(`/api/register/check-email?email=${encodeURIComponent(trimmed)}`);
+      if (res.data && res.data.available === false) {
+        setEmailWarning(res.data.message);
+        return false;
+      }
+      setEmailWarning('');
+      return true;
+    } catch (e) {
+      return true;
+    } finally {
+      setEmailChecking(false);
+    }
   };
 
   const handleFileChange = (e) => {
@@ -49,36 +73,47 @@ export default function Register() {
     setError('');
     setLoading(true);
 
+    const emailTrimmed = formData.email.trim().toLowerCase();
+
+    // Check availability first before uploading file
+    try {
+      const checkRes = await axios.get(`/api/register/check-email?email=${encodeURIComponent(emailTrimmed)}`);
+      if (checkRes.data && checkRes.data.available === false) {
+        setError(checkRes.data.message);
+        setEmailWarning(checkRes.data.message);
+        setLoading(false);
+        return;
+      }
+    } catch (checkErr) {
+      // Continue to submission if check fails
+    }
+
     try {
       const data = new FormData();
       data.append('companyName', formData.companyName.trim());
       data.append('userName', formData.userName.trim());
       data.append('mobile', formData.mobile.trim());
-      data.append('email', formData.email.trim());
+      data.append('email', emailTrimmed);
       if (file) {
         data.append('document', file);
       }
 
-      await axios.post('/api/register', data, {
+      const res = await axios.post('/api/register', data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      setSubmitted(true);
+      if (res.data?.success) {
+        setSubmitted(true);
+      } else {
+        setError(res.data?.error || res.data?.message || 'Failed to submit registration.');
+      }
     } catch (err) {
       console.error('Registration error:', err);
-      // If api endpoint fails or returns error, try standard endpoint
-      try {
-        const data = new FormData();
-        data.append('companyName', formData.companyName.trim());
-        data.append('userName', formData.userName.trim());
-        data.append('mobile', formData.mobile.trim());
-        data.append('email', formData.email.trim());
-        if (file) data.append('document', file);
-
-        await axios.post('/register', data);
-        setSubmitted(true);
-      } catch (fallbackErr) {
-        setError(err.response?.data?.message || err.response?.data || 'Failed to submit registration. Please check all fields.');
+      const serverError = err.response?.data?.error || err.response?.data?.message || (typeof err.response?.data === 'string' ? err.response.data : '');
+      if (serverError) {
+        setError(serverError);
+      } else {
+        setError('Failed to submit registration. Please verify all fields.');
       }
     } finally {
       setLoading(false);
@@ -228,12 +263,21 @@ export default function Register() {
                   type="email"
                   name="email"
                   value={formData.email}
-                  onChange={handleChange}
+                  onChange={(e) => { handleChange(e); setEmailWarning(''); }}
+                  onBlur={(e) => checkEmail(e.target.value)}
                   required
                   placeholder="contact@company.com"
-                  className="block w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
+                  className={`block w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl border ${
+                    emailWarning ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200 bg-slate-50/50'
+                  } text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition`}
                 />
               </div>
+              {emailWarning && (
+                <p className="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1.5 animate-in fade-in duration-200">
+                  <AlertCircle size={13} className="shrink-0" />
+                  <span>{emailWarning}</span>
+                </p>
+              )}
             </div>
           </div>
 

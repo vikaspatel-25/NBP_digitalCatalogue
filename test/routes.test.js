@@ -56,6 +56,20 @@ describe('Express HTTP Routes & Endpoint Integration', () => {
       const text = await res.text();
       assert.ok(text.includes('Register') || text.includes('Company'));
     });
+
+    test('GET /api/register/check-email rejects missing email with 400', async () => {
+      const res = await fetch(`${baseUrl}/api/register/check-email`);
+      assert.equal(res.status, 400);
+      const data = await res.json();
+      assert.equal(data.available, false);
+    });
+
+    test('GET /api/register/check-email reports available for new email', async () => {
+      const res = await fetch(`${baseUrl}/api/register/check-email?email=brandnew-test@example.com`);
+      assert.equal(res.status, 200);
+      const data = await res.json();
+      assert.equal(data.available, true);
+    });
   });
 
   describe('Route Aliases for Products & Articles', () => {

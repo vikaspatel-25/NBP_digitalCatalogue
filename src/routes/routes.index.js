@@ -7,7 +7,7 @@ import { removeProductPageController, removeProductController } from "../control
 import { homePageController } from "../controllers/home.js";
 import { productPageController } from "../controllers/product.js";
 import { articlePageController } from "../controllers/article.js";
-import { registerPageController, registerCompany } from "../controllers/register.js";
+import { registerPageController, registerCompany, checkEmailAvailability } from "../controllers/register.js";
 import { userApprovalPageController, approveUserController, rejectUserController } from "../controllers/userApproval.js";
 
 import auth from "../middlewares/auth.js";
@@ -205,6 +205,7 @@ Router.post(
 );
 
 // Public API Routes for React Registration & Sign In
+Router.get("/api/register/check-email", checkEmailAvailability);
 Router.post("/api/register", upload.single("document"), registerCompany);
 Router.post("/api/adminLogin", loginController);
 Router.post("/api/login", loginController);

@@ -1,7 +1,9 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import mongoose from 'mongoose';
 import { v2 as cloudinary } from 'cloudinary';
-import User from '../models/company.model.js';
+import Company from '../models/company.model.js';
+import ApprovedUser from '../models/approved.user.model.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,6 +15,49 @@ export const registerPageController = async (req, res) => {
     return res.sendFile(reactIndexPath);
   } catch (error) {
     return res.status(500).send('Internal Server Error');
+  }
+};
+
+export const checkEmailAvailability = async (req, res) => {
+  try {
+    const rawEmail = req.query.email || req.body?.email || '';
+    const email = String(rawEmail).trim().toLowerCase();
+
+    if (!email) {
+      return res.status(400).json({ available: false, error: 'Email parameter is required.' });
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      const [existingCompany, existingApproved] = await Promise.all([
+        Company.findOne({ email }),
+        ApprovedUser.findOne({ email })
+      ]);
+
+      if (existingApproved) {
+        return res.json({
+          available: false,
+          message: 'An approved vendor account with this email address already exists. Please sign in instead.'
+        });
+      }
+
+      if (existingCompany) {
+        return res.json({
+          available: false,
+          message: 'A vendor application with this email address has already been submitted and is awaiting administrator review.'
+        });
+      }
+    }
+
+    return res.json({
+      available: true,
+      message: 'Email is available for registration.'
+    });
+  } catch (error) {
+    console.error('Error checking email availability:', error);
+    return res.status(500).json({
+      available: false,
+      error: 'Unable to verify email availability at this time.'
+    });
   }
 };
 
@@ -29,16 +74,57 @@ export const registerCompany = async (req, res) => {
 
     // Ensure required fields exist
     if (!userName || !companyName || !mobile || !email) {
+      const requiredMsg = 'All required fields (Contact Name, Company Name, Mobile Number, Email) must be provided.';
       if (isJsonRequest) {
         return res.status(400).json({
           success: false,
-          error: 'All required fields (Contact Name, Company Name, Mobile Number, Email) must be provided.'
+          error: requiredMsg,
+          message: requiredMsg
         });
       }
       return res.render('pages/register', {
-        error: 'All required fields must be provided.',
+        error: requiredMsg,
         success: null
       });
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+
+    if (mongoose.connection.readyState === 1) {
+      const [existingCompany, existingApproved] = await Promise.all([
+        Company.findOne({ email: normalizedEmail }),
+        ApprovedUser.findOne({ email: normalizedEmail })
+      ]);
+
+      if (existingApproved) {
+        const errorMsg = 'An approved vendor account with this email address already exists. Please sign in instead.';
+        if (isJsonRequest) {
+          return res.status(400).json({
+            success: false,
+            error: errorMsg,
+            message: errorMsg
+          });
+        }
+        return res.render('pages/register', {
+          error: errorMsg,
+          success: null
+        });
+      }
+
+      if (existingCompany) {
+        const errorMsg = 'A vendor application with this email address has already been submitted and is awaiting administrator review.';
+        if (isJsonRequest) {
+          return res.status(400).json({
+            success: false,
+            error: errorMsg,
+            message: errorMsg
+          });
+        }
+        return res.render('pages/register', {
+          error: errorMsg,
+          success: null
+        });
+      }
     }
 
     let documentData = undefined;
@@ -66,20 +152,20 @@ export const registerCompany = async (req, res) => {
       };
     }
 
-    // Prepare user object for Mongo
+    // Prepare company object for Mongo
     const userData = {
-      userName,
-      companyName,
-      mobile,
-      email
+      userName: userName.trim(),
+      companyName: companyName.trim(),
+      mobile: mobile.trim(),
+      email: normalizedEmail
     };
 
     if (documentData) {
       userData.document = documentData;
     }
 
-    // Create user
-    await User.create(userData);
+    // Create pending vendor registration record
+    await Company.create(userData);
 
     if (isJsonRequest) {
       return res.json({

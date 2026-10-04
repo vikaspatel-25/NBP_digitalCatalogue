@@ -16,7 +16,6 @@ import {
   ShieldAlert,
   Search,
   RefreshCw,
-  Eye,
   Calendar
 } from 'lucide-react';
 
@@ -27,7 +26,6 @@ export default function UserApproval() {
   const [actionLoading, setActionLoading] = useState(null); // id of user currently being processed
   const [feedback, setFeedback] = useState({ type: '', message: '' });
   const [rejectModal, setRejectModal] = useState(null);
-  const [docModal, setDocModal] = useState(null); // holds url of doc to preview
 
   const loadPending = () => {
     setLoading(true);
@@ -251,42 +249,35 @@ export default function UserApproval() {
                     )}
                   </div>
 
-                  {/* Attached Legal Document Preview */}
+                  {/* Attached Legal Document Link - Shown Once */}
                   {(() => {
                     const docUrl = typeof user.document === 'string' ? user.document : user.document?.url;
                     return docUrl ? (
-                      <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                        <div className="flex items-center gap-2.5 text-slate-800 font-medium min-w-0">
-                          <FileText size={18} className="text-blue-600 shrink-0" />
+                      <a
+                        href={docUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between p-3 rounded-xl bg-blue-50/70 border border-blue-200/80 hover:bg-blue-100/70 transition-colors text-xs text-blue-800 font-medium group"
+                        title="Open registration document in a new tab"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <FileText size={16} className="text-blue-600 shrink-0" />
                           <div className="min-w-0">
-                            <span className="font-semibold text-slate-900 block truncate">Company Registration Document</span>
-                            <span className="text-[11px] text-slate-500 block truncate">Uploaded during vendor registration</span>
+                            <span className="font-semibold text-slate-900 group-hover:text-blue-700 transition-colors block truncate">
+                              Company Registration Document
+                            </span>
+                            <span className="text-[11px] text-slate-500 block truncate">
+                              Uploaded during registration
+                            </span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => setDocModal(docUrl)}
-                            className="px-2.5 py-1.5 rounded-lg bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 text-xs font-semibold flex items-center gap-1.5 transition shadow-2xs"
-                            title="Quick modal preview"
-                          >
-                            <Eye size={13} />
-                            <span>Preview</span>
-                          </button>
-                          <a
-                            href={docUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-2xs"
-                            title="Open document in a new tab"
-                          >
-                            <ExternalLink size={13} />
-                            <span>View Doc (New Tab)</span>
-                          </a>
+                        <div className="flex items-center gap-1 text-blue-600 font-semibold text-xs shrink-0">
+                          <span>View in New Tab</span>
+                          <ExternalLink size={13} className="group-hover:translate-x-0.5 transition-transform" />
                         </div>
-                      </div>
+                      </a>
                     ) : (
-                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-400 text-xs italic flex items-center gap-2">
+                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-400 text-xs italic flex items-center gap-2">
                         <FileText size={15} />
                         <span>No document uploaded with this registration</span>
                       </div>
@@ -295,58 +286,34 @@ export default function UserApproval() {
                 </div>
 
                 {/* Actions Row */}
-                {(() => {
-                  const docUrl = typeof user.document === 'string' ? user.document : user.document?.url;
-                  return (
-                    <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div>
-                        {docUrl ? (
-                          <a
-                            href={docUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-700 font-semibold text-xs transition shadow-2xs"
-                            title="Open document in a new tab to review before approving"
-                          >
-                            <ExternalLink size={14} className="text-blue-600" />
-                            <span>View Document (New Tab)</span>
-                          </a>
-                        ) : (
-                          <span className="text-[11px] text-slate-400 italic">No document attached</span>
-                        )}
-                      </div>
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                  <button
+                    disabled={isProcessing}
+                    onClick={() => setRejectModal(user)}
+                    className="px-4 py-2 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-rose-600 font-semibold text-xs transition active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    <X size={14} />
+                    <span>Reject</span>
+                  </button>
 
-                      <div className="flex items-center gap-2.5 justify-end">
-                        <button
-                          disabled={isProcessing}
-                          onClick={() => setRejectModal(user)}
-                          className="px-4 py-2 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-rose-600 font-semibold text-xs transition active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
-                        >
-                          <X size={14} />
-                          <span>Reject</span>
-                        </button>
-
-                        <button
-                          disabled={isProcessing}
-                          onClick={() => handleApprove(user)}
-                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition shadow-2xs active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
-                        >
-                          {isProcessing ? (
-                            <>
-                              <Loader2 size={14} className="animate-spin" />
-                              <span>Approving...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Check size={14} />
-                              <span>Approve Vendor</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })()}
+                  <button
+                    disabled={isProcessing}
+                    onClick={() => handleApprove(user)}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition shadow-2xs active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" />
+                        <span>Approving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check size={14} />
+                        <span>Approve Vendor</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -383,47 +350,6 @@ export default function UserApproval() {
               >
                 Confirm Rejection
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Document Quick Preview Lightbox */}
-      {docModal && (
-        <div 
-          className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setDocModal(null)}
-        >
-          <div 
-            className="bg-white rounded-2xl max-w-3xl w-full max-h-[85vh] p-4 flex flex-col shadow-2xl overflow-hidden"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h4 className="text-sm font-bold text-slate-900">Registration Document Preview</h4>
-              <button 
-                onClick={() => setDocModal(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-50 rounded-xl my-2">
-              <img 
-                src={docModal} 
-                alt="Document preview" 
-                className="max-w-full max-h-[65vh] object-contain shadow-sm rounded-lg"
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-              <a
-                href={docModal}
-                target="_blank"
-                rel="noreferrer"
-                className="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition flex items-center gap-1.5"
-              >
-                <span>Open Full Size</span>
-                <ExternalLink size={12} />
-              </a>
             </div>
           </div>
         </div>
