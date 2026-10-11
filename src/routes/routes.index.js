@@ -134,8 +134,7 @@ Router.route("/admin/addArticle")
 
 
 // User Routes
-
-Router.route("/userPanel")
+Router.route(["/userPanel", "/userPanel/*"])
   .get(userAuth, userPanelPageController);
 
 Router.route("/userPanel/forgotPassword")
