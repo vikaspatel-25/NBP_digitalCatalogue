@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vendor Subscription Plans | NetZeroMart</title>
+    <link rel="icon" type="image/png" href="/assets/netZeroStickerIcon.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 antialiased font-sans flex flex-col min-h-screen">
+    <%- include('../components/header.ejs') %>
+
+    <main class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 mb-3">
+          Transparent & Fair Pricing
+        </span>
+        <h1 class="text-3xl sm:text-4xl font-black text-slate-950 tracking-tight">
+          Showcase Your Sustainable Products
+        </h1>
+        <p class="text-sm sm:text-base text-slate-600 mt-3">
+          Get listed on NetZeroMart. Start with a complimentary 28-day free trial upon verification, then renew anytime via UPI with zero auto-debit surprises.
+        </p>
+      </div>
+
+      <!-- Pricing Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
+        
+        <!-- Standard 28-Day Plan -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm flex flex-col justify-between hover:shadow-md transition">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold text-slate-900">28-Day Standard Plan</h3>
+              <span class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">Flexible</span>
+            </div>
+            <p class="text-xs text-slate-500 mb-6">Perfect for emerging suppliers testing catalogue exposure.</p>
+            <div class="flex items-baseline gap-1 mb-6">
+              <span class="text-4xl font-extrabold text-slate-950">₹49</span>
+              <span class="text-xs font-medium text-slate-500">/ 28 days</span>
+            </div>
+
+            <ul class="space-y-3 text-xs sm:text-sm text-slate-600 mb-8">
+              <li class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>Full digital catalogue visibility</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>Publish unlimited products & articles</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>Instant UPI & QR payment support</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span><strong>No auto-debit:</strong> Pay only when you renew</span>
+              </li>
+            </ul>
+          </div>
+
+          <a href="/register" class="w-full text-center py-3 px-4 rounded-xl font-bold text-xs sm:text-sm bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm">
+            Start With 28-Day Free Trial
+          </a>
+        </div>
+
+        <!-- Yearly Value Plan -->
+        <div class="bg-white rounded-2xl border-2 border-emerald-500 p-8 shadow-md flex flex-col justify-between relative hover:shadow-lg transition">
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-sm">
+            Best Value (Save ₹138)
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold text-slate-900">Yearly Value Plan</h3>
+              <span class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700">Save ~22%</span>
+            </div>
+            <p class="text-xs text-slate-500 mb-6">365 days of uninterrupted storefront listing and lead generation.</p>
+            <div class="flex items-baseline gap-1 mb-2">
+              <span class="text-4xl font-extrabold text-slate-950">₹499</span>
+              <span class="text-xs font-medium text-slate-500">/ 365 days</span>
+            </div>
+            <p class="text-[11px] font-medium text-emerald-600 mb-6">Equates to only ~₹38 per month</p>
+
+            <ul class="space-y-3 text-xs sm:text-sm text-slate-600 mb-8">
+              <li class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span><strong>All Standard Plan benefits included</strong></span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>365 uninterrupted days of visibility</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>Priority placement in catalogue directories</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>Instant UPI payment with invoice emailed</span>
+              </li>
+            </ul>
+          </div>
+
+          <a href="/register" class="w-full text-center py-3 px-4 rounded-xl font-bold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm">
+            Get Started Now
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Free Trial Guarantee Info -->
+      <div class="mt-12 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 text-center max-w-3xl mx-auto shadow-sm">
+        <h3 class="text-base font-bold text-slate-900 mb-2">How the 28-Day Free Trial Works</h3>
+        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-xl mx-auto">
+          Every verified vendor receives a one-time 28-day complimentary period. If your plan is not renewed after 28 days, your products are temporarily hidden until you decide to renew. Your data is always saved.
+        </p>
+      </div>
+    </main>
+
+    <%- include('../components/footer.ejs') %>
+  </body>
+</html>

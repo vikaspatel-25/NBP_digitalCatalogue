@@ -23,6 +23,17 @@ async function articlePageController(req, res) {
       return res.status(404).send("Article not found");
     }
 
+    // Verify creator subscription status (admin articles are always visible)
+    if (article.creatorRole !== 'admin') {
+      const { getActiveVendorIdentifiers } = await import("../services/catalogVisibility.js");
+      const { emails, ids } = await getActiveVendorIdentifiers().catch(() => ({ emails: [], ids: [] }));
+      const isVendorActive = (article.email && emails.includes(article.email.toLowerCase().trim())) ||
+                             (article.creatorId && ids.includes(String(article.creatorId)));
+      if (!isVendorActive) {
+        return res.status(404).send("This article is currently inactive or under renewal.");
+      }
+    }
+
     res.render(filePath, { article });
 
   } catch (error) {

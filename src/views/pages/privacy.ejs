@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy | NetZeroMart</title>
+    <link rel="icon" type="image/png" href="/assets/netZeroStickerIcon.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 antialiased font-sans flex flex-col min-h-screen">
+    <%- include('../components/header.ejs') %>
+
+    <main class="flex-grow max-w-4xl mx-auto px-4 sm:px-6 py-12">
+      <div class="bg-white rounded-2xl border border-slate-200 p-8 sm:p-10 shadow-sm space-y-6">
+        <div class="border-b border-slate-200 pb-4">
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-950">Privacy Policy</h1>
+          <p class="text-xs text-slate-500 mt-1">Last Updated: October 2026</p>
+        </div>
+
+        <section class="space-y-3 text-xs sm:text-sm text-slate-700 leading-relaxed">
+          <h2 class="text-base font-bold text-slate-900">1. Information We Collect</h2>
+          <p>
+            When registering as a vendor on NetZeroMart, we collect your company name, representative name, business email address, phone number, and company verification documents.
+          </p>
+        </section>
+
+        <section class="space-y-3 text-xs sm:text-sm text-slate-700 leading-relaxed">
+          <h2 class="text-base font-bold text-slate-900">2. Payment Security</h2>
+          <p>
+            All online transactions and UPI payments are processed securely through Razorpay. NetZeroMart does not store or process sensitive credit card numbers or UPI MPINs on its servers.
+          </p>
+        </section>
+
+        <section class="space-y-3 text-xs sm:text-sm text-slate-700 leading-relaxed">
+          <h2 class="text-base font-bold text-slate-900">3. Inquiries</h2>
+          <p>
+            If you have questions about our data practices, email us at <a href="mailto:netzeromart@gmail.com" class="text-blue-600 underline">netzeromart@gmail.com</a>.
+          </p>
+        </section>
+      </div>
+    </main>
+
+    <%- include('../components/footer.ejs') %>
+  </body>
+</html>

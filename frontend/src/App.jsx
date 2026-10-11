@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AddProduct from './pages/AddProduct';
 import UserApproval from './pages/UserApproval';
@@ -12,6 +12,8 @@ import Register from './pages/Register';
 import AdminLogin from './pages/AdminLogin';
 import UserLogin from './pages/UserLogin';
 import ResetPassword from './pages/ResetPassword';
+import SubscriptionManager from './pages/SubscriptionManager';
+import Onboarding from './pages/Onboarding';
 import { 
   LayoutDashboard, 
   UserCheck, 
@@ -36,7 +38,8 @@ import {
   CheckCircle2,
   Sparkles,
   TrendingUp,
-  FileText
+  FileText,
+  CreditCard
 } from 'lucide-react';
 
 // Dynamic Document Title Sync
@@ -300,6 +303,9 @@ function UserLayout({ children }) {
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Content & Stories</p>
           <NavItem to="/userPanel/addArticle" icon={FilePlus} label="Publish Article" />
           <NavItem to="/userPanel/removeArticle" icon={FileMinus} label="Manage Articles" />
+
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Subscription & Billing</p>
+          <NavItem to="/userPanel/subscription" icon={CreditCard} label="Subscription Plans" />
 
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Security</p>
           <NavItem to="/userPanel/resetPassword" icon={KeyRound} label="Change Password" />
@@ -574,27 +580,59 @@ function AdminDashboardOverview() {
 }
 
 function UserDashboardOverview() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     products: 0,
     articles: 0,
     loading: true
   });
+  const [subData, setSubData] = useState(null);
 
   useEffect(() => {
     Promise.allSettled([
       axios.get('/api/userPanel/removeProduct'),
-      axios.get('/api/userPanel/removeArticle')
-    ]).then(([prodRes, artRes]) => {
+      axios.get('/api/userPanel/removeArticle'),
+      axios.get('/api/payment/status')
+    ]).then(([prodRes, artRes, subRes]) => {
       setStats({
         products: prodRes.status === 'fulfilled' ? (prodRes.value.data.products?.length || 0) : 0,
         articles: artRes.status === 'fulfilled' ? (artRes.value.data.articles?.length || 0) : 0,
         loading: false
       });
+
+      if (subRes.status === 'fulfilled' && subRes.value.data.success) {
+        const sub = subRes.value.data.subscription;
+        setSubData(sub);
+        // Automatically route new vendors to Onboarding if not completed
+        if (sub.isOnboarded === false) {
+          navigate('/userPanel/onboarding');
+        }
+      }
     });
-  }, []);
+  }, [navigate]);
+
+  const isExpired = subData?.status === 'expired';
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Expired Subscription Warning Banner */}
+      {isExpired && (
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <Clock size={18} className="text-rose-600 flex-shrink-0" />
+            <div>
+              <span className="font-bold">Subscription Expired:</span> Your products and articles are temporarily hidden from the storefront.
+            </div>
+          </div>
+          <Link
+            to="/userPanel/subscription"
+            className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs transition shadow-2xs self-start sm:self-auto"
+          >
+            Renew via UPI (₹49) →
+          </Link>
+        </div>
+      )}
+
       {/* Header Banner - Minimal */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -765,6 +803,8 @@ function App() {
         
         {/* Vendor Portal Routes */}
         <Route path="/userPanel" element={<UserLayout><UserDashboardOverview /></UserLayout>} />
+        <Route path="/userPanel/onboarding" element={<Onboarding />} />
+        <Route path="/userPanel/subscription" element={<UserLayout><SubscriptionManager /></UserLayout>} />
         <Route path="/userPanel/addProduct" element={<UserLayout><AddProduct apiEndpoint="/api/userPanel/addProduct" role="user" /></UserLayout>} />
         <Route path="/userPanel/updateProduct" element={<UserLayout><UpdateProduct basePath="/api/userPanel" /></UserLayout>} />
         <Route path="/userPanel/removeProduct" element={<UserLayout><RemoveProduct basePath="/api/userPanel" /></UserLayout>} />

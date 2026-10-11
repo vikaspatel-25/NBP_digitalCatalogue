@@ -14,13 +14,16 @@ async function homePageController(req, res) {
     const productsCollection = db.collection("products");
     const articlesCollection = db.collection("articles");
 
+    const { buildActiveCatalogFilter } = await import("../services/catalogVisibility.js");
+    const activeFilter = await buildActiveCatalogFilter().catch(() => ({}));
+
     const products = await productsCollection
-      .find({})
+      .find(activeFilter)
       .sort({ order: 1 })
       .toArray();
 
     const articles = await articlesCollection
-      .find({})
+      .find(activeFilter)
       .sort({ createdAt: -1 })
       .toArray();
 

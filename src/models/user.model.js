@@ -15,6 +15,27 @@ const userSchema = new mongoose.Schema(
     passKey: { type: String },
     role: { type: String, default: "user" },
     status: { type: String, default: "active" },
+    isOnboarded: { type: Boolean, default: false },
+    subscription: {
+      plan: {
+        type: String,
+        enum: ['free_trial', 'monthly_28d', 'yearly_365d', 'none'],
+        default: 'free_trial'
+      },
+      status: {
+        type: String,
+        enum: ['trial', 'active', 'expired', 'inactive'],
+        default: 'trial'
+      },
+      trialAvailed: { type: Boolean, default: false },
+      startDate: { type: Date, default: Date.now },
+      expiresAt: {
+        type: Date,
+        default: () => new Date(Date.now() + 28 * 24 * 60 * 60 * 1000)
+      },
+      lastOrderId: { type: String, default: null },
+      lastPaymentId: { type: String, default: null }
+    },
 
     passwordUpdatedAt: {
       type: Date,

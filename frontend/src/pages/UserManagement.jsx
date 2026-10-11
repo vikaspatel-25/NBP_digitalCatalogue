@@ -22,6 +22,8 @@ import {
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
+  const [stats, setStats] = useState({ totalVendors: 0, subscribed: 0, trial: 0, expired: 0 });
+  const [subscriptionFilter, setSubscriptionFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
@@ -40,6 +42,7 @@ export default function UserManagement() {
       const res = await axios.get('/api/admin/userManagement');
       if (res.data && res.data.success) {
         setUsers(res.data.users || []);
+        if (res.data.stats) setStats(res.data.stats);
       } else {
         setUsers(res.data.users || []);
       }
@@ -84,13 +87,22 @@ export default function UserManagement() {
 
   const filteredUsers = users.filter(u => {
     const q = search.toLowerCase();
-    return (
+    const matchesSearch = (
       (u.companyName && u.companyName.toLowerCase().includes(q)) ||
       (u.userName && u.userName.toLowerCase().includes(q)) ||
       (u.email && u.email.toLowerCase().includes(q)) ||
       (u.mobile && u.mobile.includes(q)) ||
       (u.userId && u.userId.toLowerCase().includes(q))
     );
+
+    if (!matchesSearch) return false;
+
+    const compStatus = u.subscription?.computedStatus || 'trial';
+    if (subscriptionFilter === 'active') return compStatus === 'active';
+    if (subscriptionFilter === 'trial') return compStatus === 'trial';
+    if (subscriptionFilter === 'expired') return compStatus === 'expired';
+
+    return true;
   });
 
   return (
@@ -133,38 +145,46 @@ export default function UserManagement() {
         </button>
       </div>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-            <Users className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900">{users.length}</div>
-            <div className="text-xs font-medium text-slate-500">Active Vendor Accounts</div>
-          </div>
+      {/* Stats Summary - Including Razorpay Subscription Breakdown */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div 
+          onClick={() => setSubscriptionFilter('all')}
+          className={`bg-white p-4 sm:p-5 rounded-2xl border cursor-pointer transition shadow-2xs ${
+            subscriptionFilter === 'all' ? 'border-blue-600 ring-2 ring-blue-600/20' : 'border-slate-200/80 hover:border-slate-300'
+          }`}
+        >
+          <div className="text-2xl font-black text-slate-900">{stats.totalVendors || users.length}</div>
+          <div className="text-xs font-semibold text-slate-500 mt-1">Total Active Vendors</div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
-            <ShieldCheck className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900">
-              {users.filter(u => u.document?.url).length}
-            </div>
-            <div className="text-xs font-medium text-slate-500">Verified Legal Docs</div>
-          </div>
+        <div 
+          onClick={() => setSubscriptionFilter('active')}
+          className={`bg-white p-4 sm:p-5 rounded-2xl border cursor-pointer transition shadow-2xs ${
+            subscriptionFilter === 'active' ? 'border-emerald-600 ring-2 ring-emerald-600/20' : 'border-slate-200/80 hover:border-slate-300'
+          }`}
+        >
+          <div className="text-2xl font-black text-emerald-600">{stats.subscribed || 0}</div>
+          <div className="text-xs font-semibold text-slate-500 mt-1">Paid Subscriptions</div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
-            <Building2 className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900">100%</div>
-            <div className="text-xs font-medium text-slate-500">Authorized Access Status</div>
-          </div>
+        <div 
+          onClick={() => setSubscriptionFilter('trial')}
+          className={`bg-white p-4 sm:p-5 rounded-2xl border cursor-pointer transition shadow-2xs ${
+            subscriptionFilter === 'trial' ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-slate-200/80 hover:border-slate-300'
+          }`}
+        >
+          <div className="text-2xl font-black text-amber-600">{stats.trial || 0}</div>
+          <div className="text-xs font-semibold text-slate-500 mt-1">28-Day Free Trials</div>
+        </div>
+
+        <div 
+          onClick={() => setSubscriptionFilter('expired')}
+          className={`bg-white p-4 sm:p-5 rounded-2xl border cursor-pointer transition shadow-2xs ${
+            subscriptionFilter === 'expired' ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-200/80 hover:border-slate-300'
+          }`}
+        >
+          <div className="text-2xl font-black text-rose-600">{stats.expired || 0}</div>
+          <div className="text-xs font-semibold text-slate-500 mt-1">Expired (Hidden Catalogue)</div>
         </div>
       </div>
 
@@ -244,9 +264,21 @@ export default function UserManagement() {
                       </div>
                     </div>
                   </div>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                    Active
-                  </span>
+                  <div className="flex flex-col items-end gap-1">
+                    {user.subscription?.computedStatus === 'active' ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        Paid Plan ({user.subscription.remainingDays}d left)
+                      </span>
+                    ) : user.subscription?.computedStatus === 'trial' ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                        28d Free Trial ({user.subscription?.remainingDays || 0}d left)
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                        Expired (Hidden)
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Details */}

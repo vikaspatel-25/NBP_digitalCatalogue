@@ -41,8 +41,55 @@ export { userManagementPageController, removeUserController };
 
 export async function apiUserManagementPageController(req, res) {
   try {
-    const users = await User.find({});
-    res.json({ success: true, users });
+    const rawUsers = await User.find({}).lean();
+    const now = new Date();
+
+    let subscribedCount = 0;
+    let trialCount = 0;
+    let expiredCount = 0;
+
+    const users = rawUsers.map(user => {
+      const sub = user.subscription || {};
+      const expiresAt = sub.expiresAt ? new Date(sub.expiresAt) : null;
+      const isExpired = !expiresAt || expiresAt <= now;
+      const remainingDays = expiresAt && !isExpired
+        ? Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+        : 0;
+
+      let computedStatus = 'expired';
+      if (!isExpired) {
+        if (sub.status === 'active' && sub.plan !== 'free_trial') {
+          computedStatus = 'active';
+          subscribedCount++;
+        } else {
+          computedStatus = 'trial';
+          trialCount++;
+        }
+      } else {
+        expiredCount++;
+      }
+
+      return {
+        ...user,
+        subscription: {
+          ...sub,
+          computedStatus,
+          remainingDays,
+          isExpired
+        }
+      };
+    });
+
+    res.json({
+      success: true,
+      users,
+      stats: {
+        totalVendors: users.length,
+        subscribed: subscribedCount,
+        trial: trialCount,
+        expired: expiredCount
+      }
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }

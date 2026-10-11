@@ -300,4 +300,51 @@ Router.post("/api/userPanel/removeArticle", userAuth, async (req, res) => {
   return apiRemoveArticleController(req, res);
 });
 
+// Razorpay Payment & Subscription API Routes
+Router.get("/api/payment/plans", async (req, res) => {
+  const { getSubscriptionPlans } = await import("../controllers/payment.js");
+  return getSubscriptionPlans(req, res);
+});
+
+Router.get("/api/payment/status", userAuth, async (req, res) => {
+  const { getSubscriptionStatus } = await import("../controllers/payment.js");
+  return getSubscriptionStatus(req, res);
+});
+
+Router.post("/api/payment/create-order", userAuth, async (req, res) => {
+  const { createOrder } = await import("../controllers/payment.js");
+  return createOrder(req, res);
+});
+
+Router.post("/api/payment/verify", userAuth, async (req, res) => {
+  const { verifyPayment } = await import("../controllers/payment.js");
+  return verifyPayment(req, res);
+});
+
+// Razorpay Webhook (public endpoint with signature verification)
+Router.post("/api/payment/webhook", async (req, res) => {
+  const { handleRazorpayWebhook } = await import("../controllers/payment.js");
+  return handleRazorpayWebhook(req, res);
+});
+
+// Onboarding completion
+Router.post("/api/userPanel/complete-onboarding", userAuth, async (req, res) => {
+  const { completeVendorOnboarding } = await import("../controllers/payment.js");
+  return completeVendorOnboarding(req, res);
+});
+
+// Public Compliance & Legal Pages (Required by Razorpay)
+Router.get("/pricing", (req, res) => {
+  res.render("pages/pricing.ejs");
+});
+Router.get("/terms", (req, res) => {
+  res.render("pages/terms.ejs");
+});
+Router.get("/refund-policy", (req, res) => {
+  res.render("pages/refund.ejs");
+});
+Router.get("/privacy", (req, res) => {
+  res.render("pages/privacy.ejs");
+});
+
 export default Router;

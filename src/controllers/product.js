@@ -23,6 +23,17 @@ async function productPageController(req, res) {
       return res.status(404).send("Product not found");
     }
 
+    // Verify creator subscription status (admin products are always visible)
+    if (product.creatorRole !== 'admin') {
+      const { getActiveVendorIdentifiers } = await import("../services/catalogVisibility.js");
+      const { emails, ids } = await getActiveVendorIdentifiers().catch(() => ({ emails: [], ids: [] }));
+      const isVendorActive = (product.email && emails.includes(product.email.toLowerCase().trim())) ||
+                             (product.creatorId && ids.includes(String(product.creatorId)));
+      if (!isVendorActive) {
+        return res.status(404).send("This product listing is currently inactive or under renewal.");
+      }
+    }
+
     res.render(filePath, { product });
 
   } catch (error) {
