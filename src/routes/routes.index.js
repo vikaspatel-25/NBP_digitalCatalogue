@@ -335,7 +335,8 @@ Router.post("/api/userPanel/complete-onboarding", userAuth, async (req, res) => 
 
 // Public Compliance & Legal Pages (Required by Razorpay)
 Router.get("/pricing", (req, res) => {
-  res.render("pages/pricing.ejs");
+  const isVendorLoggedIn = Boolean(req.cookies.userToken);
+  res.render("pages/pricing.ejs", { isVendorLoggedIn });
 });
 Router.get("/terms", (req, res) => {
   res.render("pages/terms.ejs");
