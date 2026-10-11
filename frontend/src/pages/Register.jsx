@@ -5,18 +5,13 @@ import {
   User, 
   Phone, 
   Mail, 
-  FileText, 
   Upload, 
   CheckCircle, 
   AlertCircle, 
-  ArrowLeft, 
   Loader2,
   ShieldCheck,
   Sparkles,
-  CheckCircle2,
   Store,
-  Leaf,
-  Layers,
   Award,
   ArrowRight
 } from 'lucide-react';
@@ -137,25 +132,25 @@ export default function Register() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 sm:p-10 text-center shadow-2xl animate-fade-in">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-10 text-center shadow-xl animate-fade-in">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={36} />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Application Received</h2>
-          <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-            Your registration has been submitted for verification. Upon administrative review, we will email your passkey to <span className="text-emerald-400 font-semibold">{formData.email}</span> along with your complimentary <strong>28-day free trial</strong>.
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Application Received</h2>
+          <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+            Your registration has been submitted for verification. Upon administrative review, we will email your passkey to <span className="text-emerald-700 font-semibold">{formData.email}</span> along with your complimentary <strong>28-day free trial</strong>.
           </p>
-          <div className="p-4 bg-slate-950/70 rounded-2xl border border-slate-800 mb-6 text-left text-xs text-slate-300 space-y-2">
-            <div className="flex justify-between"><span className="text-slate-500">Company:</span> <span className="font-semibold text-white">{formData.companyName}</span></div>
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 mb-6 text-left text-xs text-slate-700 space-y-2">
+            <div className="flex justify-between"><span className="text-slate-500">Company:</span> <span className="font-semibold text-slate-900">{formData.companyName}</span></div>
             <div className="flex justify-between"><span className="text-slate-500">Representative:</span> <span>{formData.userName}</span></div>
-            <div className="flex justify-between"><span className="text-slate-500">Trial Period:</span> <span className="text-emerald-400 font-bold">28 Days Free</span></div>
+            <div className="flex justify-between"><span className="text-slate-500">Trial Period:</span> <span className="text-emerald-700 font-bold">28 Days Free</span></div>
           </div>
           <div className="flex flex-col gap-3">
-            <a href="/home" className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition shadow-lg shadow-emerald-900/30">
+            <a href="/home" className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold transition shadow-sm">
               Return to Storefront
             </a>
-            <a href="/userLogin" className="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
+            <a href="/userLogin" className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">
               Already have an approved account? Sign In
             </a>
           </div>
@@ -165,81 +160,81 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-center">
       <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         
         {/* Navigation Bar */}
-        <div className="flex items-center justify-between mb-8 sm:mb-12">
+        <div className="flex items-center justify-between mb-8 sm:mb-10">
           <a href="/home" className="inline-flex items-center gap-2.5 group no-underline">
             <img 
               src="/assets/netZeroStickerIcon.png" 
               alt="NetZeroMart" 
               className="w-9 h-9 object-contain group-hover:scale-105 transition-transform" 
             />
-            <span className="text-xl sm:text-2xl font-black tracking-tight text-white">
-              NetZero<span className="text-emerald-400">Mart</span>
+            <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
+              NetZero<span className="text-emerald-600">Mart</span>
             </span>
           </a>
           <a 
             href="/userLogin" 
-            className="text-xs sm:text-sm font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5"
+            className="text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5"
           >
             <span>Existing Vendor?</span>
-            <span className="text-emerald-400 underline">Sign In</span>
+            <span className="text-emerald-600 underline font-bold">Sign In</span>
           </a>
         </div>
 
-        {/* Side-by-Side Grid Container */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch bg-slate-900/70 border border-slate-800/80 rounded-3xl overflow-hidden shadow-2xl backdrop-blur-md">
+        {/* Side-by-Side Grid Container - Clean Light Theme */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-sm">
           
           {/* Left Column: Visual Brand Pitch & Value Pillars */}
-          <div className="lg:col-span-5 p-8 sm:p-12 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800">
+          <div className="lg:col-span-5 p-8 sm:p-12 bg-slate-50/70 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-200/80">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold tracking-wide uppercase mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100/70 border border-emerald-200 text-emerald-800 text-xs font-bold tracking-wide uppercase mb-6">
                 <Sparkles size={13} />
                 <span>Verified Supplier Directory</span>
               </div>
 
-              <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight mb-4">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight mb-4">
                 List Your Green Innovations for Buyers Worldwide.
               </h1>
-              <p className="text-sm text-slate-400 leading-relaxed mb-8">
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-8">
                 Connect directly with enterprise sustainability officers, green architects, and industrial procurement teams seeking vetted decarbonization solutions.
               </p>
 
               {/* Value Props */}
-              <div className="space-y-4">
-                <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-950/50 border border-slate-800/80">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center flex-shrink-0 mt-0.5 border border-emerald-500/20">
+              <div className="space-y-3.5">
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5 border border-emerald-100">
                     <Award size={18} />
                   </div>
                   <div>
-                    <h2 className="text-sm font-bold text-white">Complimentary 28-Day Free Trial</h2>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <h2 className="text-xs sm:text-sm font-bold text-slate-900">Complimentary 28-Day Free Trial</h2>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
                       New verified suppliers get 28 full days of catalogue exposure at zero cost.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-950/50 border border-slate-800/80">
-                  <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center flex-shrink-0 mt-0.5 border border-blue-500/20">
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5 border border-blue-100">
                     <Store size={18} />
                   </div>
                   <div>
-                    <h2 className="text-sm font-bold text-white">Full Digital Catalogue</h2>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <h2 className="text-xs sm:text-sm font-bold text-slate-900">Full Digital Catalogue</h2>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
                       Publish products with multi-image carousels, spec sheets, and video demonstrations.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-950/50 border border-slate-800/80">
-                  <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center flex-shrink-0 mt-0.5 border border-purple-500/20">
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+                  <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0 mt-0.5 border border-purple-100">
                     <ShieldCheck size={18} />
                   </div>
                   <div>
-                    <h2 className="text-sm font-bold text-white">Zero Auto-Debit Surprises</h2>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <h2 className="text-xs sm:text-sm font-bold text-slate-900">Zero Auto-Debit Surprises</h2>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
                       Renewals are 100% manual via instant UPI for just ₹49/28 days or ₹499/year.
                     </p>
                   </div>
@@ -247,30 +242,30 @@ export default function Register() {
               </div>
             </div>
 
-            {/* Bottom mini testimonial / guarantee */}
-            <div className="pt-8 mt-8 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
+            {/* Bottom info */}
+            <div className="pt-8 mt-8 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
               <div className="flex items-center gap-2">
-                <ShieldCheck size={16} className="text-emerald-400" />
+                <ShieldCheck size={16} className="text-emerald-600" />
                 <span>SSL Encrypted Submission</span>
               </div>
-              <a href="/pricing" className="text-emerald-400 hover:underline">View Pricing Plans →</a>
+              <a href="/pricing" className="text-emerald-700 hover:underline font-medium">View Pricing Plans →</a>
             </div>
           </div>
 
           {/* Right Column: Registration Form */}
-          <div className="lg:col-span-7 p-6 sm:p-10 lg:p-12 flex flex-col justify-center">
+          <div className="lg:col-span-7 p-6 sm:p-10 lg:p-12 flex flex-col justify-center bg-white">
             <div className="mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                 Submit Vendor Application
               </h2>
-              <p className="text-xs sm:text-sm text-slate-400 mt-1">
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 Enter your company information below to start your verification process.
               </p>
             </div>
 
             {error && (
-              <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs sm:text-sm flex items-start gap-3">
-                <AlertCircle size={18} className="flex-shrink-0 text-rose-400 mt-0.5" />
+              <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm flex items-start gap-3">
+                <AlertCircle size={18} className="flex-shrink-0 text-rose-500 mt-0.5" />
                 <div>{error}</div>
               </div>
             )}
@@ -279,11 +274,11 @@ export default function Register() {
               
               {/* Company Name */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
                   Company / Organization Name *
                 </label>
                 <div className="relative">
-                  <Building2 size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <Building2 size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
                     name="companyName"
@@ -291,18 +286,18 @@ export default function Register() {
                     onChange={handleChange}
                     required
                     placeholder="e.g. EcoMatrix Technologies Pvt Ltd"
-                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-950/80 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition"
                   />
                 </div>
               </div>
 
               {/* Representative Name */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
                   Authorized Representative Name *
                 </label>
                 <div className="relative">
-                  <User size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <User size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
                     name="userName"
@@ -310,7 +305,7 @@ export default function Register() {
                     onChange={handleChange}
                     required
                     placeholder="e.g. Rahul Mehta"
-                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-950/80 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition"
                   />
                 </div>
               </div>
@@ -318,11 +313,11 @@ export default function Register() {
               {/* Mobile & Email Row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
                     Mobile Number *
                   </label>
                   <div className="relative">
-                    <Phone size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <Phone size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="tel"
                       name="mobile"
@@ -330,17 +325,17 @@ export default function Register() {
                       onChange={handleChange}
                       required
                       placeholder="+91 98765 43210"
-                      className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-950/80 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+                      className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
                     Business Email *
                   </label>
                   <div className="relative">
-                    <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="email"
                       name="email"
@@ -349,8 +344,8 @@ export default function Register() {
                       onBlur={() => checkEmail()}
                       required
                       placeholder="vendor@company.com"
-                      className={`w-full pl-11 pr-9 py-3 rounded-xl bg-slate-950/80 border text-white placeholder-slate-500 text-sm focus:outline-none transition ${
-                        emailWarning ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500'
+                      className={`w-full pl-11 pr-9 py-3 rounded-xl bg-slate-50/70 border text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:outline-none transition ${
+                        emailWarning ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-200 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600'
                       }`}
                     />
                     {emailChecking && (
@@ -358,7 +353,7 @@ export default function Register() {
                     )}
                   </div>
                   {emailWarning && (
-                    <p className="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1 font-medium">
+                    <p className="text-[11px] text-rose-600 mt-1.5 flex items-center gap-1 font-medium">
                       <AlertCircle size={13} className="shrink-0" />
                       <span>{emailWarning}</span>
                     </p>
@@ -368,17 +363,17 @@ export default function Register() {
 
               {/* Business Certificate Document Upload */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
                   Business Registration / GST Certificate (Optional)
                 </label>
-                <div className="p-4 rounded-xl border border-dashed border-slate-700 bg-slate-950/50 hover:border-slate-600 transition">
+                <div className="p-4 rounded-xl border border-dashed border-slate-300 bg-slate-50/60 hover:border-slate-400 transition">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-slate-800 text-slate-400 flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 text-slate-500 flex items-center justify-center flex-shrink-0 shadow-2xs">
                         <Upload size={18} />
                       </div>
                       <div>
-                        <div className="text-xs font-semibold text-white">
+                        <div className="text-xs font-semibold text-slate-800">
                           {file ? file.name : 'Upload GST, Certificate, or Brochure'}
                         </div>
                         <div className="text-[11px] text-slate-500">
@@ -387,7 +382,7 @@ export default function Register() {
                       </div>
                     </div>
                     
-                    <label className="cursor-pointer px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition border border-slate-700 shrink-0">
+                    <label className="cursor-pointer px-4 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition border border-slate-200 shadow-2xs shrink-0">
                       <span>{file ? 'Change File' : 'Browse File'}</span>
                       <input 
                         type="file" 
@@ -400,9 +395,9 @@ export default function Register() {
                   </div>
 
                   {filePreview && (
-                    <div className="mt-3 pt-3 border-t border-slate-800 flex items-center gap-2">
-                      <img src={filePreview} alt="Preview" className="w-12 h-12 object-cover rounded-lg border border-slate-700" />
-                      <span className="text-xs text-slate-400">Document ready for upload</span>
+                    <div className="mt-3 pt-3 border-t border-slate-200 flex items-center gap-2">
+                      <img src={filePreview} alt="Preview" className="w-12 h-12 object-cover rounded-lg border border-slate-200" />
+                      <span className="text-xs text-slate-600">Document ready for upload</span>
                     </div>
                   )}
                 </div>
@@ -413,7 +408,7 @@ export default function Register() {
                 <button
                   type="submit"
                   disabled={loading || Boolean(emailWarning)}
-                  className="w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-500 text-white transition shadow-lg shadow-emerald-950 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99]"
+                  className="w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99]"
                 >
                   {loading ? (
                     <>
@@ -430,7 +425,7 @@ export default function Register() {
               </div>
 
               <p className="text-[11px] text-center text-slate-500 pt-1">
-                By submitting, you agree to our <a href="/terms" className="text-slate-400 hover:text-white underline">Terms</a> and <a href="/privacy" className="text-slate-400 hover:text-white underline">Privacy Policy</a>.
+                By submitting, you agree to our <a href="/terms" className="text-slate-700 hover:underline">Terms</a> and <a href="/privacy" className="text-slate-700 hover:underline">Privacy Policy</a>.
               </p>
             </form>
           </div>
