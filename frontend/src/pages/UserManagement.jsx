@@ -17,12 +17,16 @@ import {
   Copy,
   Check,
   RefreshCw,
-  X
+  X,
+  BellRing,
+  Clock,
+  Send,
+  CreditCard
 } from 'lucide-react';
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
-  const [stats, setStats] = useState({ totalVendors: 0, subscribed: 0, trial: 0, expired: 0 });
+  const [stats, setStats] = useState({ totalVendors: 0, active: 0, expiringSoon: 0, pendingPayment: 0, expired: 0 });
   const [subscriptionFilter, setSubscriptionFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -34,6 +38,7 @@ export default function UserManagement() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [successToast, setSuccessToast] = useState('');
+  const [sendingReminderId, setSendingReminderId] = useState(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -62,6 +67,24 @@ export default function UserManagement() {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleSendReminder = async (user) => {
+    setSendingReminderId(user._id);
+    try {
+      const res = await axios.post('/api/admin/send-reminder', { userId: user._id });
+      if (res.data?.success) {
+        setSuccessToast(`Renewal reminder email successfully sent to ${user.email}!`);
+        setTimeout(() => setSuccessToast(''), 4000);
+      } else {
+        alert(res.data?.error || 'Failed to send reminder email');
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.error || 'Network error sending reminder email');
+    } finally {
+      setSendingReminderId(null);
+    }
   };
 
   const handleConfirmDelete = async () => {
@@ -97,9 +120,12 @@ export default function UserManagement() {
 
     if (!matchesSearch) return false;
 
-    const compStatus = u.subscription?.computedStatus || 'trial';
+    const compStatus = u.subscription?.computedStatus || 'pending_payment';
+    const remainingDays = u.subscription?.remainingDays || 0;
+
     if (subscriptionFilter === 'active') return compStatus === 'active';
-    if (subscriptionFilter === 'trial') return compStatus === 'trial';
+    if (subscriptionFilter === 'expiring') return compStatus === 'active' && remainingDays <= 30;
+    if (subscriptionFilter === 'pending') return compStatus === 'pending_payment';
     if (subscriptionFilter === 'expired') return compStatus === 'expired';
 
     return true;
@@ -120,7 +146,7 @@ export default function UserManagement() {
         </div>
       )}
 
-      {/* Header Banner - Standardized Minimal */}
+      {/* Header Banner */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold tracking-wide uppercase mb-1.5">
@@ -128,10 +154,10 @@ export default function UserManagement() {
             <span>Vendor Directory</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-            User & Vendor Management
+            User & Vendor Directory
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Oversee active vendor profiles, verified corporate credentials, and access credentials.
+            Oversee verified corporate accounts, 365-day subscription periods, and initiate renewal reminders.
           </p>
         </div>
 
@@ -145,51 +171,61 @@ export default function UserManagement() {
         </button>
       </div>
 
-      {/* Stats Summary - Including Razorpay Subscription Breakdown */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {/* Stats Summary - B2B Annual Subscriptions Breakdown */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <div 
           onClick={() => setSubscriptionFilter('all')}
-          className={`bg-white p-4 sm:p-5 rounded-2xl border cursor-pointer transition shadow-2xs ${
-            subscriptionFilter === 'all' ? 'border-blue-600 ring-2 ring-blue-600/20' : 'border-slate-200/80 hover:border-slate-300'
+          className={`bg-white p-4 rounded-2xl border cursor-pointer transition shadow-2xs ${
+            subscriptionFilter === 'all' ? 'border-slate-900 ring-2 ring-slate-900/10' : 'border-slate-200/80 hover:border-slate-300'
           }`}
         >
           <div className="text-2xl font-black text-slate-900">{stats.totalVendors || users.length}</div>
-          <div className="text-xs font-semibold text-slate-500 mt-1">Total Active Vendors</div>
+          <div className="text-xs font-semibold text-slate-500 mt-0.5">All Vendors</div>
         </div>
 
         <div 
           onClick={() => setSubscriptionFilter('active')}
-          className={`bg-white p-4 sm:p-5 rounded-2xl border cursor-pointer transition shadow-2xs ${
+          className={`bg-white p-4 rounded-2xl border cursor-pointer transition shadow-2xs ${
             subscriptionFilter === 'active' ? 'border-emerald-600 ring-2 ring-emerald-600/20' : 'border-slate-200/80 hover:border-slate-300'
           }`}
         >
-          <div className="text-2xl font-black text-emerald-600">{stats.subscribed || 0}</div>
-          <div className="text-xs font-semibold text-slate-500 mt-1">Paid Subscriptions</div>
+          <div className="text-2xl font-black text-emerald-600">{stats.active || 0}</div>
+          <div className="text-xs font-semibold text-slate-500 mt-0.5">Active (365d)</div>
         </div>
 
         <div 
-          onClick={() => setSubscriptionFilter('trial')}
-          className={`bg-white p-4 sm:p-5 rounded-2xl border cursor-pointer transition shadow-2xs ${
-            subscriptionFilter === 'trial' ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-slate-200/80 hover:border-slate-300'
+          onClick={() => setSubscriptionFilter('expiring')}
+          className={`bg-white p-4 rounded-2xl border cursor-pointer transition shadow-2xs ${
+            subscriptionFilter === 'expiring' ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-slate-200/80 hover:border-slate-300'
           }`}
         >
-          <div className="text-2xl font-black text-amber-600">{stats.trial || 0}</div>
-          <div className="text-xs font-semibold text-slate-500 mt-1">28-Day Free Trials</div>
+          <div className="text-2xl font-black text-amber-600">{stats.expiringSoon || 0}</div>
+          <div className="text-xs font-semibold text-slate-500 mt-0.5">Expiring Soon (≤30d)</div>
+        </div>
+
+        <div 
+          onClick={() => setSubscriptionFilter('pending')}
+          className={`bg-white p-4 rounded-2xl border cursor-pointer transition shadow-2xs ${
+            subscriptionFilter === 'pending' ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-slate-200/80 hover:border-slate-300'
+          }`}
+        >
+          <div className="text-2xl font-black text-blue-600">{stats.pendingPayment || 0}</div>
+          <div className="text-xs font-semibold text-slate-500 mt-0.5">Pending Payment</div>
         </div>
 
         <div 
           onClick={() => setSubscriptionFilter('expired')}
-          className={`bg-white p-4 sm:p-5 rounded-2xl border cursor-pointer transition shadow-2xs ${
+          className={`bg-white p-4 rounded-2xl border cursor-pointer transition shadow-2xs ${
             subscriptionFilter === 'expired' ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-200/80 hover:border-slate-300'
           }`}
         >
           <div className="text-2xl font-black text-rose-600">{stats.expired || 0}</div>
-          <div className="text-xs font-semibold text-slate-500 mt-1">Expired (Hidden Catalogue)</div>
+          <div className="text-xs font-semibold text-slate-500 mt-0.5">Expired (Hidden)</div>
         </div>
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row gap-3 items-center justify-between">
+      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row gap-3 items-center justify-between">
         <div className="relative w-full sm:max-w-md">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -197,7 +233,7 @@ export default function UserManagement() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by company, representative, email, or user ID..."
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all text-slate-800"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all text-slate-800"
           />
         </div>
         <div className="text-xs font-semibold text-slate-500 w-full sm:w-auto text-right">
@@ -207,26 +243,26 @@ export default function UserManagement() {
 
       {/* Content Area */}
       {loading ? (
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-16 text-center shadow-sm">
-          <div className="inline-block animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mb-3"></div>
-          <p className="text-sm font-semibold text-slate-600">Loading vendor records...</p>
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-16 text-center shadow-2xs">
+          <RefreshCw className="w-8 h-8 animate-spin text-slate-400 mx-auto mb-3" />
+          <p className="text-xs text-slate-600 font-semibold">Loading vendor records...</p>
         </div>
       ) : error ? (
-        <div className="bg-white rounded-2xl border border-red-200 p-8 text-center shadow-sm">
+        <div className="bg-white rounded-2xl border border-red-200 p-8 text-center shadow-2xs">
           <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-slate-900">Unable to load vendors</h3>
-          <p className="text-sm text-slate-500 mt-1 mb-4">{error}</p>
-          <button onClick={fetchUsers} className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700">
+          <h3 className="text-base font-bold text-slate-900">Unable to load vendors</h3>
+          <p className="text-xs text-slate-500 mt-1 mb-4">{error}</p>
+          <button onClick={fetchUsers} className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700">
             Try Again
           </button>
         </div>
       ) : filteredUsers.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-16 text-center shadow-sm">
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-16 text-center shadow-2xs">
           <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-slate-900">
-            {search ? 'No matching vendors found' : 'No active vendors registered'}
+          <h3 className="text-base font-bold text-slate-900">
+            {search ? 'No matching vendors found' : 'No vendors in this category'}
           </h3>
-          <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
+          <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
             {search
               ? `We couldn't find any vendor accounts matching "${search}". Try adjusting your query.`
               : 'Vendors will appear here once their registration is approved through the User Approval panel.'}
@@ -242,147 +278,182 @@ export default function UserManagement() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredUsers.map((user) => (
-            <div
-              key={user._id}
-              className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
-            >
-              <div className="space-y-4">
-                {/* Header row */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 font-black text-lg flex items-center justify-center flex-shrink-0">
-                      {(user.companyName || 'V').charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-900 text-base leading-tight line-clamp-1">
-                        {user.companyName}
-                      </h3>
-                      <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
-                        <UserCheck className="w-3.5 h-3.5 text-blue-600" />
-                        <span>{user.userName || 'Representative'}</span>
+          {filteredUsers.map((user) => {
+            const sub = user.subscription || {};
+            const compStatus = sub.computedStatus || 'pending_payment';
+            const isExpiringSoon = sub.isExpiringSoon;
+            const planDisplay = sub.plan === 'yearly_2400' ? 'Enterprise (₹2,400/yr)' : sub.plan === 'yearly_1200' ? 'Standard (₹1,200/yr)' : 'No Plan';
+
+            return (
+              <div
+                key={user._id}
+                className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
+              >
+                <div className="space-y-4">
+                  {/* Header row */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 font-black text-lg flex items-center justify-center flex-shrink-0">
+                        {(user.companyName || 'V').charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-sm leading-tight line-clamp-1">
+                          {user.companyName}
+                        </h3>
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
+                          <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+                          <span>{user.userName || 'Representative'}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    {user.subscription?.computedStatus === 'active' ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                        Paid Plan ({user.subscription.remainingDays}d left)
-                      </span>
-                    ) : user.subscription?.computedStatus === 'trial' ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                        28d Free Trial ({user.subscription?.remainingDays || 0}d left)
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
-                        Expired (Hidden)
-                      </span>
-                    )}
-                  </div>
-                </div>
 
-                {/* Details */}
-                <div className="space-y-2 pt-2 border-t border-slate-100 text-xs text-slate-600">
-                  <div className="flex items-center justify-between gap-2 p-1.5 rounded-lg bg-slate-50/70">
-                    <span className="text-slate-400 font-medium">User ID:</span>
-                    <div className="flex items-center gap-1 font-mono font-semibold text-slate-800">
-                      <span>{user.userId}</span>
-                      <button
-                        onClick={() => handleCopy(user.userId, `id-${user._id}`)}
-                        title="Copy User ID"
-                        className="text-slate-400 hover:text-blue-600"
-                      >
-                        {copiedId === `id-${user._id}` ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5" />
-                        )}
-                      </button>
+                    <div className="flex flex-col items-end gap-1">
+                      {compStatus === 'active' && !isExpiringSoon && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          Active ({sub.remainingDays}d)
+                        </span>
+                      )}
+                      {compStatus === 'active' && isExpiringSoon && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">
+                          Expiring ({sub.remainingDays}d)
+                        </span>
+                      )}
+                      {compStatus === 'pending_payment' && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                          Pending Payment
+                        </span>
+                      )}
+                      {compStatus === 'expired' && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                          Expired (Hidden)
+                        </span>
+                      )}
+                      <span className="text-[10px] text-slate-500 font-medium">{planDisplay}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 text-slate-500">
-                      <Mail className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Email:</span>
+                  {/* Details */}
+                  <div className="space-y-2 pt-2 border-t border-slate-100 text-xs text-slate-600">
+                    <div className="flex items-center justify-between gap-2 p-1.5 rounded-lg bg-slate-50/70">
+                      <span className="text-slate-400 font-medium">User ID:</span>
+                      <div className="flex items-center gap-1 font-mono font-semibold text-slate-800">
+                        <span>{user.userId}</span>
+                        <button
+                          onClick={() => handleCopy(user.userId, `id-${user._id}`)}
+                          title="Copy User ID"
+                          className="text-slate-400 hover:text-blue-600"
+                        >
+                          {copiedId === `id-${user._id}` ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
                     </div>
-                    <a
-                      href={`mailto:${user.email}`}
-                      className="font-medium text-slate-800 hover:text-blue-600 truncate max-w-[180px]"
-                    >
-                      {user.email}
-                    </a>
-                  </div>
 
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 text-slate-500">
-                      <Phone className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Phone:</span>
-                    </div>
-                    <a
-                      href={`tel:${user.mobile}`}
-                      className="font-medium text-slate-800 hover:text-blue-600 font-mono"
-                    >
-                      {user.mobile}
-                    </a>
-                  </div>
-
-                  {user.createdAt && (
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 text-slate-500">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Registered:</span>
+                        <Mail className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Email:</span>
                       </div>
-                      <span className="text-slate-700">
-                        {new Date(user.createdAt).toLocaleDateString(undefined, {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                      </span>
+                      <a
+                        href={`mailto:${user.email}`}
+                        className="font-medium text-slate-800 hover:text-blue-600 truncate max-w-[180px]"
+                      >
+                        {user.email}
+                      </a>
                     </div>
-                  )}
+
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-slate-500">
+                        <Phone className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Phone:</span>
+                      </div>
+                      <a
+                        href={`tel:${user.mobile}`}
+                        className="font-medium text-slate-800 hover:text-blue-600 font-mono"
+                      >
+                        {user.mobile}
+                      </a>
+                    </div>
+
+                    {sub.expiresAt && (
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 text-slate-500">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Valid Until:</span>
+                        </div>
+                        <span className="font-semibold text-slate-800">
+                          {new Date(sub.expiresAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+
+                    {sub.lastUtr && (
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 text-slate-500">
+                          <CreditCard className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Last UTR:</span>
+                        </div>
+                        <span className="font-mono text-slate-700">{sub.lastUtr}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Document badge */}
+                  {(() => {
+                    const docUrl = typeof user.document === 'string' ? user.document : user.document?.url;
+                    return docUrl ? (
+                      <a
+                        href={docUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-blue-50/60 border border-blue-100 hover:bg-blue-100/70 transition-colors text-xs text-blue-800 font-medium group"
+                        title="Open business document in a new tab"
+                      >
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-blue-600" />
+                          <span>Business Registration Document</span>
+                        </div>
+                        <ExternalLink className="w-3.5 h-3.5 text-blue-500 group-hover:translate-x-0.5 transition-transform" />
+                      </a>
+                    ) : (
+                      <div className="p-2 rounded-xl bg-slate-50 text-slate-400 text-xs italic flex items-center gap-2">
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>No legal document attached</span>
+                      </div>
+                    );
+                  })()}
                 </div>
 
-                {/* Document badge */}
-                {(() => {
-                  const docUrl = typeof user.document === 'string' ? user.document : user.document?.url;
-                  return docUrl ? (
-                    <a
-                      href={docUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-between p-2.5 rounded-xl bg-blue-50/60 border border-blue-100 hover:bg-blue-100/70 transition-colors text-xs text-blue-800 font-medium group"
-                      title="Open business document in a new tab"
-                    >
-                      <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-blue-600" />
-                        <span>Business Registration Document</span>
-                      </div>
-                      <ExternalLink className="w-3.5 h-3.5 text-blue-500 group-hover:translate-x-0.5 transition-transform" />
-                    </a>
-                  ) : (
-                    <div className="p-2 rounded-xl bg-slate-50 text-slate-400 text-xs italic flex items-center gap-2">
-                      <FileText className="w-3.5 h-3.5" />
-                      <span>No legal document attached</span>
-                    </div>
-                  );
-                })()}
-              </div>
+                {/* Action buttons */}
+                <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleSendReminder(user)}
+                    disabled={sendingReminderId === user._id}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition active:scale-95 disabled:opacity-50"
+                    title="Send renewal reminder email to vendor"
+                  >
+                    {sendingReminderId === user._id ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                    ) : (
+                      <Send className="w-3.5 h-3.5 text-blue-600" />
+                    )}
+                    <span>Send Reminder</span>
+                  </button>
 
-              {/* Action buttons */}
-              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
-                <span className="text-xs text-slate-400 font-medium capitalize">Role: {user.role || 'Vendor'}</span>
-                <button
-                  onClick={() => setDeletingUser(user)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold transition-all active:scale-95"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Remove User</span>
-                </button>
+                  <button
+                    onClick={() => setDeletingUser(user)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold transition-all active:scale-95"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Remove</span>
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

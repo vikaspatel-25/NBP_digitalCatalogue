@@ -39,7 +39,6 @@ async function approveUserController(req, res) {
     const hashedPassword = await bcrypt.hash(rawPassword, 4);
 
     const now = new Date();
-    const trialExpiry = new Date(now.getTime() + 28 * 24 * 60 * 60 * 1000);
 
     const newUser = new User({
       companyName: userData.companyName || '',
@@ -57,13 +56,19 @@ async function approveUserController(req, res) {
       status: 'active',
       isOnboarded: false,
       subscription: {
-        plan: 'free_trial',
-        status: 'trial',
-        trialAvailed: true,
-        startDate: now,
-        expiresAt: trialExpiry,
-        lastOrderId: null,
-        lastPaymentId: null
+        plan: 'none',
+        status: 'pending_payment',
+        startDate: null,
+        expiresAt: null,
+        lastPaymentReceivedDate: null,
+        lastUtr: null,
+        lastPaymentRequestId: null
+      },
+      limits: {
+        productMonthlyLimit: 25,
+        articleMonthlyLimit: 50,
+        maxVideoLengthSeconds: 30,
+        maxVideoSizeMb: 15
       }
     });
 
@@ -73,7 +78,7 @@ async function approveUserController(req, res) {
       await transporter.sendMail({
         from: process.env.GMAIL_USER,
         to: userData.email,
-        subject: 'Your NetZero Mart Account Has Been Approved',
+        subject: 'Your NetZero Mart Vendor Account Has Been Approved',
         html: `
         <div style="margin:0;padding:0;background:#f2f4f8;font-family:Arial,Helvetica,sans-serif;">
           <div style="max-width:600px;margin:40px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.08);">
@@ -89,12 +94,12 @@ async function approveUserController(req, res) {
               <p style="font-size:14px;color:#4b5563;line-height:1.6;">
                 <strong>Your Temporary Pass Key:</strong> <span style="display:inline-block;padding:6px 12px;background:#f3f4f6;border-radius:6px;font-family:monospace;font-size:14px;">${rawPassword}</span>
               </p>
-              <div style="background:#ecfdf5;border-left:4px solid #10b981;padding:12px;margin:16px 0;border-radius:4px;">
-                <p style="margin:0;font-size:13px;color:#065f46;font-weight:600;">
-                  🎁 Complimentary 28-Day Free Trial Activated!
+              <div style="background:#eff6ff;border-left:4px solid #3b82f6;padding:12px;margin:16px 0;border-radius:4px;">
+                <p style="margin:0;font-size:13px;color:#1e40af;font-weight:600;">
+                  ⚡ Next Step: Activate Your Annual Subscription
                 </p>
-                <p style="margin:4px 0 0 0;font-size:12px;color:#047857;">
-                  Your digital catalogue is active for 28 days completely free. Start adding your products today!
+                <p style="margin:4px 0 0 0;font-size:12px;color:#1e3a8a;">
+                  Log in to your vendor dashboard, select your annual supplier plan (₹1,200 Standard or ₹2,400 Enterprise), and pay directly via UPI/QR to publish your catalogue.
                 </p>
               </div>
               <p style="font-size:14px;color:#4b5563;line-height:1.6;">

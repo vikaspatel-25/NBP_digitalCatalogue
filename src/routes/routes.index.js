@@ -132,6 +132,12 @@ Router.route("/admin/addArticle")
     addArticleController
   );
 
+Router.route("/admin/paymentSettings")
+  .get(auth, adminPageController);
+
+Router.route("/admin/paymentRequests")
+  .get(auth, adminPageController);
+
 
 // User Routes
 Router.route(["/userPanel", "/userPanel/*"])
@@ -297,6 +303,43 @@ Router.get("/api/userPanel/removeArticle", userAuth, async (req, res) => {
 Router.post("/api/userPanel/removeArticle", userAuth, async (req, res) => {
   const { apiRemoveArticleController } = await import("../controllers/removeArticle.js");
   return apiRemoveArticleController(req, res);
+});
+
+// Admin Offline UPI/QR Settings & Verification API Routes
+Router.get("/api/admin/payment-settings", auth, async (req, res) => {
+  const { getAdminPaymentSettings } = await import("../controllers/adminPayment.js");
+  return getAdminPaymentSettings(req, res);
+});
+
+Router.post("/api/admin/payment-settings", auth, upload.single("qrCode"), async (req, res) => {
+  const { updateAdminPaymentSettings } = await import("../controllers/adminPayment.js");
+  return updateAdminPaymentSettings(req, res);
+});
+
+Router.get("/api/admin/payment-requests", auth, async (req, res) => {
+  const { getPaymentRequests } = await import("../controllers/adminPayment.js");
+  return getPaymentRequests(req, res);
+});
+
+Router.post("/api/admin/payment-requests/verify", auth, async (req, res) => {
+  const { verifyPaymentRequest } = await import("../controllers/adminPayment.js");
+  return verifyPaymentRequest(req, res);
+});
+
+Router.post("/api/admin/send-reminder", auth, async (req, res) => {
+  const { apiSendReminderController } = await import("../controllers/userManagement.js");
+  return apiSendReminderController(req, res);
+});
+
+// Vendor Offline Payment & Subscription APIs
+Router.get("/api/userPanel/payment-info", userAuth, async (req, res) => {
+  const { getVendorPaymentInfo } = await import("../controllers/vendorPayment.js");
+  return getVendorPaymentInfo(req, res);
+});
+
+Router.post("/api/userPanel/submit-payment", userAuth, upload.single("screenshot"), async (req, res) => {
+  const { submitVendorPayment } = await import("../controllers/vendorPayment.js");
+  return submitVendorPayment(req, res);
 });
 
 // Razorpay Payment & Subscription API Routes

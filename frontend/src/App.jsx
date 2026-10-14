@@ -14,6 +14,8 @@ import UserLogin from './pages/UserLogin';
 import ResetPassword from './pages/ResetPassword';
 import SubscriptionManager from './pages/SubscriptionManager';
 import Onboarding from './pages/Onboarding';
+import AdminPaymentSettings from './pages/AdminPaymentSettings';
+import AdminPaymentRequests from './pages/AdminPaymentRequests';
 import { 
   LayoutDashboard, 
   UserCheck, 
@@ -39,7 +41,9 @@ import {
   Sparkles,
   TrendingUp,
   FileText,
-  CreditCard
+  CreditCard,
+  QrCode,
+  AlertTriangle
 } from 'lucide-react';
 
 // Dynamic Document Title Sync
@@ -52,6 +56,8 @@ function TitleUpdater() {
       '/admin': 'Admin Dashboard | NetZeroMart',
       '/admin/userApproval': 'Vendor Approvals | NetZeroMart',
       '/admin/userManagement': 'Vendor Directory | NetZeroMart',
+      '/admin/paymentRequests': 'Payment Approvals | NetZeroMart Admin',
+      '/admin/paymentSettings': 'UPI & QR Setup | NetZeroMart Admin',
       '/admin/addProduct': 'Add Product | NetZeroMart Admin',
       '/admin/updateProduct': 'Update Product | NetZeroMart Admin',
       '/admin/removeProduct': 'Remove Products | NetZeroMart Admin',
@@ -59,6 +65,7 @@ function TitleUpdater() {
       '/admin/removeArticle': 'Manage Articles | NetZeroMart Admin',
       '/admin/resetPassword': 'Change Password | NetZeroMart Admin',
       '/userPanel': 'Vendor Portal Dashboard | NetZeroMart',
+      '/userPanel/subscription': 'Annual Subscription & Quotas | NetZeroMart Vendor',
       '/userPanel/addProduct': 'Add Listing | NetZeroMart Vendor',
       '/userPanel/updateProduct': 'Update Listing | NetZeroMart Vendor',
       '/userPanel/removeProduct': 'Manage Listings | NetZeroMart Vendor',
@@ -105,6 +112,7 @@ function NavItem({ to, icon: Icon, label, badge = null }) {
 function AdminLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [pendingPaymentsCount, setPendingPaymentsCount] = useState(0);
   const location = useLocation();
 
   const currentPath = location.pathname.replace(/\/+$/, '') || '/';
@@ -112,6 +120,8 @@ function AdminLayout({ children }) {
     '/admin': 'Dashboard Overview',
     '/admin/userApproval': 'Pending Approvals',
     '/admin/userManagement': 'Active Vendor Directory',
+    '/admin/paymentRequests': 'Payment Verification & Settlements',
+    '/admin/paymentSettings': 'UPI & QR Code Configuration',
     '/admin/removeProduct': 'Remove Products',
     '/admin/removeArticle': 'Remove Articles',
     '/admin/resetPassword': 'Change Password',
@@ -123,6 +133,14 @@ function AdminLayout({ children }) {
       .then(res => {
         if (res.data && res.data.users) {
           setPendingCount(res.data.users.length);
+        }
+      })
+      .catch(() => {});
+
+    axios.get('/api/admin/payment-requests?status=pending')
+      .then(res => {
+        if (res.data?.counts?.pending !== undefined) {
+          setPendingPaymentsCount(res.data.counts.pending);
         }
       })
       .catch(() => {});
@@ -171,6 +189,10 @@ function AdminLayout({ children }) {
         <nav className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mb-1.5">Overview</p>
           <NavItem to="/admin" icon={LayoutDashboard} label="Dashboard" />
+
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Corporate Accounting</p>
+          <NavItem to="/admin/paymentRequests" icon={CreditCard} label="Payment Approvals" badge={pendingPaymentsCount} />
+          <NavItem to="/admin/paymentSettings" icon={QrCode} label="UPI & QR Setup" />
 
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Vendor Relations</p>
           <NavItem to="/admin/userApproval" icon={UserCheck} label="Pending Approvals" badge={pendingCount} />
@@ -592,7 +614,7 @@ function UserDashboardOverview() {
     Promise.allSettled([
       axios.get('/api/userPanel/removeProduct'),
       axios.get('/api/userPanel/removeArticle'),
-      axios.get('/api/payment/status')
+      axios.get('/api/userPanel/payment-info')
     ]).then(([prodRes, artRes, subRes]) => {
       setStats({
         products: prodRes.status === 'fulfilled' ? (prodRes.value.data.products?.length || 0) : 0,
@@ -600,21 +622,59 @@ function UserDashboardOverview() {
         loading: false
       });
 
-      if (subRes.status === 'fulfilled' && subRes.value.data.success) {
-        const sub = subRes.value.data.subscription;
+      if (subRes.status === 'fulfilled' && subRes.value.data?.success) {
+        const sub = subRes.value.data.vendorSubscription;
         setSubData(sub);
         // Automatically route new vendors to Onboarding if not completed
-        if (sub.isOnboarded === false) {
+        if (sub?.isOnboarded === false) {
           navigate('/userPanel/onboarding');
         }
       }
     });
   }, [navigate]);
 
+  const isPendingPayment = subData?.status === 'pending_payment';
   const isExpired = subData?.status === 'expired';
+  const isExpiringSoon = subData?.status === 'active' && (subData?.remainingDays ?? 999) <= 30;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Pending Payment Activation Callout Banner */}
+      {isPendingPayment && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle size={18} className="text-amber-600 flex-shrink-0" />
+            <div>
+              <span className="font-bold">Annual Subscription Required:</span> Your vendor account is verified! Activate your 365-day subscription via UPI/QR to publish products and go live.
+            </div>
+          </div>
+          <Link
+            to="/userPanel/subscription"
+            className="px-3.5 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-semibold text-xs transition shadow-2xs self-start sm:self-auto"
+          >
+            Activate via UPI / QR →
+          </Link>
+        </div>
+      )}
+
+      {/* Expiring Soon Reminder Banner */}
+      {isExpiringSoon && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <Clock size={18} className="text-amber-600 flex-shrink-0" />
+            <div>
+              <span className="font-bold">Subscription Expiring Soon:</span> Your annual catalogue expires in {subData.remainingDays} days. Please submit your renewal payment to prevent interruption.
+            </div>
+          </div>
+          <Link
+            to="/userPanel/subscription"
+            className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs transition shadow-2xs self-start sm:self-auto"
+          >
+            Renew Subscription →
+          </Link>
+        </div>
+      )}
+
       {/* Expired Subscription Warning Banner */}
       {isExpired && (
         <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
@@ -628,7 +688,7 @@ function UserDashboardOverview() {
             to="/userPanel/subscription"
             className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs transition shadow-2xs self-start sm:self-auto"
           >
-            Renew via UPI (₹49) →
+            Renew via UPI / QR →
           </Link>
         </div>
       )}
@@ -794,6 +854,8 @@ function App() {
         <Route path="/admin" element={<AdminLayout><AdminDashboardOverview /></AdminLayout>} />
         <Route path="/admin/userApproval" element={<AdminLayout><UserApproval /></AdminLayout>} />
         <Route path="/admin/userManagement" element={<AdminLayout><UserManagement /></AdminLayout>} />
+        <Route path="/admin/paymentRequests" element={<AdminLayout><AdminPaymentRequests /></AdminLayout>} />
+        <Route path="/admin/paymentSettings" element={<AdminLayout><AdminPaymentSettings /></AdminLayout>} />
         <Route path="/admin/addProduct" element={<Navigate to="/admin/removeProduct" replace />} />
         <Route path="/admin/updateProduct" element={<Navigate to="/admin/removeProduct" replace />} />
         <Route path="/admin/removeProduct" element={<AdminLayout><RemoveProduct basePath="/api/admin" /></AdminLayout>} />

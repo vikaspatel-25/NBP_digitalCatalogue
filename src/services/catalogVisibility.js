@@ -7,24 +7,19 @@ import ApprovedUser from '../models/approved.user.model.js';
 export async function getActiveVendorIdentifiers() {
   const now = new Date();
 
-  // Find all vendors whose subscription expiresAt is in the future
+  // Find all vendors whose subscription status is active and expiresAt is in the future
   const [approvedActive, usersActive] = await Promise.all([
     ApprovedUser.find(
       {
-        $or: [
-          { 'subscription.expiresAt': { $gt: now } },
-          // If no subscription recorded yet (e.g. legacy before migration), allow or treat as trial
-          { subscription: { $exists: false } }
-        ]
+        'subscription.status': 'active',
+        'subscription.expiresAt': { $gt: now }
       },
       { email: 1, userId: 1, _id: 1 }
     ).lean(),
     User.find(
       {
-        $or: [
-          { 'subscription.expiresAt': { $gt: now } },
-          { subscription: { $exists: false } }
-        ]
+        'subscription.status': 'active',
+        'subscription.expiresAt': { $gt: now }
       },
       { email: 1, userId: 1, _id: 1 }
     ).lean()

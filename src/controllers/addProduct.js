@@ -3,6 +3,7 @@ import { fileURLToPath } from "url";
 import cloudinary from "../config/cloudinary.js";
 import Product from "../models/product.model.js";
 import jwt from "jsonwebtoken";
+import { checkProductUploadQuota } from "../services/quotaService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -93,6 +94,30 @@ async function addProductController(req, res) {
       return res.status(400).send("Price range required");
     }
 
+    const creator = getCreatorId(req);
+
+    if (creator && creator.role === "user") {
+      const quota = await checkProductUploadQuota(creator.id);
+      if (!quota.allowed) {
+        return res.status(403).send(`<!DOCTYPE html>
+<html>
+<head><title>Quota Limit Exceeded</title><style>body{font-family:system-ui;padding:40px;background:#f8fafc;color:#0f172a}.card{max-width:500px;margin:auto;background:white;padding:30px;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1)}h2{color:#e11d48}a{display:inline-block;margin-top:20px;padding:10px 16px;background:#0f172a;color:white;text-decoration:none;border-radius:8px;font-size:14px}</style></head>
+<body><div class="card"><h2>Upload Limit Exceeded</h2><p>${quota.error}</p><a href="/userPanel/subscription">Go to Subscription</a></div></body></html>`);
+      }
+
+      const maxVideos = quota.monthlyLimit >= 75 ? 2 : 1;
+      if (videos.length > maxVideos) {
+        return res.status(400).send(`<!DOCTYPE html><html><head><title>Video Limit Exceeded</title><style>body{font-family:system-ui;padding:40px;background:#f8fafc}.card{max-width:500px;margin:auto;background:white;padding:30px;border-radius:12px;border:1px solid #e2e8f0}h2{color:#e11d48}a{display:inline-block;margin-top:20px;padding:10px 16px;background:#0f172a;color:white;text-decoration:none;border-radius:8px}</style></head><body><div class="card"><h2>Video Upload Limit</h2><p>Your plan allows maximum ${maxVideos} short video clip${maxVideos > 1 ? 's' : ''} per product. Please remove extra video files or use YouTube links.</p><a href="/userPanel/addProduct">Back to Form</a></div></body></html>`);
+      }
+
+      const maxBytes = (quota.maxVideoSizeMb || 15) * 1024 * 1024;
+      for (const video of videos) {
+        if (video.size > maxBytes) {
+          return res.status(400).send(`<!DOCTYPE html><html><head><title>Video Size Exceeded</title><style>body{font-family:system-ui;padding:40px;background:#f8fafc}.card{max-width:500px;margin:auto;background:white;padding:30px;border-radius:12px;border:1px solid #e2e8f0}h2{color:#e11d48}a{display:inline-block;margin-top:20px;padding:10px 16px;background:#0f172a;color:white;text-decoration:none;border-radius:8px}</style></head><body><div class="card"><h2>Video Size Exceeded</h2><p>Video "${video.originalname || 'file'}" exceeds the ${quota.maxVideoSizeMb || 15}MB limit. Please compress it or link via YouTube.</p><a href="/userPanel/addProduct">Back to Form</a></div></body></html>`);
+        }
+      }
+    }
+
     const uploadedImages = [];
     for (const image of images) {
       const result = await uploadToCloudinary(image.buffer, "image");
@@ -113,8 +138,6 @@ async function addProductController(req, res) {
       const lastProduct = await Product.findOne().sort({ order: -1 }).select("order");
       orderValue = lastProduct ? lastProduct.order + 1 : 0;
     }
-
-    const creator = getCreatorId(req);
 
     const productData = {
       productName,
@@ -283,6 +306,33 @@ async function addApiProductController(req, res) {
       return res.status(400).json({ success: false, error: "Price range required" });
     }
 
+    const creator = getCreatorId(req);
+
+    if (creator && creator.role === "user") {
+      const quota = await checkProductUploadQuota(creator.id);
+      if (!quota.allowed) {
+        return res.status(403).json({ success: false, error: quota.error });
+      }
+
+      const maxVideos = quota.monthlyLimit >= 75 ? 2 : 1;
+      if (videos.length > maxVideos) {
+        return res.status(400).json({
+          success: false,
+          error: `Your plan allows a maximum of ${maxVideos} short video clip${maxVideos > 1 ? 's' : ''} per product. Please remove extra video files or use YouTube links.`
+        });
+      }
+
+      const maxBytes = (quota.maxVideoSizeMb || 15) * 1024 * 1024;
+      for (const video of videos) {
+        if (video.size > maxBytes) {
+          return res.status(400).json({
+            success: false,
+            error: `Video "${video.originalname || 'file'}" exceeds the ${quota.maxVideoSizeMb || 15}MB size limit. Please compress it or link via YouTube.`
+          });
+        }
+      }
+    }
+
     const uploadedImages = [];
     for (const image of images) {
       const result = await uploadToCloudinary(image.buffer, "image");
@@ -303,8 +353,6 @@ async function addApiProductController(req, res) {
       const lastProduct = await Product.findOne().sort({ order: -1 }).select("order");
       orderValue = lastProduct ? lastProduct.order + 1 : 0;
     }
-
-    const creator = getCreatorId(req);
 
     const productData = {
       productName,

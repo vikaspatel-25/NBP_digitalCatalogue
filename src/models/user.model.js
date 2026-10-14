@@ -19,22 +19,25 @@ const userSchema = new mongoose.Schema(
     subscription: {
       plan: {
         type: String,
-        enum: ['free_trial', 'monthly_28d', 'yearly_365d', 'none'],
-        default: 'free_trial'
+        enum: ['yearly_1200', 'yearly_2400', 'free_trial', 'none'],
+        default: 'none'
       },
       status: {
         type: String,
-        enum: ['trial', 'active', 'expired', 'inactive'],
-        default: 'trial'
+        enum: ['active', 'expired', 'pending_payment', 'trial', 'inactive'],
+        default: 'pending_payment'
       },
-      trialAvailed: { type: Boolean, default: false },
-      startDate: { type: Date, default: Date.now },
-      expiresAt: {
-        type: Date,
-        default: () => new Date(Date.now() + 28 * 24 * 60 * 60 * 1000)
-      },
-      lastOrderId: { type: String, default: null },
-      lastPaymentId: { type: String, default: null }
+      startDate: { type: Date, default: null },
+      expiresAt: { type: Date, default: null },
+      lastPaymentReceivedDate: { type: Date, default: null },
+      lastUtr: { type: String, default: null },
+      lastPaymentRequestId: { type: String, default: null }
+    },
+    limits: {
+      productMonthlyLimit: { type: Number, default: 25 },
+      articleMonthlyLimit: { type: Number, default: 50 },
+      maxVideoLengthSeconds: { type: Number, default: 30 },
+      maxVideoSizeMb: { type: Number, default: 15 }
     },
 
     passwordUpdatedAt: {

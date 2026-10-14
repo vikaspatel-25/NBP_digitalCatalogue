@@ -3,6 +3,7 @@ import { fileURLToPath } from "url";
 import cloudinary from "../config/cloudinary.js";
 import Article from "../models/article.model.js";
 import jwt from "jsonwebtoken";
+import { checkArticleUploadQuota } from "../services/quotaService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -200,6 +201,35 @@ async function addArticleController(req, res) {
         );
     }
 
+    if (creator.role === "user") {
+      const quota = await checkArticleUploadQuota(creator.id);
+      if (!quota.allowed) {
+        return res
+          .status(403)
+          .send(
+            responseCard(
+              "Publishing Limit Exceeded",
+              quota.error,
+              "/userPanel/subscription",
+              backLink
+            )
+          );
+      }
+    }
+
+    if (req.file && req.file.mimetype && req.file.mimetype.startsWith("video/")) {
+      return res
+        .status(400)
+        .send(
+          responseCard(
+            "Media Format Error",
+            "Direct video uploads are not permitted for articles. You may only upload a cover image.",
+            addAnotherLink,
+            backLink
+          )
+        );
+    }
+
 
     let coverImageUrl = null;
 
@@ -296,21 +326,6 @@ export async function apiAddArticleController(req, res) {
       return res.status(400).json({ success: false, error: 'Required fields missing' });
     }
 
-    let coverImageUrl = '';
-    if (req.file) {
-      const uploadToCloudinary = (buffer) => {
-        return new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream({ resource_type: "image" }, (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-          });
-          stream.end(buffer);
-        });
-      };
-      const result = await uploadToCloudinary(req.file.buffer);
-      coverImageUrl = result.secure_url;
-    }
-
     const getCreatorId = (req) => {
       const adminToken = req.cookies.adminToken;
       const userToken = req.cookies.userToken;
@@ -328,6 +343,36 @@ export async function apiAddArticleController(req, res) {
     };
 
     const creator = getCreatorId(req);
+
+    if (creator && creator.role === 'user') {
+      const quota = await checkArticleUploadQuota(creator.id);
+      if (!quota.allowed) {
+        return res.status(403).json({ success: false, error: quota.error });
+      }
+    }
+
+    if (req.file && req.file.mimetype && req.file.mimetype.startsWith('video/')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Direct video uploads are not permitted for articles. You may only upload a cover image.'
+      });
+    }
+
+    let coverImageUrl = '';
+    if (req.file) {
+      const uploadToCloudinary = (buffer) => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream({ resource_type: "image" }, (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          });
+          stream.end(buffer);
+        });
+      };
+      const result = await uploadToCloudinary(req.file.buffer);
+      coverImageUrl = result.secure_url;
+    }
+
     const newArticle = new Article({
       title, date, bodyText, bodyHtml, videoUrl, authorName, sourceLink, coverImageUrl,
       creatorId: creator ? creator.id : null,

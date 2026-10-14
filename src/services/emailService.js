@@ -12,198 +12,42 @@ const transporter = nodemailer.createTransport({
 
 const adminEmail = (process.env.ADMIN_GMAIL || 'netzeromart@gmail.com').trim();
 const appName = 'NetZeroMart';
-const storeUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+const storeUrl = process.env.FRONTEND_URL || 'https://www.netzeromart.com';
 
 /**
- * Send email when a free 28-day trial is activated upon approval
+ * 1. Vendor submits UTR & Screenshot -> Email to Vendor (Awaiting review) + Alert to Admin
  */
-export async function sendTrialActivatedEmail({ to, userName, companyName, expiresAt }) {
+export async function sendManualPaymentSubmittedEmail({ to, userName, companyName, plan, amount, utrNumber }) {
   try {
-    const formattedDate = new Date(expiresAt).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+    const planName = plan === 'yearly_2400' ? 'Enterprise Annual Plan (₹2,400/yr)' : 'Standard Annual Plan (₹1,200/yr)';
 
-    const mailOptions = {
+    const vendorMail = {
       from: `"${appName}" <${process.env.GMAIL_USER}>`,
       to,
-      subject: `🎉 Your 28-Day Free Trial is Active - ${appName}`,
+      subject: `⏳ Payment Received for Verification - ${appName}`,
       html: `
         <div style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;">
           <div style="max-width:600px;margin:30px auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
             <div style="background:#0f172a;padding:24px;text-align:center;color:#ffffff;">
-              <h1 style="margin:0;font-size:22px;letter-spacing:-0.5px;">${appName}</h1>
-              <p style="margin:6px 0 0;font-size:13px;color:#94a3b8;">Welcome to the Digital Catalogue Marketplace</p>
+              <h1 style="margin:0;font-size:20px;">${appName}</h1>
+              <p style="margin:6px 0 0;font-size:13px;color:#94a3b8;">Payment Verification in Progress</p>
             </div>
             <div style="padding:28px 24px;color:#1e293b;">
-              <h2 style="font-size:18px;margin-top:0;">Hello ${userName || companyName || 'Vendor'},</h2>
+              <h2 style="font-size:18px;margin-top:0;">Hello ${userName || companyName},</h2>
               <p style="font-size:14px;line-height:1.6;color:#475569;">
-                Congratulations! Your vendor account is approved, and your <strong>28-Day Free Subscription</strong> is now active.
+                Thank you for submitting your annual subscription payment. Our finance team is reviewing your UTR reference against our bank records.
               </p>
-              <div style="background:#f1f5f9;border-left:4px solid #10b981;padding:14px 16px;border-radius:6px;margin:20px 0;">
-                <p style="margin:0;font-size:13px;color:#334155;">
-                  <strong>Plan:</strong> 28-Day Free Trial<br/>
-                  <strong>Valid Until:</strong> ${formattedDate}<br/>
-                  <strong>Public Catalogue:</strong> Active & Visible to all visitors
-                </p>
-              </div>
-              <p style="font-size:13px;line-height:1.6;color:#64748b;">
-                You can list your sustainable products and articles directly from your vendor portal. After your trial expires, you can renew anytime for just ₹49 via instant UPI.
-              </p>
-              <div style="text-align:center;margin-top:24px;">
-                <a href="${storeUrl}/userLogin" style="display:inline-block;padding:12px 24px;background:#0f172a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:bold;border-radius:8px;">Open Vendor Portal</a>
-              </div>
-            </div>
-            <div style="background:#f8fafc;padding:16px;text-align:center;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;">
-              © ${new Date().getFullYear()} ${appName}. All rights reserved.
-            </div>
-          </div>
-        </div>
-      `
-    };
-
-    return await transporter.sendMail(mailOptions);
-  } catch (error) {
-    console.error('Failed to send trial activated email:', error?.message || error);
-  }
-}
-
-/**
- * Send email when subscription is successfully renewed/paid via Razorpay
- */
-export async function sendPaymentSuccessEmail({ to, userName, companyName, planType, amount, paymentId, expiresAt }) {
-  try {
-    const formattedDate = new Date(expiresAt).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
-    const amountRs = (amount / 100).toFixed(0);
-    const planName = planType === 'yearly_365d' ? 'Yearly Plan (365 Days)' : 'Standard Plan (28 Days)';
-
-    // 1. Email to Vendor
-    const userMailOptions = {
-      from: `"${appName}" <${process.env.GMAIL_USER}>`,
-      to,
-      subject: `✅ Payment Received: Subscription Renewed - ${appName}`,
-      html: `
-        <div style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;">
-          <div style="max-width:600px;margin:30px auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
-            <div style="background:#0f172a;padding:24px;text-align:center;color:#ffffff;">
-              <h1 style="margin:0;font-size:22px;">${appName}</h1>
-              <p style="margin:6px 0 0;font-size:13px;color:#94a3b8;">Payment & Renewal Receipt</p>
-            </div>
-            <div style="padding:28px 24px;color:#1e293b;">
-              <h2 style="font-size:18px;margin-top:0;">Thank You, ${userName || companyName}!</h2>
-              <p style="font-size:14px;line-height:1.6;color:#475569;">
-                We have successfully received your payment of <strong>₹${amountRs}</strong>. Your digital catalogue listings are active and visible on the marketplace.
-              </p>
-              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:20px 0;">
-                <table style="width:100%;font-size:13px;color:#334155;border-collapse:collapse;">
-                  <tr>
-                    <td style="padding:6px 0;color:#64748b;">Plan:</td>
-                    <td style="padding:6px 0;font-weight:600;text-align:right;">${planName}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:6px 0;color:#64748b;">Amount Paid:</td>
-                    <td style="padding:6px 0;font-weight:600;text-align:right;">₹${amountRs}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:6px 0;color:#64748b;">Payment Ref / ID:</td>
-                    <td style="padding:6px 0;font-family:monospace;text-align:right;">${paymentId}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:6px 0;color:#64748b;">Subscription Valid Till:</td>
-                    <td style="padding:6px 0;font-weight:600;color:#10b981;text-align:right;">${formattedDate}</td>
-                  </tr>
-                </table>
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:20px 0;font-size:13px;">
+                <p style="margin:4px 0;"><strong>Plan:</strong> ${planName}</p>
+                <p style="margin:4px 0;"><strong>Amount:</strong> ₹${amount}</p>
+                <p style="margin:4px 0;"><strong>UTR / Reference ID:</strong> <span style="font-family:monospace;font-weight:bold;">${utrNumber}</span></p>
+                <p style="margin:4px 0;"><strong>Status:</strong> <span style="color:#d97706;font-weight:bold;">Under Verification</span></p>
               </div>
               <p style="font-size:13px;color:#64748b;">
-                Thank you for being a part of our sustainable vendor network!
+                Verification typically completes within a few hours. Once confirmed, your annual catalogue listings will be activated immediately and you will receive your confirmation receipt.
               </p>
-              <div style="text-align:center;margin-top:20px;">
-                <a href="${storeUrl}/userPanel" style="display:inline-block;padding:10px 20px;background:#0f172a;color:#ffffff;text-decoration:none;font-size:13px;font-weight:bold;border-radius:6px;">Go to Vendor Dashboard</a>
-              </div>
             </div>
             <div style="background:#f8fafc;padding:16px;text-align:center;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;">
-              © ${new Date().getFullYear()} ${appName}. No auto-debit will occur.
-            </div>
-          </div>
-        </div>
-      `
-    };
-
-    // 2. Alert to Admin
-    const adminMailOptions = {
-      from: `"${appName} Bot" <${process.env.GMAIL_USER}>`,
-      to: adminEmail,
-      subject: `🔔 [Admin Alert] New Subscription Payment of ₹${amountRs} from ${companyName || userName}`,
-      html: `
-        <div style="font-family:Arial,sans-serif;padding:20px;color:#1e293b;">
-          <h3>New Subscription Payment Received</h3>
-          <p><strong>Vendor:</strong> ${companyName || userName} (${to})</p>
-          <p><strong>Plan:</strong> ${planName}</p>
-          <p><strong>Amount:</strong> ₹${amountRs}</p>
-          <p><strong>Razorpay Payment ID:</strong> ${paymentId}</p>
-          <p><strong>New Expiration Date:</strong> ${formattedDate}</p>
-        </div>
-      `
-    };
-
-    await Promise.allSettled([
-      transporter.sendMail(userMailOptions),
-      transporter.sendMail(adminMailOptions)
-    ]);
-  } catch (error) {
-    console.error('Failed to send payment success notification:', error?.message || error);
-  }
-}
-
-/**
- * Send warning email when subscription is expiring soon or expired
- */
-export async function sendSubscriptionStatusAlert({ to, userName, companyName, status, expiresAt }) {
-  try {
-    const isExpired = status === 'expired';
-    const subject = isExpired
-      ? `⚠️ Your Catalogue is now Hidden - Subscription Expired (${appName})`
-      : `⏳ Reminder: Your ${appName} Subscription is Expiring Soon`;
-
-    const mailOptions = {
-      from: `"${appName}" <${process.env.GMAIL_USER}>`,
-      to,
-      subject,
-      html: `
-        <div style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;">
-          <div style="max-width:600px;margin:30px auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
-            <div style="background:${isExpired ? '#991b1b' : '#0f172a'};padding:20px;text-align:center;color:#ffffff;">
-              <h2 style="margin:0;font-size:20px;">${appName}</h2>
-              <p style="margin:4px 0 0;font-size:12px;opacity:0.9;">
-                ${isExpired ? 'Catalogue Visibility Temporarily Suspended' : 'Subscription Expiration Notice'}
-              </p>
-            </div>
-            <div style="padding:24px;color:#1e293b;">
-              <p style="font-size:14px;color:#475569;">
-                Hello <strong>${userName || companyName}</strong>,
-              </p>
-              ${
-                isExpired
-                  ? `<p style="font-size:14px;line-height:1.6;color:#dc2626;">
-                      Your subscription cycle has ended. As a result, your products and articles have been temporarily hidden from the public catalogue.
-                    </p>
-                    <p style="font-size:13px;line-height:1.6;color:#475569;">
-                      Don't worry—your data and listings are completely safe. Renew now via UPI for just ₹49 to instantly restore your listings to all customers.
-                    </p>`
-                  : `<p style="font-size:14px;line-height:1.6;color:#475569;">
-                      Your subscription is ending soon. Renew anytime from your dashboard to maintain uninterrupted visibility for your products on NetZeroMart.
-                    </p>`
-              }
-              <div style="text-align:center;margin:24px 0;">
-                <a href="${storeUrl}/userPanel" style="display:inline-block;padding:12px 24px;background:#0f172a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:bold;border-radius:6px;">Renew via UPI Now (₹49)</a>
-              </div>
-            </div>
-            <div style="background:#f8fafc;padding:14px;text-align:center;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;">
               © ${new Date().getFullYear()} ${appName}.
             </div>
           </div>
@@ -211,8 +55,207 @@ export async function sendSubscriptionStatusAlert({ to, userName, companyName, s
       `
     };
 
+    const adminMail = {
+      from: `"${appName} Bot" <${process.env.GMAIL_USER}>`,
+      to: adminEmail,
+      subject: `🔔 [Action Required] New ₹${amount} Payment Submitted by ${companyName || userName}`,
+      html: `
+        <div style="font-family:Arial,sans-serif;padding:20px;color:#1e293b;">
+          <h3>New Offline UPI Payment Submitted for Verification</h3>
+          <p><strong>Vendor:</strong> ${companyName || userName} (${to})</p>
+          <p><strong>Selected Plan:</strong> ${planName}</p>
+          <p><strong>Amount:</strong> ₹${amount}</p>
+          <p><strong>UTR / Transaction ID:</strong> <code>${utrNumber}</code></p>
+          <p>Please check your bank statement and approve or reject this request in the Admin Console.</p>
+          <p><a href="${storeUrl}/admin/paymentRequests" style="display:inline-block;padding:10px 18px;background:#0f172a;color:#ffffff;text-decoration:none;border-radius:6px;font-size:13px;">Open Payment Approval Desk</a></p>
+        </div>
+      `
+    };
+
+    await Promise.allSettled([
+      transporter.sendMail(vendorMail),
+      transporter.sendMail(adminMail)
+    ]);
+  } catch (error) {
+    console.error('Failed to dispatch payment submitted email:', error?.message || error);
+  }
+}
+
+/**
+ * 2. Admin Approves Payment -> Official Activation Email with Quotas & Expiry Date
+ */
+export async function sendManualPaymentApprovedEmail({
+  to,
+  companyName,
+  userName,
+  plan,
+  amount,
+  utrNumber,
+  paymentDate,
+  expiresAt,
+  productMonthlyLimit,
+  articleMonthlyLimit
+}) {
+  try {
+    const formattedDate = new Date(expiresAt).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+    const formattedPaymentDate = new Date(paymentDate).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+    const planName = plan === 'yearly_2400' ? 'Enterprise Annual Plan (₹2,400/yr)' : 'Standard Annual Plan (₹1,200/yr)';
+
+    const mailOptions = {
+      from: `"${appName}" <${process.env.GMAIL_USER}>`,
+      to,
+      subject: `✅ Payment Approved: Your Annual Subscription is Active! - ${appName}`,
+      html: `
+        <div style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;">
+          <div style="max-width:600px;margin:30px auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+            <div style="background:#0f172a;padding:24px;text-align:center;color:#ffffff;">
+              <h1 style="margin:0;font-size:20px;">${appName}</h1>
+              <p style="margin:6px 0 0;font-size:13px;color:#94a3b8;">Subscription Activation & Invoice Receipt</p>
+            </div>
+            <div style="padding:28px 24px;color:#1e293b;">
+              <h2 style="font-size:18px;margin-top:0;">Congratulations, ${companyName || userName}!</h2>
+              <p style="font-size:14px;line-height:1.6;color:#475569;">
+                Your payment of <strong>₹${amount}</strong> has been verified. Your annual digital catalogue is active and fully discoverable by buyers worldwide.
+              </p>
+              
+              <div style="background:#f1f5f9;border-left:4px solid #10b981;border-radius:6px;padding:16px;margin:20px 0;font-size:13px;">
+                <table style="width:100%;border-collapse:collapse;color:#334155;">
+                  <tr>
+                    <td style="padding:4px 0;color:#64748b;">Plan:</td>
+                    <td style="padding:4px 0;font-weight:bold;text-align:right;">${planName}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;color:#64748b;">Payment Date:</td>
+                    <td style="padding:4px 0;text-align:right;">${formattedPaymentDate}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;color:#64748b;">UTR Reference:</td>
+                    <td style="padding:4px 0;font-family:monospace;text-align:right;">${utrNumber}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;color:#64748b;">Valid Until:</td>
+                    <td style="padding:4px 0;font-weight:bold;color:#10b981;text-align:right;">${formattedDate} (365 Days)</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;color:#64748b;">Monthly Product Quota:</td>
+                    <td style="padding:4px 0;font-weight:bold;text-align:right;">${productMonthlyLimit} Products / month</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;color:#64748b;">Monthly Article Quota:</td>
+                    <td style="padding:4px 0;font-weight:bold;text-align:right;">${articleMonthlyLimit} Articles / month</td>
+                  </tr>
+                </table>
+              </div>
+
+              <div style="text-align:center;margin-top:24px;">
+                <a href="${storeUrl}/userPanel" style="display:inline-block;padding:12px 24px;background:#0f172a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:bold;border-radius:8px;">Open Vendor Dashboard</a>
+              </div>
+            </div>
+            <div style="background:#f8fafc;padding:16px;text-align:center;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;">
+              © ${new Date().getFullYear()} ${appName}. Thank you for partnering with us.
+            </div>
+          </div>
+        </div>
+      `
+    };
+
     return await transporter.sendMail(mailOptions);
   } catch (error) {
-    console.error('Failed to dispatch subscription status alert:', error?.message || error);
+    console.error('Failed to send payment approved email:', error?.message || error);
+  }
+}
+
+/**
+ * 3. Admin Rejects Payment
+ */
+export async function sendManualPaymentRejectedEmail({ to, companyName, userName, utrNumber, reason }) {
+  try {
+    const mailOptions = {
+      from: `"${appName}" <${process.env.GMAIL_USER}>`,
+      to,
+      subject: `⚠️ Payment Verification Update - ${appName}`,
+      html: `
+        <div style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;">
+          <div style="max-width:600px;margin:30px auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+            <div style="background:#991b1b;padding:24px;text-align:center;color:#ffffff;">
+              <h1 style="margin:0;font-size:20px;">${appName}</h1>
+              <p style="margin:6px 0 0;font-size:13px;opacity:0.9;">Payment Verification Issue</p>
+            </div>
+            <div style="padding:28px 24px;color:#1e293b;">
+              <h2 style="font-size:18px;margin-top:0;">Hello ${userName || companyName},</h2>
+              <p style="font-size:14px;line-height:1.6;color:#475569;">
+                Our accounts team could not verify the payment submitted with UTR reference: <code>${utrNumber}</code>.
+              </p>
+              <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px;margin:20px 0;font-size:13px;color:#991b1b;">
+                <strong>Reason:</strong> ${reason || 'Payment record not found on bank statement.'}
+              </div>
+              <p style="font-size:13px;color:#64748b;">
+                Please re-check your bank reference or contact our accounts team at <a href="mailto:${adminEmail}">${adminEmail}</a>. You can submit a corrected UTR anytime from your dashboard.
+              </p>
+              <div style="text-align:center;margin-top:20px;">
+                <a href="${storeUrl}/userPanel/subscription" style="display:inline-block;padding:10px 20px;background:#0f172a;color:#ffffff;text-decoration:none;font-size:13px;border-radius:6px;">Re-submit Payment Details</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    };
+
+    return await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('Failed to send payment rejected email:', error?.message || error);
+  }
+}
+
+/**
+ * 4. Subscription Expiring Warning (Sent 30 days & 7 days before expiry)
+ */
+export async function sendExpirationReminderEmail({ to, companyName, userName, expiresAt, daysLeft }) {
+  try {
+    const formattedDate = new Date(expiresAt).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+
+    const mailOptions = {
+      from: `"${appName}" <${process.env.GMAIL_USER}>`,
+      to,
+      subject: `⏳ Notice: Your ${appName} Annual Subscription Expires in ${daysLeft} Days`,
+      html: `
+        <div style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;">
+          <div style="max-width:600px;margin:30px auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+            <div style="background:#0f172a;padding:24px;text-align:center;color:#ffffff;">
+              <h1 style="margin:0;font-size:20px;">${appName}</h1>
+              <p style="margin:6px 0 0;font-size:13px;color:#94a3b8;">Annual Renewal Notice</p>
+            </div>
+            <div style="padding:28px 24px;color:#1e293b;">
+              <h2 style="font-size:18px;margin-top:0;">Hello ${userName || companyName},</h2>
+              <p style="font-size:14px;line-height:1.6;color:#475569;">
+                Your annual digital catalogue subscription will conclude on <strong>${formattedDate}</strong> (${daysLeft} days remaining).
+              </p>
+              <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:14px;margin:20px 0;font-size:13px;color:#92400e;">
+                To ensure uninterrupted listing visibility for your sustainable products, please submit your renewal via UPI before ${formattedDate}.
+              </div>
+              <div style="text-align:center;margin-top:20px;">
+                <a href="${storeUrl}/userPanel/subscription" style="display:inline-block;padding:12px 24px;background:#0f172a;color:#ffffff;text-decoration:none;font-size:13px;font-weight:bold;border-radius:6px;">Renew Annual Subscription</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    };
+
+    return await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('Failed to send expiration reminder email:', error?.message || error);
   }
 }
