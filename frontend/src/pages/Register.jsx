@@ -139,12 +139,12 @@ export default function Register() {
           </div>
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Application Received</h2>
           <p className="text-slate-600 text-sm mb-6 leading-relaxed">
-            Your registration has been submitted for verification. Upon administrative review, we will email your passkey to <span className="text-emerald-700 font-semibold">{formData.email}</span> along with your complimentary <strong>28-day free trial</strong>.
+            Your registration has been submitted for corporate verification. Upon administrative review and approval, we will email your passkey to <span className="text-emerald-700 font-semibold">{formData.email}</span> with activation instructions.
           </p>
           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 mb-6 text-left text-xs text-slate-700 space-y-2">
             <div className="flex justify-between"><span className="text-slate-500">Company:</span> <span className="font-semibold text-slate-900">{formData.companyName}</span></div>
             <div className="flex justify-between"><span className="text-slate-500">Representative:</span> <span>{formData.userName}</span></div>
-            <div className="flex justify-between"><span className="text-slate-500">Trial Period:</span> <span className="text-emerald-700 font-bold">28 Days Free</span></div>
+            <div className="flex justify-between"><span className="text-slate-500">Subscription:</span> <span className="text-slate-900 font-semibold">Corporate Annual (Post-Verification)</span></div>
           </div>
           <div className="flex flex-col gap-3">
             <a href="/home" className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold transition shadow-sm">
@@ -209,9 +209,9 @@ export default function Register() {
                     <Award size={18} />
                   </div>
                   <div>
-                    <h2 className="text-xs sm:text-sm font-bold text-slate-900">Complimentary 28-Day Free Trial</h2>
+                    <h2 className="text-xs sm:text-sm font-bold text-slate-900">Verified Corporate Supplier Directory</h2>
                     <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                      New verified suppliers get 28 full days of catalogue exposure at zero cost.
+                      Only verified sustainable suppliers are listed, maintaining high standards for enterprise buyers.
                     </p>
                   </div>
                 </div>
@@ -235,7 +235,7 @@ export default function Register() {
                   <div>
                     <h2 className="text-xs sm:text-sm font-bold text-slate-900">Zero Auto-Debit Surprises</h2>
                     <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                      Renewals are 100% manual via instant UPI for just ₹49/28 days or ₹499/year.
+                      Annual subscriptions are settled directly via corporate UPI / QR code with official invoices.
                     </p>
                   </div>
                 </div>
@@ -417,7 +417,7 @@ export default function Register() {
                     </>
                   ) : (
                     <>
-                      <span>Submit Application & Claim Free Trial</span>
+                      <span>Submit Application for Verification</span>
                       <ArrowRight size={16} />
                     </>
                   )}

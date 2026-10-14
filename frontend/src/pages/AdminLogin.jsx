@@ -135,7 +135,7 @@ export default function AdminLogin() {
                   </div>
                   <div>
                     <h3 className="text-xs font-bold text-slate-900">Subscription Health & Visibility</h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Audit live trials, active subscriptions, and hidden catalogue metrics.</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Audit active subscriptions, pending payment approvals, and catalogue metrics.</p>
                   </div>
                 </div>
 

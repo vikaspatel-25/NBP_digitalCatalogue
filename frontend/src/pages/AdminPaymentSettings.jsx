@@ -193,7 +193,7 @@ export default function AdminPaymentSettings() {
                     required
                     value={formData.upiId}
                     onChange={(e) => setFormData({ ...formData, upiId: e.target.value })}
-                    placeholder="e.g. netzeromart@upi"
+                    placeholder="Enter UPI ID (e.g. company@bank)"
                     className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 font-mono"
                   />
                   {formData.upiId && (
@@ -219,7 +219,7 @@ export default function AdminPaymentSettings() {
                   required
                   value={formData.upiName}
                   onChange={(e) => setFormData({ ...formData, upiName: e.target.value })}
-                  placeholder="e.g. NetZeroMart Enterprise Ltd"
+                  placeholder="Enter Beneficiary / Company Account Title"
                   className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
                 <p className="text-[11px] text-slate-400 mt-1">Official bank account title shown to vendors.</p>
@@ -237,7 +237,7 @@ export default function AdminPaymentSettings() {
                     type="email"
                     value={formData.contactEmail}
                     onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
-                    placeholder="accounts@netzeromart.com"
+                    placeholder="Enter Accounts Email"
                     className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
@@ -253,7 +253,7 @@ export default function AdminPaymentSettings() {
                     type="text"
                     value={formData.contactPhone}
                     onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
-                    placeholder="+91 98765 43210"
+                    placeholder="Enter Accounts Phone / WhatsApp"
                     className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
@@ -337,8 +337,8 @@ export default function AdminPaymentSettings() {
             {/* Quick Live Preview Card */}
             <div className="w-full bg-slate-50 rounded-xl p-3 border border-slate-200/60 text-left text-xs space-y-1 mt-2">
               <div className="text-[10px] uppercase font-bold text-slate-400">Vendor Scan Preview</div>
-              <div className="font-semibold text-slate-800 truncate">{formData.upiName || 'Payee Name'}</div>
-              <div className="font-mono text-slate-600 text-[11px] truncate">{formData.upiId || 'upi-id@bank'}</div>
+              <div className="font-semibold text-slate-800 truncate">{formData.upiName || 'Not configured yet'}</div>
+              <div className="font-mono text-slate-600 text-[11px] truncate">{formData.upiId || 'Not configured yet'}</div>
             </div>
           </div>
         </form>

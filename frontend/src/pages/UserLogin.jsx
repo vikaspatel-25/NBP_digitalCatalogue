@@ -134,8 +134,8 @@ export default function UserLogin() {
                     <Sparkles size={16} />
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-slate-900">28-Day Free Trial Provisioning</h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Complimentary storefront exposure for every approved supplier.</p>
+                    <h3 className="text-xs font-bold text-slate-900">Corporate Annual Access</h3>
+                    <p className="text-[11px] text-slate-500 mt-0.5">High-impact B2B catalogue exposure for certified eco suppliers.</p>
                   </div>
                 </div>
 
@@ -144,8 +144,8 @@ export default function UserLogin() {
                     <Zap size={16} />
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-slate-900">Instant UPI Renewals</h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Zero auto-debit. Pay ₹49 for 28 days only when you choose to renew.</p>
+                    <h3 className="text-xs font-bold text-slate-900">Direct UPI / QR Renewals</h3>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Zero auto-debit. Direct corporate UPI / QR settlement for 365-day access.</p>
                   </div>
                 </div>
 

@@ -4,12 +4,12 @@ const platformSettingsSchema = new mongoose.Schema(
   {
     upiId: {
       type: String,
-      default: 'netzeromart@upi',
+      default: '',
       trim: true
     },
     upiName: {
       type: String,
-      default: 'NetZeroMart Official',
+      default: '',
       trim: true
     },
     qrCode: {
@@ -18,7 +18,7 @@ const platformSettingsSchema = new mongoose.Schema(
     },
     contactEmail: {
       type: String,
-      default: 'netzeromart@gmail.com',
+      default: '',
       trim: true
     },
     contactPhone: {
@@ -28,7 +28,7 @@ const platformSettingsSchema = new mongoose.Schema(
     },
     notes: {
       type: String,
-      default: 'Please enter your UPI transaction / UTR reference number and upload payment proof for verification.'
+      default: ''
     },
     updatedAt: {
       type: Date,

@@ -9,8 +9,8 @@ describe('Corporate B2B Offline UPI/QR Accounting & Payment Modules', () => {
   describe('PlatformSettings Model Schema', () => {
     it('initializes with default UPI, QR and contact values', () => {
       const settings = new PlatformSettings({});
-      assert.strictEqual(settings.upiId, 'netzeromart@upi');
-      assert.strictEqual(settings.upiName, 'NetZeroMart Official');
+      assert.strictEqual(settings.upiId, '');
+      assert.strictEqual(settings.upiName, '');
       assert.strictEqual(typeof settings.notes, 'string');
     });
 

@@ -413,47 +413,67 @@ export default function SubscriptionManager() {
             </h3>
           </div>
 
-          {/* QR Code Container */}
-          <div className="w-52 h-52 mx-auto rounded-2xl border-2 border-slate-100 bg-slate-50 flex items-center justify-center p-2 overflow-hidden shadow-inner">
-            {paymentInfo?.qrCodeUrl ? (
-              <img
-                src={paymentInfo.qrCodeUrl}
-                alt="Official UPI QR Code"
-                className="w-full h-full object-contain"
-              />
-            ) : (
-              <div className="text-slate-400 text-xs flex flex-col items-center gap-1.5">
-                <QrCode size={40} className="stroke-[1.2]" />
-                <span>Scan Official QR Code</span>
-              </div>
-            )}
-          </div>
-
-          {/* UPI Address & Copy Button */}
-          <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200/70 text-left space-y-1">
-            <div className="text-[10px] font-bold text-slate-400 uppercase">Beneficiary Name</div>
-            <div className="text-xs font-bold text-slate-800">{paymentInfo?.upiName || 'NetZeroMart Official'}</div>
-
-            <div className="text-[10px] font-bold text-slate-400 uppercase pt-1">UPI Address (VPA)</div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-mono font-bold text-xs text-slate-900 truncate">
-                {paymentInfo?.upiId || 'netzeromart@upi'}
-              </span>
-              <button
-                type="button"
-                onClick={handleCopyUpi}
-                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 transition flex-shrink-0"
-                title="Copy UPI ID"
-              >
-                {copiedUpi ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
-              </button>
+          {/* Payment Details Container */}
+          {!paymentInfo?.upiId && !paymentInfo?.qrCodeUrl ? (
+            <div className="p-6 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-2 text-center">
+              <AlertTriangle className="w-8 h-8 text-amber-600 mx-auto" />
+              <div className="font-bold text-sm">Payment Details Not Configured Yet</div>
+              <p className="text-slate-600 leading-relaxed text-[11px]">
+                The administrator has not configured the receiving corporate UPI ID or QR code yet. Please check back shortly or contact support.
+              </p>
             </div>
-          </div>
+          ) : (
+            <>
+              {/* QR Code Container */}
+              <div className="w-52 h-52 mx-auto rounded-2xl border-2 border-slate-100 bg-slate-50 flex items-center justify-center p-2 overflow-hidden shadow-inner">
+                {paymentInfo?.qrCodeUrl ? (
+                  <img
+                    src={paymentInfo.qrCodeUrl}
+                    alt="Official UPI QR Code"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <div className="text-slate-400 text-xs flex flex-col items-center gap-1.5">
+                    <QrCode size={40} className="stroke-[1.2]" />
+                    <span>QR Code not uploaded yet</span>
+                  </div>
+                )}
+              </div>
 
-          <div className="text-[11px] text-slate-500 text-left leading-relaxed">
-            {paymentInfo?.notes ||
-              'Open any UPI app (GPay, PhonePe, Paytm, BHIM or Bank App), scan this QR code or transfer the chosen plan amount, and save the 12-digit UTR reference.'}
-          </div>
+              {/* UPI Address & Copy Button */}
+              {paymentInfo?.upiId && (
+                <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200/70 text-left space-y-1">
+                  {paymentInfo.upiName && (
+                    <>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase">Beneficiary Name</div>
+                      <div className="text-xs font-bold text-slate-800">{paymentInfo.upiName}</div>
+                    </>
+                  )}
+
+                  <div className="text-[10px] font-bold text-slate-400 uppercase pt-1">UPI Address (VPA)</div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono font-bold text-xs text-slate-900 truncate">
+                      {paymentInfo.upiId}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCopyUpi}
+                      className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 transition flex-shrink-0"
+                      title="Copy UPI ID"
+                    >
+                      {copiedUpi ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {paymentInfo?.notes && (
+                <div className="text-[11px] text-slate-500 text-left leading-relaxed">
+                  {paymentInfo.notes}
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Step 2: Submit UTR & Screenshot Confirmation (Right Column - 3 cols) */}

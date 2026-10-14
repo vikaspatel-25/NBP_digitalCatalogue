@@ -33,13 +33,20 @@ export async function getOrCreateSettings() {
   let settings = await PlatformSettings.findOne({});
   if (!settings) {
     settings = await PlatformSettings.create({
-      upiId: 'netzeromart@upi',
-      upiName: 'NetZeroMart Official',
+      upiId: '',
+      upiName: '',
       qrCode: { url: '', public_id: '' },
-      contactEmail: process.env.ADMIN_GMAIL || 'netzeromart@gmail.com',
-      contactPhone: '+91 98765 43210',
-      notes: 'Please transfer the exact amount using any UPI app and enter the 12-digit UTR reference number.'
+      contactEmail: '',
+      contactPhone: '',
+      notes: ''
     });
+  } else if (settings.upiId === 'netzeromart@upi') {
+    // Clean up any previously initialized dummy values
+    settings.upiId = '';
+    settings.upiName = '';
+    settings.contactPhone = '';
+    settings.notes = '';
+    await settings.save();
   }
   return settings;
 }
