@@ -76,8 +76,7 @@ export default function UserManagement() {
   const [selectedManualUser, setSelectedManualUser] = useState(null);
   const [manualSearchVendor, setManualSearchVendor] = useState('');
   const [renewPlan, setRenewPlan] = useState('yearly_1200');
-  const [renewDurationDays, setRenewDurationDays] = useState(365);
-  const [renewNotes, setRenewNotes] = useState('');
+  const [renewStartDate, setRenewStartDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [isRenewing, setIsRenewing] = useState(false);
   const [renewError, setRenewError] = useState('');
 
@@ -199,8 +198,7 @@ export default function UserManagement() {
       setManualSearchVendor('');
       setRenewPlan('yearly_1200');
     }
-    setRenewDurationDays(365);
-    setRenewNotes('');
+    setRenewStartDate(new Date().toISOString().split('T')[0]);
     setRenewError('');
   };
 
@@ -217,8 +215,8 @@ export default function UserManagement() {
       const res = await axios.post('/api/admin/renew-vendor', {
         userId: target._id,
         plan: renewPlan,
-        durationDays: Number(renewDurationDays) || 365,
-        adminNotes: renewNotes || undefined
+        startDate: renewStartDate || new Date().toISOString().split('T')[0],
+        durationDays: 365
       });
 
       if (res.data?.success) {
@@ -230,7 +228,7 @@ export default function UserManagement() {
                 ...u.subscription,
                 ...res.data.subscription,
                 computedStatus: 'active',
-                remainingDays: Number(renewDurationDays) || 365,
+                remainingDays: 365,
                 isExpiringSoon: false
               },
               limits: res.data.limits || u.limits
@@ -239,7 +237,7 @@ export default function UserManagement() {
           return u;
         }));
 
-        const successMsg = `Subscription renewed! "${target.companyName}" is active for ${renewDurationDays} days under ${renewPlan} plan.`;
+        const successMsg = `Subscription renewed! "${target.companyName}" is active for 1 year starting ${new Date(renewStartDate).toLocaleDateString('en-IN')}.`;
         setSuccessToast(successMsg);
         toast.success(successMsg, { title: 'Subscription Renewed' });
         setTimeout(() => setSuccessToast(''), 4000);
@@ -879,58 +877,35 @@ export default function UserManagement() {
                 </div>
               </div>
 
-              {/* Duration Presets & Input */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Renewal Duration
-                  </label>
-                  <span className="text-xs font-extrabold text-blue-600 font-mono">{renewDurationDays} Days</span>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap mb-2">
-                  {[
-                    { label: '30 Days', days: 30 },
-                    { label: '90 Days', days: 90 },
-                    { label: '180 Days (6 Mo)', days: 180 },
-                    { label: '365 Days (1 Yr)', days: 365 },
-                    { label: '730 Days (2 Yrs)', days: 730 }
-                  ].map((chip) => (
-                    <button
-                      key={chip.days}
-                      type="button"
-                      onClick={() => setRenewDurationDays(chip.days)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                        renewDurationDays === chip.days
-                          ? 'bg-slate-900 text-white'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      {chip.label}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="number"
-                  min="1"
-                  max="1825"
-                  value={renewDurationDays}
-                  onChange={(e) => setRenewDurationDays(Math.max(1, Number(e.target.value) || 1))}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  placeholder="Custom number of days..."
-                />
-              </div>
-
+              {/* Subscription Start Date */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Admin Internal Notes / Feedback (Optional)
+                  Subscription Start Date
                 </label>
-                <textarea
-                  rows={2}
-                  value={renewNotes}
-                  onChange={(e) => setRenewNotes(e.target.value)}
-                  placeholder="Optional internal remark or custom agreed SLA..."
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                />
+                <div className="relative">
+                  <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="date"
+                    value={renewStartDate}
+                    onChange={(e) => setRenewStartDate(e.target.value)}
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
+                  />
+                </div>
+                {renewStartDate && (
+                  <p className="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1.5">
+                    <Clock size={12} className="text-blue-600 flex-shrink-0" />
+                    <span>
+                      Active for 1 year (Expires:{' '}
+                      <strong className="text-slate-800">
+                        {(() => {
+                          const d = new Date(renewStartDate);
+                          d.setFullYear(d.getFullYear() + 1);
+                          return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                        })()}
+                      </strong>)
+                    </span>
+                  </p>
+                )}
               </div>
             </div>
 
@@ -949,7 +924,7 @@ export default function UserManagement() {
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
               >
                 {isRenewing ? <RefreshCw size={13} className="animate-spin" /> : <ShieldCheck size={14} />}
-                <span>Confirm & Renew ({renewDurationDays} Days)</span>
+                <span>Confirm & Activate Subscription (1 Year)</span>
               </button>
             </div>
           </div>

@@ -364,14 +364,9 @@ export async function verifyPaymentRequest(req, res) {
     const finalPlanId = plan || request.selectedPlan || 'yearly_1200';
     const planDoc = await SubscriptionPlan.findOne({ planId: finalPlanId }).lean();
 
-    const activationDate = new Date();
+    const activationDate = req.body.startDate ? new Date(req.body.startDate) : new Date();
     const days = Number(durationDays) > 0 ? Number(durationDays) : 365;
-
-    // Calculate expiry: extending if current expiry is in the future
-    const now = new Date();
-    const currentExpiry = vendor.subscription?.expiresAt ? new Date(vendor.subscription.expiresAt) : null;
-    const baseDate = (currentExpiry && currentExpiry > now) ? currentExpiry : activationDate;
-    const newExpiresAt = new Date(baseDate.getTime() + days * 24 * 60 * 60 * 1000);
+    const newExpiresAt = new Date(activationDate.getTime() + days * 24 * 60 * 60 * 1000);
 
     // Apply quotas dynamically from planDoc or default
     const productMonthlyLimit = planDoc?.productMonthlyLimit || (finalPlanId === 'yearly_2400' ? 75 : 25);
@@ -454,14 +449,9 @@ export async function directRenewVendor(req, res) {
     const chosenPlanId = String(plan || 'yearly_1200').trim();
     const planDoc = await SubscriptionPlan.findOne({ planId: chosenPlanId }).lean();
 
-    const activationDate = new Date();
+    const activationDate = req.body.startDate ? new Date(req.body.startDate) : new Date();
     const days = Number(durationDays) > 0 ? Number(durationDays) : 365;
-
-    // Calculate expiry: extending if current expiry is in the future
-    const now = new Date();
-    const currentExpiry = vendor.subscription?.expiresAt ? new Date(vendor.subscription.expiresAt) : null;
-    const baseDate = (currentExpiry && currentExpiry > now) ? currentExpiry : activationDate;
-    const newExpiresAt = new Date(baseDate.getTime() + days * 24 * 60 * 60 * 1000);
+    const newExpiresAt = new Date(activationDate.getTime() + days * 24 * 60 * 60 * 1000);
 
     const productMonthlyLimit = planDoc?.productMonthlyLimit || (chosenPlanId === 'yearly_2400' ? 75 : 25);
     const articleMonthlyLimit = planDoc?.articleMonthlyLimit || (chosenPlanId === 'yearly_2400' ? 150 : 50);

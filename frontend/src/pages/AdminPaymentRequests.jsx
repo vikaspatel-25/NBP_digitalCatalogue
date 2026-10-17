@@ -63,7 +63,7 @@ export default function AdminPaymentRequests() {
   // Approval / Renew / Discontinue modal state
   const [activeModal, setActiveModal] = useState(null); // { type: 'approve' | 'renew' | 'reject' | 'discontinue', request }
   const [approvalPlan, setApprovalPlan] = useState('yearly_1200');
-  const [durationDays, setDurationDays] = useState(365);
+  const [approvalStartDate, setApprovalStartDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [adminNotes, setAdminNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [submittingAction, setSubmittingAction] = useState(false);
@@ -76,8 +76,7 @@ export default function AdminPaymentRequests() {
   const [vendorSearch, setVendorSearch] = useState('');
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [directRenewPlan, setDirectRenewPlan] = useState('yearly_1200');
-  const [directRenewDuration, setDirectRenewDuration] = useState(365);
-  const [directRenewNotes, setDirectRenewNotes] = useState('');
+  const [directRenewStartDate, setDirectRenewStartDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [directRenewError, setDirectRenewError] = useState('');
   const [submittingDirectRenew, setSubmittingDirectRenew] = useState(false);
 
@@ -119,7 +118,7 @@ export default function AdminPaymentRequests() {
   const openApproveModal = (req, isDirectRenewal = false) => {
     const preselectedPlan = req.approvedPlan || req.selectedPlan || 'yearly_1200';
     setApprovalPlan(preselectedPlan);
-    setDurationDays(365);
+    setApprovalStartDate(new Date().toISOString().split('T')[0]);
     setAdminNotes('');
     setModalError('');
     setActiveModal({ type: isDirectRenewal ? 'renew' : 'approve', request: req });
@@ -143,8 +142,7 @@ export default function AdminPaymentRequests() {
     setSelectedVendor(null);
     setVendorSearch('');
     setDirectRenewPlan('yearly_1200');
-    setDirectRenewDuration(365);
-    setDirectRenewNotes('');
+    setDirectRenewStartDate(new Date().toISOString().split('T')[0]);
     setDirectRenewError('');
     if (vendorList.length === 0) {
       setLoadingVendors(true);
@@ -172,12 +170,12 @@ export default function AdminPaymentRequests() {
       const res = await axios.post('/api/admin/renew-vendor', {
         userId: selectedVendor._id,
         plan: directRenewPlan,
-        durationDays: Number(directRenewDuration) || 365,
-        adminNotes: directRenewNotes || undefined
+        startDate: directRenewStartDate || new Date().toISOString().split('T')[0],
+        durationDays: 365
       });
       if (res.data?.success) {
         appToast.success(
-          `Subscription renewed! "${selectedVendor.companyName}" is active for ${directRenewDuration} days under ${directRenewPlan}.`,
+          `Subscription renewed! "${selectedVendor.companyName}" is active for 1 year starting ${new Date(directRenewStartDate).toLocaleDateString('en-IN')}.`,
           { title: 'Subscription Renewed' }
         );
         setDirectRenewModal(false);
@@ -218,8 +216,8 @@ export default function AdminPaymentRequests() {
         res = await axios.post('/api/admin/renew-vendor', {
           userId: activeModal.request.userId,
           plan: approvalPlan,
-          durationDays: Number(durationDays) || 365,
-          adminNotes: adminNotes || undefined
+          startDate: approvalStartDate || new Date().toISOString().split('T')[0],
+          durationDays: 365
         });
       } else if (isDiscontinue) {
         res = await axios.post('/api/admin/discontinue-subscription', {
@@ -231,8 +229,8 @@ export default function AdminPaymentRequests() {
           requestId: activeModal.request._id,
           action: 'approve',
           plan: approvalPlan,
-          durationDays: Number(durationDays) || 365,
-          adminNotes: adminNotes || undefined
+          startDate: approvalStartDate || new Date().toISOString().split('T')[0],
+          durationDays: 365
         });
       }
 
@@ -241,7 +239,7 @@ export default function AdminPaymentRequests() {
           ? `Subscription request rejected. Notice dispatched to vendor.`
           : isDiscontinue
           ? `Subscription discontinued for ${activeModal.request.companyName}. Catalogue access revoked.`
-          : `Subscription ${isRenew ? 'renewed' : 'activated'}! ${activeModal.request.companyName} is active for ${durationDays} days.`;
+          : `Subscription ${isRenew ? 'renewed' : 'activated'}! ${activeModal.request.companyName} is active for 1 year starting ${new Date(approvalStartDate).toLocaleDateString('en-IN')}.`;
         appToast.success(successMsg, {
           title: isReject
             ? 'Request Rejected'
@@ -676,58 +674,35 @@ export default function AdminPaymentRequests() {
                 </div>
               </div>
 
-              {/* Duration Presets & Input */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Activation Duration
-                  </label>
-                  <span className="text-xs font-extrabold text-blue-600 font-mono">{durationDays} Days</span>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap mb-2">
-                  {[
-                    { label: '30 Days', days: 30 },
-                    { label: '90 Days', days: 90 },
-                    { label: '180 Days (6 Mo)', days: 180 },
-                    { label: '365 Days (1 Yr)', days: 365 },
-                    { label: '730 Days (2 Yrs)', days: 730 }
-                  ].map((chip) => (
-                    <button
-                      key={chip.days}
-                      type="button"
-                      onClick={() => setDurationDays(chip.days)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                        durationDays === chip.days
-                          ? 'bg-slate-900 text-white'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      {chip.label}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="number"
-                  min="1"
-                  max="1825"
-                  value={durationDays}
-                  onChange={(e) => setDurationDays(Math.max(1, Number(e.target.value) || 1))}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  placeholder="Custom number of days..."
-                />
-              </div>
-
+              {/* Subscription Start Date */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Admin Internal Notes / Feedback (Optional)
+                  Subscription Start Date
                 </label>
-                <textarea
-                  rows={2}
-                  value={adminNotes}
-                  onChange={(e) => setAdminNotes(e.target.value)}
-                  placeholder="Optional internal remark or custom agreed SLA..."
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                />
+                <div className="relative">
+                  <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="date"
+                    value={approvalStartDate}
+                    onChange={(e) => setApprovalStartDate(e.target.value)}
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
+                  />
+                </div>
+                {approvalStartDate && (
+                  <p className="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1.5">
+                    <Clock size={12} className="text-blue-600 flex-shrink-0" />
+                    <span>
+                      Active for 1 year (Expires:{' '}
+                      <strong className="text-slate-800">
+                        {(() => {
+                          const d = new Date(approvalStartDate);
+                          d.setFullYear(d.getFullYear() + 1);
+                          return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                        })()}
+                      </strong>)
+                    </span>
+                  </p>
+                )}
               </div>
             </div>
 
@@ -746,7 +721,7 @@ export default function AdminPaymentRequests() {
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
               >
                 {submittingAction ? <RefreshCw size={13} className="animate-spin" /> : <CheckCircle2 size={14} />}
-                <span>Confirm & Activate ({durationDays} Days)</span>
+                <span>Confirm & Activate Subscription (1 Year)</span>
               </button>
             </div>
           </div>
@@ -1064,58 +1039,35 @@ export default function AdminPaymentRequests() {
                 </div>
               </div>
 
-              {/* Duration Presets & Input */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Step 3: Duration
-                  </label>
-                  <span className="text-xs font-extrabold text-blue-600 font-mono">{directRenewDuration} Days</span>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap mb-2">
-                  {[
-                    { label: '30 Days', days: 30 },
-                    { label: '90 Days', days: 90 },
-                    { label: '180 Days (6 Mo)', days: 180 },
-                    { label: '365 Days (1 Yr)', days: 365 },
-                    { label: '730 Days (2 Yrs)', days: 730 }
-                  ].map((chip) => (
-                    <button
-                      key={chip.days}
-                      type="button"
-                      onClick={() => setDirectRenewDuration(chip.days)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                        directRenewDuration === chip.days
-                          ? 'bg-slate-900 text-white'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      {chip.label}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="number"
-                  min="1"
-                  max="1825"
-                  value={directRenewDuration}
-                  onChange={(e) => setDirectRenewDuration(Math.max(1, Number(e.target.value) || 1))}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  placeholder="Custom number of days..."
-                />
-              </div>
-
+              {/* Subscription Start Date */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Admin Internal Notes (Optional)
+                  Step 3: Subscription Start Date
                 </label>
-                <textarea
-                  rows={2}
-                  value={directRenewNotes}
-                  onChange={(e) => setDirectRenewNotes(e.target.value)}
-                  placeholder="Optional internal remark or custom terms..."
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                />
+                <div className="relative">
+                  <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="date"
+                    value={directRenewStartDate}
+                    onChange={(e) => setDirectRenewStartDate(e.target.value)}
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
+                  />
+                </div>
+                {directRenewStartDate && (
+                  <p className="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1.5">
+                    <Clock size={12} className="text-blue-600 flex-shrink-0" />
+                    <span>
+                      Active for 1 year (Expires:{' '}
+                      <strong className="text-slate-800">
+                        {(() => {
+                          const d = new Date(directRenewStartDate);
+                          d.setFullYear(d.getFullYear() + 1);
+                          return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                        })()}
+                      </strong>)
+                    </span>
+                  </p>
+                )}
               </div>
             </div>
 
@@ -1134,7 +1086,7 @@ export default function AdminPaymentRequests() {
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
               >
                 {submittingDirectRenew ? <RefreshCw size={13} className="animate-spin" /> : <ShieldCheck size={14} />}
-                <span>Confirm & Renew ({directRenewDuration} Days)</span>
+                <span>Confirm & Renew (1 Year)</span>
               </button>
             </div>
           </div>
