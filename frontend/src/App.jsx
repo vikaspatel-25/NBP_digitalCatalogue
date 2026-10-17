@@ -16,6 +16,9 @@ import SubscriptionManager from './pages/SubscriptionManager';
 import Onboarding from './pages/Onboarding';
 import AdminPaymentSettings from './pages/AdminPaymentSettings';
 import AdminPaymentRequests from './pages/AdminPaymentRequests';
+import AdminPlanSettings from './pages/AdminPlanSettings';
+import AdminMediaSettings from './pages/AdminMediaSettings';
+import { ToastProvider } from './context/ToastContext';
 import { 
   LayoutDashboard, 
   UserCheck, 
@@ -43,7 +46,9 @@ import {
   FileText,
   CreditCard,
   QrCode,
-  AlertTriangle
+  AlertTriangle,
+  Percent,
+  Sliders
 } from 'lucide-react';
 
 // Dynamic Document Title Sync
@@ -56,8 +61,10 @@ function TitleUpdater() {
       '/admin': 'Admin Dashboard | NetZeroMart',
       '/admin/userApproval': 'Vendor Approvals | NetZeroMart',
       '/admin/userManagement': 'Vendor Directory | NetZeroMart',
-      '/admin/paymentRequests': 'Payment Approvals | NetZeroMart Admin',
-      '/admin/paymentSettings': 'UPI & QR Setup | NetZeroMart Admin',
+      '/admin/paymentRequests': 'Subscription Requests | NetZeroMart Admin',
+      '/admin/plans': 'Subscription Plans & Pricing | NetZeroMart Admin',
+      '/admin/mediaSettings': 'Media & Upload Limits | NetZeroMart Admin',
+      '/admin/paymentSettings': 'Media & Upload Limits | NetZeroMart Admin',
       '/admin/addProduct': 'Add Product | NetZeroMart Admin',
       '/admin/updateProduct': 'Update Product | NetZeroMart Admin',
       '/admin/removeProduct': 'Remove Products | NetZeroMart Admin',
@@ -120,8 +127,10 @@ function AdminLayout({ children }) {
     '/admin': 'Dashboard Overview',
     '/admin/userApproval': 'Pending Approvals',
     '/admin/userManagement': 'Active Vendor Directory',
-    '/admin/paymentRequests': 'Payment Verification & Settlements',
-    '/admin/paymentSettings': 'UPI & QR Code Configuration',
+    '/admin/paymentRequests': 'Subscription Requests',
+    '/admin/plans': 'Subscription Plans & Pricing',
+    '/admin/mediaSettings': 'Media & Upload Limits',
+    '/admin/paymentSettings': 'Media & Upload Limits',
     '/admin/removeProduct': 'Remove Products',
     '/admin/removeArticle': 'Remove Articles',
     '/admin/resetPassword': 'Change Password',
@@ -190,9 +199,10 @@ function AdminLayout({ children }) {
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mb-1.5">Overview</p>
           <NavItem to="/admin" icon={LayoutDashboard} label="Dashboard" />
 
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Corporate Accounting</p>
-          <NavItem to="/admin/paymentRequests" icon={CreditCard} label="Payment Approvals" badge={pendingPaymentsCount} />
-          <NavItem to="/admin/paymentSettings" icon={QrCode} label="UPI & QR Setup" />
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Subscriptions & Limits</p>
+          <NavItem to="/admin/paymentRequests" icon={Layers} label="Subscription Requests" badge={pendingPaymentsCount} />
+          <NavItem to="/admin/plans" icon={Percent} label="Subscription Plans" />
+          <NavItem to="/admin/mediaSettings" icon={Sliders} label="Media & Upload Limits" />
 
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Vendor Relations</p>
           <NavItem to="/admin/userApproval" icon={UserCheck} label="Pending Approvals" badge={pendingCount} />
@@ -645,14 +655,14 @@ function UserDashboardOverview() {
           <div className="flex items-center gap-2.5">
             <AlertTriangle size={18} className="text-amber-600 flex-shrink-0" />
             <div>
-              <span className="font-bold">Annual Subscription Required:</span> Your vendor account is verified! Activate your 365-day subscription via UPI/QR to publish products and go live.
+              <span className="font-bold">Annual Subscription Required:</span> Your vendor account is verified! Activate your 365-day supplier subscription to publish products and go live.
             </div>
           </div>
           <Link
             to="/userPanel/subscription"
             className="px-3.5 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-semibold text-xs transition shadow-2xs self-start sm:self-auto"
           >
-            Activate via UPI / QR →
+            Choose Plan & Activate →
           </Link>
         </div>
       )}
@@ -842,42 +852,46 @@ function UserDashboardOverview() {
 function App() {
   return (
     <BrowserRouter>
-      <TitleUpdater />
-      <Routes>
-        {/* Public Authentication & Registration (React SPA) */}
-        <Route path="/register" element={<Register />} />
-        <Route path="/adminLogin" element={<AdminLogin />} />
-        <Route path="/userLogin" element={<UserLogin />} />
-        <Route path="/login" element={<Navigate to="/adminLogin" replace />} />
+      <ToastProvider>
+        <TitleUpdater />
+        <Routes>
+          {/* Public Authentication & Registration (React SPA) */}
+          <Route path="/register" element={<Register />} />
+          <Route path="/adminLogin" element={<AdminLogin />} />
+          <Route path="/userLogin" element={<UserLogin />} />
+          <Route path="/login" element={<Navigate to="/adminLogin" replace />} />
 
-        {/* Master Admin Routes - deletion & moderation only */}
-        <Route path="/admin" element={<AdminLayout><AdminDashboardOverview /></AdminLayout>} />
-        <Route path="/admin/userApproval" element={<AdminLayout><UserApproval /></AdminLayout>} />
-        <Route path="/admin/userManagement" element={<AdminLayout><UserManagement /></AdminLayout>} />
-        <Route path="/admin/paymentRequests" element={<AdminLayout><AdminPaymentRequests /></AdminLayout>} />
-        <Route path="/admin/paymentSettings" element={<AdminLayout><AdminPaymentSettings /></AdminLayout>} />
-        <Route path="/admin/addProduct" element={<Navigate to="/admin/removeProduct" replace />} />
-        <Route path="/admin/updateProduct" element={<Navigate to="/admin/removeProduct" replace />} />
-        <Route path="/admin/removeProduct" element={<AdminLayout><RemoveProduct basePath="/api/admin" /></AdminLayout>} />
-        <Route path="/admin/addArticle" element={<Navigate to="/admin/removeArticle" replace />} />
-        <Route path="/admin/removeArticle" element={<AdminLayout><RemoveArticle basePath="/api/admin" /></AdminLayout>} />
-        <Route path="/admin/resetPassword" element={<AdminLayout><ResetPassword role="admin" /></AdminLayout>} />
-        
-        {/* Vendor Portal Routes */}
-        <Route path="/userPanel" element={<UserLayout><UserDashboardOverview /></UserLayout>} />
-        <Route path="/userPanel/onboarding" element={<Onboarding />} />
-        <Route path="/userPanel/subscription" element={<UserLayout><SubscriptionManager /></UserLayout>} />
-        <Route path="/userPanel/addProduct" element={<UserLayout><AddProduct apiEndpoint="/api/userPanel/addProduct" role="user" /></UserLayout>} />
-        <Route path="/userPanel/updateProduct" element={<UserLayout><UpdateProduct basePath="/api/userPanel" /></UserLayout>} />
-        <Route path="/userPanel/removeProduct" element={<UserLayout><RemoveProduct basePath="/api/userPanel" /></UserLayout>} />
-        <Route path="/userPanel/addArticle" element={<UserLayout><AddArticle basePath="/api/userPanel" /></UserLayout>} />
-        <Route path="/userPanel/removeArticle" element={<UserLayout><RemoveArticle basePath="/api/userPanel" /></UserLayout>} />
-        <Route path="/userPanel/resetPassword" element={<UserLayout><ResetPassword role="user" /></UserLayout>} />
+          {/* Master Admin Routes - deletion & moderation only */}
+          <Route path="/admin" element={<AdminLayout><AdminDashboardOverview /></AdminLayout>} />
+          <Route path="/admin/userApproval" element={<AdminLayout><UserApproval /></AdminLayout>} />
+          <Route path="/admin/userManagement" element={<AdminLayout><UserManagement /></AdminLayout>} />
+          <Route path="/admin/paymentRequests" element={<AdminLayout><AdminPaymentRequests /></AdminLayout>} />
+          <Route path="/admin/plans" element={<AdminLayout><AdminPlanSettings /></AdminLayout>} />
+          <Route path="/admin/mediaSettings" element={<AdminLayout><AdminMediaSettings /></AdminLayout>} />
+          <Route path="/admin/paymentSettings" element={<Navigate to="/admin/mediaSettings" replace />} />
+          <Route path="/admin/addProduct" element={<Navigate to="/admin/removeProduct" replace />} />
+          <Route path="/admin/updateProduct" element={<Navigate to="/admin/removeProduct" replace />} />
+          <Route path="/admin/removeProduct" element={<AdminLayout><RemoveProduct basePath="/api/admin" /></AdminLayout>} />
+          <Route path="/admin/addArticle" element={<Navigate to="/admin/removeArticle" replace />} />
+          <Route path="/admin/removeArticle" element={<AdminLayout><RemoveArticle basePath="/api/admin" /></AdminLayout>} />
+          <Route path="/admin/resetPassword" element={<AdminLayout><ResetPassword role="admin" /></AdminLayout>} />
+          
+          {/* Vendor Portal Routes */}
+          <Route path="/userPanel" element={<UserLayout><UserDashboardOverview /></UserLayout>} />
+          <Route path="/userPanel/onboarding" element={<Onboarding />} />
+          <Route path="/userPanel/subscription" element={<UserLayout><SubscriptionManager /></UserLayout>} />
+          <Route path="/userPanel/addProduct" element={<UserLayout><AddProduct apiEndpoint="/api/userPanel/addProduct" role="user" /></UserLayout>} />
+          <Route path="/userPanel/updateProduct" element={<UserLayout><UpdateProduct basePath="/api/userPanel" /></UserLayout>} />
+          <Route path="/userPanel/removeProduct" element={<UserLayout><RemoveProduct basePath="/api/userPanel" /></UserLayout>} />
+          <Route path="/userPanel/addArticle" element={<UserLayout><AddArticle basePath="/api/userPanel" /></UserLayout>} />
+          <Route path="/userPanel/removeArticle" element={<UserLayout><RemoveArticle basePath="/api/userPanel" /></UserLayout>} />
+          <Route path="/userPanel/resetPassword" element={<UserLayout><ResetPassword role="user" /></UserLayout>} />
 
-        {/* Beta Route compatibility */}
-        <Route path="/v2/admin/*" element={<Navigate to="/admin" replace />} />
-        <Route path="/v2/userPanel/*" element={<Navigate to="/userPanel" replace />} />
-      </Routes>
+          {/* Beta Route compatibility */}
+          <Route path="/v2/admin/*" element={<Navigate to="/admin" replace />} />
+          <Route path="/v2/userPanel/*" element={<Navigate to="/userPanel" replace />} />
+        </Routes>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

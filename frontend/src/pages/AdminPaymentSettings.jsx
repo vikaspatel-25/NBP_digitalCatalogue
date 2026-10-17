@@ -16,8 +16,10 @@ import {
   FileText,
   CreditCard
 } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 export default function AdminPaymentSettings() {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     upiId: '',
     upiName: '',
@@ -65,7 +67,12 @@ export default function AdminPaymentSettings() {
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('QR Code image exceeds 10MB limit. Please upload a smaller image.', { title: 'File Too Large' });
+        return;
+      }
       setSelectedFile(file);
+      toast.info(`QR image selected: ${file.name}`, { title: 'Image Selected' });
       const reader = new FileReader();
       reader.onloadend = () => {
         setFilePreview(reader.result);
@@ -78,6 +85,7 @@ export default function AdminPaymentSettings() {
     if (formData.upiId) {
       navigator.clipboard.writeText(formData.upiId);
       setCopied(true);
+      toast.info(`UPI ID copied: ${formData.upiId}`, { title: 'Copied to Clipboard' });
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -105,7 +113,9 @@ export default function AdminPaymentSettings() {
       });
 
       if (res.data?.success) {
-        setSuccessToast('UPI and QR payment settings updated successfully!');
+        const msg = 'UPI and QR payment settings updated successfully!';
+        setSuccessToast(msg);
+        toast.success(msg, { title: 'Settings Saved' });
         if (res.data.settings?.qrCode?.url) {
           setCurrentQr(res.data.settings.qrCode.url);
           setSelectedFile(null);
@@ -113,11 +123,15 @@ export default function AdminPaymentSettings() {
         }
         setTimeout(() => setSuccessToast(''), 4000);
       } else {
-        setErrorToast(res.data?.error || 'Failed to update settings');
+        const errText = res.data?.error || 'Failed to update settings';
+        setErrorToast(errText);
+        toast.error(errText, { title: 'Save Failed' });
       }
     } catch (err) {
       console.error(err);
-      setErrorToast(err.response?.data?.error || 'Network error updating settings');
+      const errText = err.response?.data?.error || 'Network error updating settings';
+      setErrorToast(errText);
+      toast.error(errText, { title: 'Network Error' });
     } finally {
       setSaving(false);
     }

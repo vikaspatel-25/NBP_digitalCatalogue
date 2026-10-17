@@ -2,6 +2,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import cloudinary from "../config/cloudinary.js";
 import Product from "../models/product.model.js";
+import PlatformSettings from "../models/settings.model.js";
 import jwt from "jsonwebtoken";
 import { checkProductUploadQuota } from "../services/quotaService.js";
 
@@ -298,12 +299,71 @@ async function addApiProductController(req, res) {
       return res.status(400).json({ success: false, error: "Required fields missing" });
     }
 
-    if (images.length === 0) {
+    if (!priceMin || !priceMax) {
+      return res.status(400).json({ success: false, error: "Price range required" });
+    }
+
+    // Dynamic Admin Media Controls Enforcement
+    const settings = (await PlatformSettings.findOne({}).lean()) || {};
+
+    if (settings.allowImages === false && images.length > 0) {
+      return res.status(400).json({ success: false, error: "Product image uploads are currently disabled by the platform administrator" });
+    }
+
+    if (images.length === 0 && settings.allowImages !== false) {
       return res.status(400).json({ success: false, error: "At least one image required" });
     }
 
-    if (!priceMin || !priceMax) {
-      return res.status(400).json({ success: false, error: "Price range required" });
+    const maxImages = settings.maxImagesPerProduct || 10;
+    if (images.length > maxImages) {
+      return res.status(400).json({
+        success: false,
+        error: `Maximum ${maxImages} product images allowed. You uploaded ${images.length}.`
+      });
+    }
+
+    const maxImageBytes = (settings.maxImageSizeMb || 10) * 1024 * 1024;
+    for (const image of images) {
+      if (image.size > maxImageBytes) {
+        return res.status(400).json({
+          success: false,
+          error: `Image "${image.originalname || 'file'}" exceeds the ${settings.maxImageSizeMb || 10}MB size limit set by administrator.`
+        });
+      }
+    }
+
+    if (videos.length > 0) {
+      if (settings.allowVideos === false) {
+        return res.status(400).json({
+          success: false,
+          error: "Direct video uploads are currently disabled by the platform administrator. You may link videos via YouTube."
+        });
+      }
+
+      const globalMaxVideos = settings.maxVideosPerProduct !== undefined ? settings.maxVideosPerProduct : 2;
+      if (videos.length > globalMaxVideos) {
+        return res.status(400).json({
+          success: false,
+          error: `Platform limits allow a maximum of ${globalMaxVideos} video clip${globalMaxVideos > 1 ? 's' : ''} per product.`
+        });
+      }
+
+      const adminMaxVideoBytes = (settings.maxVideoSizeMb || 15) * 1024 * 1024;
+      for (const video of videos) {
+        if (video.size > adminMaxVideoBytes) {
+          return res.status(400).json({
+            success: false,
+            error: `Video "${video.originalname || 'file'}" exceeds the ${settings.maxVideoSizeMb || 15}MB limit configured by administrator.`
+          });
+        }
+      }
+    }
+
+    if (youtubeLinks && youtubeLinks.length > 0 && settings.allowYoutube === false) {
+      return res.status(400).json({
+        success: false,
+        error: "YouTube video embeds are currently disabled by the platform administrator."
+      });
     }
 
     const creator = getCreatorId(req);
@@ -322,12 +382,12 @@ async function addApiProductController(req, res) {
         });
       }
 
-      const maxBytes = (quota.maxVideoSizeMb || 15) * 1024 * 1024;
+      const maxBytes = Math.min((quota.maxVideoSizeMb || 15), (settings.maxVideoSizeMb || 15)) * 1024 * 1024;
       for (const video of videos) {
         if (video.size > maxBytes) {
           return res.status(400).json({
             success: false,
-            error: `Video "${video.originalname || 'file'}" exceeds the ${quota.maxVideoSizeMb || 15}MB size limit. Please compress it or link via YouTube.`
+            error: `Video "${video.originalname || 'file'}" exceeds the size limit. Please compress it or link via YouTube.`
           });
         }
       }

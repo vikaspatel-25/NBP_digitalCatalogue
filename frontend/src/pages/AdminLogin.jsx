@@ -10,19 +10,23 @@ import {
   X,
   ShieldCheck,
   Building2,
+  Sparkles,
   ArrowRight,
-  UserCheck,
+  Zap,
+  LayoutDashboard,
   CheckCircle2,
-  Globe,
-  Layers,
-  Database
+  AlertCircle
 } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 export default function AdminLogin() {
+  const { toast } = useToast();
+
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   
   // Forgot Passkey Modal
   const [forgotModal, setForgotModal] = useState(false);
@@ -30,46 +34,64 @@ export default function AdminLogin() {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotMessage, setForgotMessage] = useState('');
 
+  const clearFieldError = (name) => {
+    setFieldErrors(prev => {
+      if (!prev[name]) return prev;
+      const copy = { ...prev };
+      delete copy[name];
+      return copy;
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!password.trim()) {
+      setFieldErrors({ password: 'Administrator security passkey is required' });
+      toast.error('Please enter the administrator master passkey.', { title: 'Passkey Required' });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await axios.post('/adminLogin', { password }, {
-        headers: { 'Content-Type': 'application/json' }
+      const res = await axios.post('/adminLogin', { password: password.trim() }, {
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
       });
-      window.location.href = '/admin';
+      toast.success('Admin authorization verified! Redirecting to console...', { title: 'Authorized' });
+      window.location.href = res.data?.redirectUrl || '/admin';
     } catch (err) {
       console.error('Admin login error:', err);
-      try {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/adminLogin';
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'password';
-        input.value = password;
-        form.appendChild(input);
-        document.body.appendChild(form);
-        form.submit();
-      } catch (fErr) {
-        setError('Invalid credentials or unauthorized access. Please try again.');
-        setLoading(false);
-      }
+      const serverMsg = err.response?.data?.error || err.response?.data?.message || (typeof err.response?.data === 'string' && !err.response?.data.includes('<') ? err.response.data : '');
+      const finalMsg = serverMsg || 'Invalid master passkey or unauthorized access attempt.';
+      setError(finalMsg);
+      setFieldErrors({ password: finalMsg });
+      toast.error(finalMsg, { title: 'Access Denied' });
+      setLoading(false);
     }
   };
 
   const handleForgotPasskey = async (e) => {
     e.preventDefault();
-    if (!adminEmail) return;
+    if (!adminEmail.trim()) {
+      toast.warning('Please enter the designated administrator email address.');
+      return;
+    }
     setForgotLoading(true);
     setForgotMessage('');
     try {
-      await axios.get(`/admin/forgotPassword?gmail=${encodeURIComponent(adminEmail)}`);
-      setForgotMessage('Passkey recovery instructions have been dispatched to your administrator email.');
+      await axios.get(`/admin/forgotPassword?gmail=${encodeURIComponent(adminEmail.trim())}`);
+      const successMsg = 'Passkey recovery instructions have been dispatched to your administrator email.';
+      setForgotMessage(successMsg);
+      toast.success(successMsg, { title: 'Passkey Dispatched' });
     } catch (err) {
-      setForgotMessage(err.response?.data || 'Failed to dispatch passkey. Ensure email is the authorized admin email.');
+      const errMsg = err.response?.data?.error || (typeof err.response?.data === 'string' && !err.response?.data.includes('<') ? err.response.data : 'Failed to dispatch passkey. Ensure email is the authorized admin email.');
+      setForgotMessage(errMsg);
+      toast.error(errMsg, { title: 'Recovery Failed' });
     } finally {
       setForgotLoading(false);
     }
@@ -88,94 +110,84 @@ export default function AdminLogin() {
               className="w-9 h-9 object-contain group-hover:scale-105 transition-transform" 
             />
             <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
-              NetZero<span className="text-blue-600">Mart</span>
+              NetZero<span className="text-blue-700">Mart</span>
             </span>
           </a>
+
           <a 
-            href="/userLogin" 
-            className="text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5"
+            href="/home" 
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-white border border-transparent hover:border-slate-200 transition"
           >
-            <span>Are you a vendor?</span>
-            <span className="text-emerald-600 underline font-bold">Vendor Login</span>
+            <ArrowLeft size={14} />
+            <span>Back to Storefront</span>
           </a>
         </div>
 
-        {/* Side-by-Side Admin Login Panel - Light Theme */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-sm">
+        {/* Auth Container Card */}
+        <div className="max-w-4xl mx-auto bg-white border border-slate-200/80 rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden grid grid-cols-1 md:grid-cols-12">
           
-          {/* Left Column: Admin Console Overview */}
-          <div className="lg:col-span-5 p-8 sm:p-12 bg-slate-50/70 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-200/80">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100/70 border border-blue-200 text-blue-800 text-xs font-bold tracking-wide uppercase mb-6">
-                <ShieldCheck size={13} />
-                <span>Master Administration Console</span>
+          {/* Left Hero Sidebar */}
+          <div className="md:col-span-5 bg-gradient-to-br from-blue-950 via-slate-900 to-slate-950 p-8 sm:p-10 text-white flex flex-col justify-between">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs font-semibold">
+                <LayoutDashboard size={13} />
+                <span>Administration Console</span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight mb-4">
-                Platform Governance & Supplier Approvals.
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-8">
-                Master administrator gateway for managing vendor onboarding, validating GST certificates, and maintaining catalogue integrity.
-              </p>
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight text-white leading-snug">
+                  Master Control & Governance
+                </h2>
+                <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+                  Restricted access environment for NetZeroMart directory operations, vendor verification, offline UPI payment reconciliations, and catalogue moderation.
+                </p>
+              </div>
 
-              <div className="space-y-3.5">
-                <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 border border-blue-100">
-                    <UserCheck size={16} />
+              <div className="space-y-3 pt-2">
+                <div className="flex items-start gap-2.5 text-xs text-slate-200">
+                  <div className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
+                    ✓
                   </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-900">Vendor Verification & Approvals</h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Review submitted company documents and issue credentials.</p>
-                  </div>
+                  <span>Vendor compliance verification & approval</span>
                 </div>
-
-                <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5 border border-emerald-100">
-                    <Globe size={16} />
+                <div className="flex items-start gap-2.5 text-xs text-slate-200">
+                  <div className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
+                    ✓
                   </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-900">Subscription Health & Visibility</h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Audit active subscriptions, pending payment approvals, and catalogue metrics.</p>
-                  </div>
+                  <span>Manual UTR transaction auditing and renewal activation</span>
                 </div>
-
-                <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5 border border-indigo-100">
-                    <Database size={16} />
+                <div className="flex items-start gap-2.5 text-xs text-slate-200">
+                  <div className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
+                    ✓
                   </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-900">Catalogue Moderation</h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Admin-level moderation and removal of obsolete listings.</p>
-                  </div>
+                  <span>Platform-wide UPI ID & QR payment settings</span>
                 </div>
               </div>
             </div>
 
-            <div className="pt-8 mt-8 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
-              <span>Restricted Access Area</span>
-              <a href="/home" className="text-slate-600 hover:text-slate-900 font-medium">Return to Storefront →</a>
+            <div className="pt-8 border-t border-slate-800 text-xs text-slate-400">
+              Looking for vendor portal?{' '}
+              <a href="/userLogin" className="text-blue-400 font-semibold hover:underline">
+                Vendor Sign In →
+              </a>
             </div>
           </div>
 
-          {/* Right Column: Admin Sign In Form */}
-          <div className="lg:col-span-7 p-6 sm:p-10 lg:p-12 flex flex-col justify-center bg-white">
+          {/* Right Form Card */}
+          <div className="md:col-span-7 p-6 sm:p-10 flex flex-col justify-center">
             <div className="mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                Admin Console Sign In
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                Enter your administrative security passkey or password to proceed.
-              </p>
+              <h3 className="text-xl font-bold text-slate-900 tracking-tight">Admin Authentication</h3>
+              <p className="text-xs text-slate-500 mt-1">Provide your master administrative credentials to continue.</p>
             </div>
 
             {error && (
-              <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm">
-                {error}
+              <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm flex items-center gap-2">
+                <AlertCircle size={16} className="text-rose-600 shrink-0" />
+                <span className="flex-1">{error}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              
+            <form onSubmit={handleSubmit} noValidate className="space-y-5">
               {/* Security Passkey Field */}
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -188,7 +200,7 @@ export default function AdminLogin() {
                       setForgotModal(true);
                       setForgotMessage('');
                     }}
-                    className="text-xs text-blue-600 hover:underline font-medium"
+                    className="text-xs text-blue-600 hover:underline font-medium cursor-pointer"
                   >
                     Forgot passkey?
                   </button>
@@ -199,19 +211,30 @@ export default function AdminLogin() {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      clearFieldError('password');
+                    }}
                     placeholder="Enter security passkey"
-                    className="w-full pl-11 pr-11 py-3 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition"
+                    className={`w-full pl-11 pr-11 py-3 rounded-xl border text-sm focus:outline-none transition ${
+                      fieldErrors.password
+                        ? 'border-rose-400 focus:border-rose-500 ring-2 ring-rose-100 bg-rose-50/20'
+                        : 'bg-slate-50/70 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600'
+                    }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+                {fieldErrors.password && (
+                  <p className="text-xs text-rose-600 font-medium mt-1 flex items-center gap-1">
+                    <AlertCircle size={12} /> {fieldErrors.password}
+                  </p>
+                )}
               </div>
 
               {/* Sign In CTA */}
@@ -219,7 +242,7 @@ export default function AdminLogin() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50"
+                  className="w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? (
                     <>
@@ -250,10 +273,10 @@ export default function AdminLogin() {
       {/* Forgot Passkey Modal */}
       {forgotModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-xl relative">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-xl relative animate-in fade-in zoom-in-95">
             <button
               onClick={() => setForgotModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 cursor-pointer"
             >
               <X size={18} />
             </button>
@@ -287,14 +310,14 @@ export default function AdminLogin() {
                 <button
                   type="button"
                   onClick={() => setForgotModal(false)}
-                  className="flex-1 py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition"
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition cursor-pointer"
                 >
                   Close
                 </button>
                 <button
                   type="submit"
                   disabled={forgotLoading}
-                  className="flex-1 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   {forgotLoading ? <Loader2 size={14} className="animate-spin" /> : <span>Send Passkey</span>}
                 </button>

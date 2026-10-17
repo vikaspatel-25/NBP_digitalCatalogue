@@ -1,11 +1,11 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { v2 as cloudinary } from 'cloudinary';
 import PlatformSettings from '../models/settings.model.js';
 import PaymentRequest from '../models/paymentRequest.model.js';
+import SubscriptionPlan from '../models/plan.model.js';
 import ApprovedUser from '../models/approved.user.model.js';
 import User from '../models/user.model.js';
-import { getOrCreateSettings } from './adminPayment.js';
+import { getOrCreateSettings, getOrSeedPlans } from './adminPayment.js';
 import { sendManualPaymentSubmittedEmail } from '../services/emailService.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,15 +13,20 @@ const __dirname = path.dirname(__filename);
 const reactIndexPath = path.resolve(process.cwd(), 'frontend/dist/index.html');
 
 /**
- * Plans config for the vendor portal
+ * Fallback static plans config for legacy compatibility
  */
 export const PLANS_CONFIG = {
   yearly_1200: {
     id: 'yearly_1200',
+    planId: 'yearly_1200',
     name: 'Standard Annual Plan',
+    originalPrice: 1800,
     price: 1200,
+    discountedPrice: 1200,
+    discountPercentage: 33,
     displayPrice: '₹1,200',
     billingCycle: 'Per Year',
+    badge: 'Popular Choice',
     productMonthlyLimit: 25,
     articleMonthlyLimit: 50,
     features: [
@@ -35,8 +40,12 @@ export const PLANS_CONFIG = {
   },
   yearly_2400: {
     id: 'yearly_2400',
+    planId: 'yearly_2400',
     name: 'Enterprise Annual Plan',
+    originalPrice: 3600,
     price: 2400,
+    discountedPrice: 2400,
+    discountPercentage: 33,
     displayPrice: '₹2,400',
     billingCycle: 'Per Year (High Volume)',
     badge: '3x Volume Limit',
@@ -54,22 +63,6 @@ export const PLANS_CONFIG = {
 };
 
 /**
- * Helper to upload buffer to Cloudinary
- */
-function uploadBufferToCloudinary(buffer, folder = 'nbp_payment_proofs') {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: 'image' },
-      (error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      }
-    );
-    stream.end(buffer);
-  });
-}
-
-/**
  * Helper to find vendor across models
  */
 async function findVendorById(userId) {
@@ -82,7 +75,8 @@ async function findVendorById(userId) {
 
 /**
  * GET /api/userPanel/payment-info
- * Returns Admin's current UPI ID, Payee Name, QR code, and available plans
+ * Returns active subscription plans with dynamic pricing and % discount,
+ * vendor status, and B2B sales contact info for custom packages.
  */
 export async function getVendorPaymentInfo(req, res) {
   try {
@@ -93,16 +87,42 @@ export async function getVendorPaymentInfo(req, res) {
       return res.status(404).json({ success: false, error: 'Vendor not found' });
     }
 
-    // Check if there is an active pending payment request
+    // Dynamic Plans from Database
+    const allDbPlans = await getOrSeedPlans();
+    const activePlans = allDbPlans.filter(p => p.isActive !== false);
+
+    // Build dictionary map for legacy compatibility
+    const plansDict = {};
+    activePlans.forEach(p => {
+      plansDict[p.planId] = {
+        id: p.planId,
+        planId: p.planId,
+        name: p.name,
+        originalPrice: p.originalPrice,
+        price: p.discountedPrice,
+        discountedPrice: p.discountedPrice,
+        discountPercentage: p.discountPercentage,
+        displayPrice: `₹${p.discountedPrice.toLocaleString('en-IN')}`,
+        billingCycle: p.billingCycle || 'Per Year',
+        badge: p.badge || '',
+        productMonthlyLimit: p.productMonthlyLimit,
+        articleMonthlyLimit: p.articleMonthlyLimit,
+        maxVideosPerProduct: p.maxVideosPerProduct,
+        maxVideoSizeMb: p.maxVideoSizeMb,
+        features: p.features || []
+      };
+    });
+
+    // Check for pending subscription request
     const pendingRequest = await PaymentRequest.findOne({
       userId: vendor._id.toString(),
       status: 'pending'
     }).sort({ createdAt: -1 }).lean();
 
-    // Latest payment history
+    // Latest request history
     const recentRequests = await PaymentRequest.find({
       userId: vendor._id.toString()
-    }).sort({ createdAt: -1 }).limit(5).lean();
+    }).sort({ createdAt: -1 }).limit(10).lean();
 
     const now = new Date();
     const sub = vendor.subscription || {};
@@ -121,15 +141,21 @@ export async function getVendorPaymentInfo(req, res) {
 
     return res.json({
       success: true,
+      b2bSalesContact: {
+        contactEmail: settings.contactEmail || 'sales@netzeromart.com',
+        contactPhone: settings.contactPhone || '+91 99999 00000',
+        customPlanNote: settings.customPlanNote || 'Need a bespoke B2B enterprise tier or custom volume quota? Contact our commercial team directly for tailored corporate contracts.'
+      },
+      // Preserved for backward compatibility
       paymentInfo: {
-        upiId: settings.upiId,
-        upiName: settings.upiName,
-        qrCodeUrl: settings.qrCode?.url || '',
+        upiId: settings.upiId || '',
+        upiName: settings.upiName || '',
         contactEmail: settings.contactEmail,
         contactPhone: settings.contactPhone,
         notes: settings.notes
       },
-      plans: PLANS_CONFIG,
+      plans: Object.keys(plansDict).length > 0 ? plansDict : PLANS_CONFIG,
+      plansList: activePlans,
       vendorSubscription: {
         status: computedStatus,
         plan: sub.plan || 'none',
@@ -143,14 +169,15 @@ export async function getVendorPaymentInfo(req, res) {
       recentRequests
     });
   } catch (error) {
-    console.error('Error fetching vendor payment info:', error);
+    console.error('Error fetching vendor subscription info:', error);
     return res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 }
 
 /**
  * POST /api/userPanel/submit-payment
- * Vendor submits chosen plan, UTR / transaction ID, and optional screenshot
+ * Vendor selects chosen plan and submits subscription activation request with optional notes.
+ * No UPI / QR or UTR required!
  */
 export async function submitVendorPayment(req, res) {
   try {
@@ -159,34 +186,49 @@ export async function submitVendorPayment(req, res) {
       return res.status(404).json({ success: false, error: 'Vendor not found' });
     }
 
-    const { plan, utrNumber } = req.body;
+    const { plan, vendorNote, note } = req.body;
+    const requestedPlanId = String(plan || '').trim();
 
-    if (!plan || !['yearly_1200', 'yearly_2400'].includes(plan)) {
-      return res.status(400).json({ success: false, error: 'Please select a valid annual plan' });
+    if (!requestedPlanId) {
+      return res.status(400).json({ success: false, error: 'Please select a subscription plan to continue' });
     }
 
-    if (!utrNumber || utrNumber.trim().length < 6) {
-      return res.status(400).json({ success: false, error: 'Please enter a valid UPI / UTR Transaction ID' });
+    // Look up plan from database (or fallback)
+    let planDoc = await SubscriptionPlan.findOne({ planId: requestedPlanId, isActive: true }).lean();
+    if (!planDoc) {
+      // Fallback check in defaults
+      planDoc = PLANS_CONFIG[requestedPlanId];
     }
 
-    const cleanUtr = utrNumber.trim();
-
-    // Check if this UTR is already approved
-    const existingApproved = await PaymentRequest.findOne({ utrNumber: cleanUtr, status: 'approved' });
-    if (existingApproved) {
-      return res.status(400).json({ success: false, error: 'This transaction reference is already verified for an existing subscription' });
+    if (!planDoc) {
+      return res.status(400).json({ success: false, error: 'Selected plan is not recognized or is no longer active' });
     }
 
-    let screenshotData = { url: '', public_id: '' };
-    if (req.file) {
-      const uploaded = await uploadBufferToCloudinary(req.file.buffer, 'nbp_payment_proofs');
-      screenshotData = {
-        url: uploaded.secure_url || uploaded.url,
-        public_id: uploaded.public_id
-      };
-    }
+    const origPrice = planDoc.originalPrice || planDoc.price || 0;
+    const discPrice = planDoc.discountedPrice || planDoc.price || 0;
+    const cleanNote = String(vendorNote || note || '').trim();
 
-    const amount = plan === 'yearly_2400' ? 2400 : 1200;
+    // Check if vendor already has an open pending request for this same plan
+    const existingPending = await PaymentRequest.findOne({
+      userId: vendor._id.toString(),
+      status: 'pending'
+    });
+
+    if (existingPending) {
+      existingPending.selectedPlan = requestedPlanId;
+      existingPending.planName = planDoc.name;
+      existingPending.originalPrice = origPrice;
+      existingPending.discountedPrice = discPrice;
+      existingPending.amount = discPrice;
+      existingPending.vendorNote = cleanNote;
+      await existingPending.save();
+
+      return res.json({
+        success: true,
+        message: 'Your subscription activation request was updated and is being reviewed by our team.',
+        request: existingPending
+      });
+    }
 
     const newRequest = await PaymentRequest.create({
       userId: vendor._id.toString(),
@@ -194,30 +236,46 @@ export async function submitVendorPayment(req, res) {
       userName: vendor.userName || '',
       email: vendor.email,
       mobile: vendor.mobile || '',
-      selectedPlan: plan,
-      amount,
-      utrNumber: cleanUtr,
-      screenshot: screenshotData,
+      selectedPlan: requestedPlanId,
+      planName: planDoc.name,
+      originalPrice: origPrice,
+      discountedPrice: discPrice,
+      amount: discPrice,
+      vendorNote: cleanNote,
       status: 'pending'
     });
 
-    // Send notifications to both Vendor and Admin
+    // Send notification email
     sendManualPaymentSubmittedEmail({
       to: vendor.email,
       userName: vendor.userName,
       companyName: vendor.companyName,
-      plan,
-      amount,
-      utrNumber: cleanUtr
+      plan: requestedPlanId,
+      amount: discPrice,
+      utrNumber: 'DIRECT_B2B_REQUEST'
     }).catch(err => console.error('Error sending submission emails:', err));
 
     return res.json({
       success: true,
-      message: 'Payment reference submitted successfully! Our accounts team will review and activate your subscription.',
+      message: 'Subscription request submitted successfully! Our administrative team will review and activate your plan.',
       request: newRequest
     });
   } catch (error) {
-    console.error('Error submitting vendor payment:', error);
-    return res.status(500).json({ success: false, error: error?.message || 'Failed to submit payment details' });
+    console.error('Error submitting vendor subscription request:', error);
+    return res.status(500).json({ success: false, error: error?.message || 'Failed to submit subscription request' });
+  }
+}
+
+/**
+ * GET /api/plans
+ * Public endpoint to view dynamic plans with % discount
+ */
+export async function getPublicPlans(req, res) {
+  try {
+    const plans = await getOrSeedPlans();
+    const active = plans.filter(p => p.isActive !== false);
+    return res.json({ success: true, plans: active });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: 'Could not fetch plans' });
   }
 }

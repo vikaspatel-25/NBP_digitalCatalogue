@@ -3,28 +3,34 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Sparkles, 
-  CheckCircle2, 
   Store, 
   ArrowRight, 
   ShieldCheck, 
-  QrCode,
-  Calendar,
-  Layers,
-  CreditCard
+  Briefcase, 
+  PhoneCall, 
+  Mail, 
+  CreditCard,
+  Building2
 } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
 
   const handleGetStarted = async (target = '/userPanel/subscription') => {
     setSubmitting(true);
     try {
       await axios.post('/api/userPanel/complete-onboarding');
+      navigate(target);
     } catch (err) {
       console.warn('Could not mark onboarding complete:', err);
-    } finally {
+      const errMsg = err.response?.data?.error || err.response?.data?.message || 'Could not complete onboarding';
+      toast.error(errMsg, { title: 'Onboarding Notice' });
       navigate(target);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -41,7 +47,7 @@ export default function Onboarding() {
             Welcome to NetZeroMart B2B
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto mt-2 leading-relaxed">
-            Your corporate documents have been verified by our team. Activate your annual subscription to launch your digital catalogue.
+            Your corporate documents have been verified by our team. Select your preferred annual tier to activate your digital catalogue.
           </p>
         </div>
 
@@ -55,10 +61,10 @@ export default function Onboarding() {
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900">
-                Next Step: Activate Your 365-Day Subscription
+                Next Step: Select Plan & Request Activation
               </h3>
               <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                Choose your annual plan (Standard ₹1,200/year or Enterprise ₹2,400/year) and transfer via corporate UPI or QR code. Once confirmed, your products and articles will be active and discoverable on NetZeroMart for 365 days.
+                Choose from our pre-configured annual plans or request activation with a single click. Once activated by our team, your products, technical specifications, and thought leadership articles will be live and discoverable on NetZeroMart for 365 days.
               </p>
             </div>
           </div>
@@ -68,27 +74,27 @@ export default function Onboarding() {
             <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/60">
               <div className="flex items-center gap-2.5 font-bold text-xs text-slate-900 mb-1.5">
                 <Store size={16} className="text-blue-600" />
-                <span>Product & Content Quotas</span>
+                <span>Product & Article Quotas</span>
               </div>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Upload 25 or 75 products/month with images, short video clips (≤15MB), and unlimited YouTube embeds. Publish 50 or 150 articles/month.
+                Upload products with image galleries, short video clips, and unlimited YouTube embeds. Publish sustainable industry articles with your brand byline.
               </p>
             </div>
 
             <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/60">
               <div className="flex items-center gap-2.5 font-bold text-xs text-slate-900 mb-1.5">
-                <QrCode size={16} className="text-emerald-600" />
-                <span>Direct UPI / QR Settlement</span>
+                <Building2 size={16} className="text-emerald-600" />
+                <span>Custom B2B Enterprise Arrangements</span>
               </div>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Pay directly from any business bank account via UPI. Zero recurring auto-debit charges. Invoices automatically issued to your company.
+                Because NetZeroMart is a specialized B2B marketplace, businesses requiring high-volume quotas or bespoke enterprise billing can contact our sales team directly for custom packages.
               </p>
             </div>
           </div>
 
           {/* Notice about expired catalogues */}
           <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/60 text-xs text-amber-900 leading-relaxed">
-            <span className="font-bold">Storefront Visibility Notice:</span> Product and article listings remain private to your portal until your annual subscription payment is confirmed. All your drafted listings and uploads will be preserved safely.
+            <span className="font-bold">Catalogue Visibility Notice:</span> Listings remain in drafted mode inside your portal until your annual subscription is activated. All your drafted products and media uploads are safely preserved.
           </div>
 
           {/* Action button */}
@@ -98,7 +104,7 @@ export default function Onboarding() {
               disabled={submitting}
               className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm bg-slate-950 hover:bg-slate-800 text-white transition shadow-md active:scale-95 disabled:opacity-50"
             >
-              <span>Activate Annual Subscription (UPI / QR)</span>
+              <span>Choose Plan & Request Activation</span>
               <ArrowRight size={16} />
             </button>
             <button

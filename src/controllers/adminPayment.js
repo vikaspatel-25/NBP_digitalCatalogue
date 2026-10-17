@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import { v2 as cloudinary } from 'cloudinary';
 import PlatformSettings from '../models/settings.model.js';
 import PaymentRequest from '../models/paymentRequest.model.js';
+import SubscriptionPlan, { DEFAULT_PLANS } from '../models/plan.model.js';
 import ApprovedUser from '../models/approved.user.model.js';
 import User from '../models/user.model.js';
 import {
@@ -16,7 +17,7 @@ const __dirname = path.dirname(__filename);
 const reactIndexPath = path.resolve(process.cwd(), 'frontend/dist/index.html');
 
 /**
- * Serve SPA index for admin payment pages
+ * Serve SPA index for admin payment & plan pages
  */
 export async function adminPaymentPageController(req, res) {
   try {
@@ -33,42 +34,51 @@ export async function getOrCreateSettings() {
   let settings = await PlatformSettings.findOne({});
   if (!settings) {
     settings = await PlatformSettings.create({
+      contactEmail: '',
+      contactPhone: '',
+      customPlanNote: 'NetZeroMart is a dedicated B2B trade platform. Contact our sales desk for bespoke enterprise quotes, custom quotas, and corporate SLA contracts.',
+      allowImages: true,
+      allowVideos: true,
+      allowYoutube: true,
+      maxImagesPerProduct: 10,
+      maxImageSizeMb: 10,
+      maxVideosPerProduct: 2,
+      maxVideoSizeMb: 15,
+      maxVideoDurationSeconds: 30,
+      articleMaxCoverSizeMb: 10,
       upiId: '',
       upiName: '',
       qrCode: { url: '', public_id: '' },
-      contactEmail: '',
-      contactPhone: '',
       notes: ''
     });
-  } else if (settings.upiId === 'netzeromart@upi') {
-    // Clean up any previously initialized dummy values
-    settings.upiId = '';
-    settings.upiName = '';
-    settings.contactPhone = '';
-    settings.notes = '';
-    await settings.save();
   }
   return settings;
 }
 
 /**
- * Helper to upload buffer to Cloudinary
+ * Helper to get or seed Subscription Plans
  */
-function uploadBufferToCloudinary(buffer, folder = 'nbp_payments') {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: 'image' },
-      (error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      }
-    );
-    stream.end(buffer);
+export async function getOrSeedPlans() {
+  let plans = await SubscriptionPlan.find({}).sort({ sortOrder: 1, createdAt: 1 }).lean();
+  if (!plans || plans.length === 0) {
+    await SubscriptionPlan.insertMany(DEFAULT_PLANS);
+    plans = await SubscriptionPlan.find({}).sort({ sortOrder: 1, createdAt: 1 }).lean();
+  }
+  // Ensure percentage discount is calculated for all plans
+  return plans.map(p => {
+    let pct = p.discountPercentage;
+    if ((pct === undefined || pct === null || pct === 0) && p.originalPrice > p.discountedPrice) {
+      pct = Math.round(((p.originalPrice - p.discountedPrice) / p.originalPrice) * 100);
+    }
+    return {
+      ...p,
+      discountPercentage: pct || 0
+    };
   });
 }
 
 /**
- * GET /api/admin/payment-settings
+ * GET /api/admin/payment-settings (Media & B2B Settings)
  */
 export async function getAdminPaymentSettings(req, res) {
   try {
@@ -82,53 +92,184 @@ export async function getAdminPaymentSettings(req, res) {
 
 /**
  * POST /api/admin/payment-settings
- * Updates UPI ID, UPI Name, Phone, and optional new QR code image
+ * Updates Media controls, file size limits, and B2B sales contact info
  */
 export async function updateAdminPaymentSettings(req, res) {
   try {
     const settings = await getOrCreateSettings();
-    const { upiId, upiName, contactEmail, contactPhone, notes } = req.body;
+    const {
+      contactEmail,
+      contactPhone,
+      customPlanNote,
+      allowImages,
+      allowVideos,
+      allowYoutube,
+      maxImagesPerProduct,
+      maxImageSizeMb,
+      maxVideosPerProduct,
+      maxVideoSizeMb,
+      maxVideoDurationSeconds,
+      articleMaxCoverSizeMb,
+      notes,
+      upiId,
+      upiName
+    } = req.body;
 
-    if (upiId !== undefined) settings.upiId = upiId.trim();
-    if (upiName !== undefined) settings.upiName = upiName.trim();
-    if (contactEmail !== undefined) settings.contactEmail = contactEmail.trim();
-    if (contactPhone !== undefined) settings.contactPhone = contactPhone.trim();
-    if (notes !== undefined) settings.notes = notes.trim();
+    if (contactEmail !== undefined) settings.contactEmail = String(contactEmail).trim();
+    if (contactPhone !== undefined) settings.contactPhone = String(contactPhone).trim();
+    if (customPlanNote !== undefined) settings.customPlanNote = String(customPlanNote).trim();
+    if (notes !== undefined) settings.notes = String(notes).trim();
+    if (upiId !== undefined) settings.upiId = String(upiId).trim();
+    if (upiName !== undefined) settings.upiName = String(upiName).trim();
 
-    if (req.file) {
-      // If previous QR exists, clean up
-      if (settings.qrCode?.public_id) {
-        try {
-          await cloudinary.uploader.destroy(settings.qrCode.public_id);
-        } catch (cErr) {
-          console.warn('Could not delete old QR code from Cloudinary:', cErr.message);
-        }
-      }
+    // Media rate limits & format toggles
+    if (allowImages !== undefined) settings.allowImages = Boolean(allowImages);
+    if (allowVideos !== undefined) settings.allowVideos = Boolean(allowVideos);
+    if (allowYoutube !== undefined) settings.allowYoutube = Boolean(allowYoutube);
 
-      const uploaded = await uploadBufferToCloudinary(req.file.buffer, 'nbp_qrcodes');
-      settings.qrCode = {
-        url: uploaded.secure_url || uploaded.url,
-        public_id: uploaded.public_id
-      };
-    }
+    if (maxImagesPerProduct !== undefined) settings.maxImagesPerProduct = Math.max(1, Math.min(30, Number(maxImagesPerProduct) || 10));
+    if (maxImageSizeMb !== undefined) settings.maxImageSizeMb = Math.max(1, Math.min(50, Number(maxImageSizeMb) || 10));
+    if (maxVideosPerProduct !== undefined) settings.maxVideosPerProduct = Math.max(0, Math.min(10, Number(maxVideosPerProduct) || 2));
+    if (maxVideoSizeMb !== undefined) settings.maxVideoSizeMb = Math.max(1, Math.min(100, Number(maxVideoSizeMb) || 15));
+    if (maxVideoDurationSeconds !== undefined) settings.maxVideoDurationSeconds = Math.max(5, Math.min(300, Number(maxVideoDurationSeconds) || 30));
+    if (articleMaxCoverSizeMb !== undefined) settings.articleMaxCoverSizeMb = Math.max(1, Math.min(50, Number(articleMaxCoverSizeMb) || 10));
 
     settings.updatedAt = new Date();
     await settings.save();
 
     return res.json({
       success: true,
-      message: 'Payment settings updated successfully',
+      message: 'Media and platform configuration updated successfully',
       settings
     });
   } catch (error) {
-    console.error('Error updating payment settings:', error);
+    console.error('Error updating settings:', error);
     return res.status(500).json({ success: false, error: error?.message || 'Failed to update settings' });
   }
 }
 
 /**
+ * GET /api/admin/plans
+ * Returns all configured subscription plans for admin management
+ */
+export async function getAdminPlans(req, res) {
+  try {
+    const plans = await getOrSeedPlans();
+    return res.json({ success: true, plans });
+  } catch (error) {
+    console.error('Error fetching admin plans:', error);
+    return res.status(500).json({ success: false, error: 'Failed to fetch subscription plans' });
+  }
+}
+
+/**
+ * POST /api/admin/plans
+ * Admin creates or updates a subscription plan with live price, discount, and quota settings
+ */
+export async function saveAdminPlan(req, res) {
+  try {
+    const {
+      planId,
+      name,
+      originalPrice,
+      discountedPrice,
+      billingCycle,
+      badge,
+      productMonthlyLimit,
+      articleMonthlyLimit,
+      maxVideosPerProduct,
+      maxVideoSizeMb,
+      features,
+      isActive,
+      sortOrder
+    } = req.body;
+
+    if (!planId || !name) {
+      return res.status(400).json({ success: false, error: 'Plan ID and Plan Name are required' });
+    }
+
+    const origPrice = Number(originalPrice) >= 0 ? Number(originalPrice) : 0;
+    const discPrice = Number(discountedPrice) >= 0 ? Number(discountedPrice) : 0;
+    const discountPct = origPrice > discPrice && origPrice > 0
+      ? Math.round(((origPrice - discPrice) / origPrice) * 100)
+      : 0;
+
+    let plan = await SubscriptionPlan.findOne({ planId: planId.trim() });
+    if (!plan) {
+      plan = new SubscriptionPlan({
+        planId: planId.trim(),
+        name: name.trim(),
+        originalPrice: origPrice,
+        discountedPrice: discPrice,
+        discountPercentage: discountPct,
+        billingCycle: billingCycle || 'Per Year',
+        badge: badge || '',
+        productMonthlyLimit: Number(productMonthlyLimit) || 25,
+        articleMonthlyLimit: Number(articleMonthlyLimit) || 50,
+        maxVideosPerProduct: Number(maxVideosPerProduct) || 1,
+        maxVideoSizeMb: Number(maxVideoSizeMb) || 15,
+        features: Array.isArray(features) ? features : [],
+        isActive: isActive !== undefined ? Boolean(isActive) : true,
+        sortOrder: Number(sortOrder) || 0
+      });
+    } else {
+      plan.name = name.trim();
+      plan.originalPrice = origPrice;
+      plan.discountedPrice = discPrice;
+      plan.discountPercentage = discountPct;
+      if (billingCycle !== undefined) plan.billingCycle = billingCycle;
+      if (badge !== undefined) plan.badge = badge;
+      if (productMonthlyLimit !== undefined) plan.productMonthlyLimit = Number(productMonthlyLimit);
+      if (articleMonthlyLimit !== undefined) plan.articleMonthlyLimit = Number(articleMonthlyLimit);
+      if (maxVideosPerProduct !== undefined) plan.maxVideosPerProduct = Number(maxVideosPerProduct);
+      if (maxVideoSizeMb !== undefined) plan.maxVideoSizeMb = Number(maxVideoSizeMb);
+      if (features !== undefined) plan.features = Array.isArray(features) ? features : [];
+      if (isActive !== undefined) plan.isActive = Boolean(isActive);
+      if (sortOrder !== undefined) plan.sortOrder = Number(sortOrder);
+    }
+
+    await plan.save();
+
+    return res.json({
+      success: true,
+      message: `Plan "${plan.name}" successfully saved! Discount calculated as ${discountPct}% OFF.`,
+      plan
+    });
+  } catch (error) {
+    console.error('Error saving plan:', error);
+    return res.status(500).json({ success: false, error: error?.message || 'Failed to save plan' });
+  }
+}
+
+/**
+ * DELETE /api/admin/plans/:planId
+ * Toggle or delete a subscription plan
+ */
+export async function deleteAdminPlan(req, res) {
+  try {
+    const { planId } = req.params;
+    const plan = await SubscriptionPlan.findOne({ planId });
+    if (!plan) {
+      return res.status(404).json({ success: false, error: 'Plan not found' });
+    }
+
+    plan.isActive = !plan.isActive;
+    await plan.save();
+
+    return res.json({
+      success: true,
+      message: `Plan "${plan.name}" is now ${plan.isActive ? 'Active' : 'Inactive'}`,
+      plan
+    });
+  } catch (error) {
+    console.error('Error toggling plan:', error);
+    return res.status(500).json({ success: false, error: 'Failed to update plan status' });
+  }
+}
+
+/**
  * GET /api/admin/payment-requests
- * Returns all payment requests with optional filter (pending, approved, rejected)
+ * Returns all subscription requests with optional filter (pending, approved, rejected)
  */
 export async function getPaymentRequests(req, res) {
   try {
@@ -155,7 +296,7 @@ export async function getPaymentRequests(req, res) {
       }
     });
   } catch (error) {
-    console.error('Error fetching payment requests:', error);
+    console.error('Error fetching subscription requests:', error);
     return res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 }
@@ -173,11 +314,11 @@ async function findVendor(userId) {
 
 /**
  * POST /api/admin/payment-requests/verify
- * Approves or Rejects a vendor's manual payment
+ * Approves or Rejects a vendor's subscription activation request
  */
 export async function verifyPaymentRequest(req, res) {
   try {
-    const { requestId, action, plan, paymentReceivedDate, adminNotes, rejectionReason } = req.body;
+    const { requestId, action, plan, durationDays = 365, adminNotes, rejectionReason } = req.body;
 
     if (!requestId || !['approve', 'reject'].includes(action)) {
       return res.status(400).json({ success: false, error: 'Invalid verification parameters' });
@@ -185,11 +326,11 @@ export async function verifyPaymentRequest(req, res) {
 
     const request = await PaymentRequest.findById(requestId);
     if (!request) {
-      return res.status(404).json({ success: false, error: 'Payment request not found' });
+      return res.status(404).json({ success: false, error: 'Subscription request not found' });
     }
 
     if (request.status !== 'pending') {
-      return res.status(400).json({ success: false, error: `This payment is already ${request.status}` });
+      return res.status(400).json({ success: false, error: `This request is already ${request.status}` });
     }
 
     const vendor = await findVendor(request.userId);
@@ -199,8 +340,7 @@ export async function verifyPaymentRequest(req, res) {
 
     if (action === 'reject') {
       request.status = 'rejected';
-      request.rejectionReason = rejectionReason || 'Payment could not be matched with bank records.';
-      request.adminNotes = adminNotes || '';
+      request.adminNotes = adminNotes || rejectionReason || 'Subscription request could not be approved at this time.';
       request.verifiedAt = new Date();
       await request.save();
 
@@ -209,87 +349,86 @@ export async function verifyPaymentRequest(req, res) {
         to: vendor.email,
         companyName: vendor.companyName,
         userName: vendor.userName,
-        utrNumber: request.utrNumber,
-        reason: request.rejectionReason
+        utrNumber: request.utrNumber || 'N/A',
+        reason: request.adminNotes
       }).catch(err => console.error('Error sending rejection email:', err));
 
       return res.json({
         success: true,
-        message: 'Payment request marked as rejected',
+        message: 'Subscription request has been marked as rejected',
         request
       });
     }
 
     // ACTION === 'approve'
-    const finalPlan = (plan === 'yearly_2400' || plan === 'yearly_1200')
-      ? plan
-      : (request.selectedPlan || 'yearly_1200');
+    const finalPlanId = plan || request.selectedPlan || 'yearly_1200';
+    const planDoc = await SubscriptionPlan.findOne({ planId: finalPlanId }).lean();
 
-    const paymentDate = paymentReceivedDate ? new Date(paymentReceivedDate) : new Date();
+    const activationDate = new Date();
+    const days = Number(durationDays) > 0 ? Number(durationDays) : 365;
 
-    // Calculate expiry: 365 days from paymentDate, or extend if current expiry is in future
+    // Calculate expiry: extending if current expiry is in the future
     const now = new Date();
     const currentExpiry = vendor.subscription?.expiresAt ? new Date(vendor.subscription.expiresAt) : null;
-    const baseDate = (currentExpiry && currentExpiry > now) ? currentExpiry : paymentDate;
-    const newExpiresAt = new Date(baseDate.getTime() + 365 * 24 * 60 * 60 * 1000);
+    const baseDate = (currentExpiry && currentExpiry > now) ? currentExpiry : activationDate;
+    const newExpiresAt = new Date(baseDate.getTime() + days * 24 * 60 * 60 * 1000);
 
-    // Quotas: 25/50 for 1200, 75/150 for 2400
-    const isPro = finalPlan === 'yearly_2400';
-    const productMonthlyLimit = isPro ? 75 : 25;
-    const articleMonthlyLimit = isPro ? 150 : 50;
+    // Apply quotas dynamically from planDoc or default
+    const productMonthlyLimit = planDoc?.productMonthlyLimit || (finalPlanId === 'yearly_2400' ? 75 : 25);
+    const articleMonthlyLimit = planDoc?.articleMonthlyLimit || (finalPlanId === 'yearly_2400' ? 150 : 50);
+    const maxVideoSizeMb = planDoc?.maxVideoSizeMb || 15;
 
     // Update Vendor Record
     vendor.subscription = {
-      plan: finalPlan,
+      plan: finalPlanId,
       status: 'active',
-      startDate: vendor.subscription?.startDate || paymentDate,
+      startDate: vendor.subscription?.startDate || activationDate,
       expiresAt: newExpiresAt,
-      lastPaymentReceivedDate: paymentDate,
-      lastUtr: request.utrNumber,
+      lastPaymentReceivedDate: activationDate,
       lastPaymentRequestId: request._id.toString()
     };
     vendor.limits = {
       productMonthlyLimit,
       articleMonthlyLimit,
       maxVideoLengthSeconds: 30,
-      maxVideoSizeMb: 15
+      maxVideoSizeMb
     };
     await vendor.save();
 
-    // Update Payment Request Record
+    // Update Subscription Request Record
     request.status = 'approved';
-    request.approvedPlan = finalPlan;
-    request.paymentReceivedDate = paymentDate;
-    request.durationDays = 365;
+    request.approvedPlan = finalPlanId;
+    request.paymentReceivedDate = activationDate;
+    request.durationDays = days;
     request.activatedExpiresAt = newExpiresAt;
     request.adminNotes = adminNotes || '';
     request.verifiedAt = new Date();
     request.verifiedBy = 'admin';
     await request.save();
 
-    // Send Approval & Activation Email with Invoice details
+    // Send Activation Email
     sendManualPaymentApprovedEmail({
       to: vendor.email,
       companyName: vendor.companyName,
       userName: vendor.userName,
-      plan: finalPlan,
-      amount: isPro ? 2400 : 1200,
-      utrNumber: request.utrNumber,
-      paymentDate,
+      plan: finalPlanId,
+      amount: planDoc?.discountedPrice || (finalPlanId === 'yearly_2400' ? 2400 : 1200),
+      utrNumber: 'DIRECT_B2B_APPROVAL',
+      paymentDate: activationDate,
       expiresAt: newExpiresAt,
       productMonthlyLimit,
       articleMonthlyLimit
-    }).catch(err => console.error('Error sending payment approval email:', err));
+    }).catch(err => console.error('Error sending approval email:', err));
 
     return res.json({
       success: true,
-      message: 'Payment approved and subscription activated for 1 year!',
+      message: `Subscription approved! ${vendor.companyName} is now active for ${days} days with ${productMonthlyLimit} products & ${articleMonthlyLimit} articles monthly quota.`,
       subscription: vendor.subscription,
       limits: vendor.limits,
       request
     });
   } catch (error) {
-    console.error('Error verifying payment request:', error);
+    console.error('Error verifying subscription request:', error);
     return res.status(500).json({ success: false, error: error?.message || 'Verification failed' });
   }
 }

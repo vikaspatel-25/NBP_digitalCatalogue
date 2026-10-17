@@ -18,8 +18,10 @@ import {
   RefreshCw,
   Calendar
 } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 export default function UserApproval() {
+  const { toast } = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -34,6 +36,7 @@ export default function UserApproval() {
       .then(res => setUsers(res.data.users || []))
       .catch(err => {
         console.error('Failed to load pending users:', err);
+        toast.error('Failed to load pending vendor registrations.', { title: 'Network Error' });
       })
       .finally(() => setLoading(false));
   };
@@ -45,6 +48,7 @@ export default function UserApproval() {
   const handleCopy = (text, label = 'Text') => {
     navigator.clipboard.writeText(text);
     setFeedback({ type: 'success', message: `${label} copied to clipboard!` });
+    toast.info(`${label} copied to clipboard!`);
     setTimeout(() => setFeedback({ type: '', message: '' }), 2500);
   };
 
@@ -55,16 +59,20 @@ export default function UserApproval() {
     try {
       const res = await axios.post('/api/admin/userApproval/approve', { userId: user._id });
       setUsers(prev => prev.filter(u => String(u._id) !== String(user._id)));
+      const msg = `Approved ${user.companyName}! Temporary passkey has been generated and dispatched to ${user.email}.`;
       setFeedback({ 
         type: 'success', 
-        message: `Approved ${user.companyName}! Temporary passkey has been generated and dispatched to ${user.email}.` 
+        message: msg 
       });
+      toast.success(msg, { title: 'Vendor Approved' });
     } catch (err) {
       console.error('Approve user error:', err);
+      const errMsg = err.response?.data?.message || err.response?.data?.error || 'Failed to approve vendor.';
       setFeedback({ 
         type: 'error', 
-        message: err.response?.data?.message || err.response?.data?.error || 'Failed to approve vendor.' 
+        message: errMsg 
       });
+      toast.error(errMsg, { title: 'Approval Failed' });
     } finally {
       setActionLoading(null);
     }
@@ -82,22 +90,28 @@ export default function UserApproval() {
       const res = await axios.post('/api/admin/userApproval/reject', { userId: targetId });
       if (res.data?.success !== false) {
         setUsers(prev => prev.filter(u => String(u._id) !== String(targetId)));
+        const msg = `Rejected registration for ${targetName || 'vendor'}.`;
         setFeedback({ 
           type: 'success', 
-          message: `Rejected registration for ${targetName || 'vendor'}.` 
+          message: msg 
         });
+        toast.success(msg, { title: 'Registration Rejected' });
         setRejectModal(null);
       } else {
-        setModalError(res.data?.error || res.data?.message || 'Failed to reject registration.');
+        const errText = res.data?.error || res.data?.message || 'Failed to reject registration.';
+        setModalError(errText);
+        toast.error(errText, { title: 'Rejection Failed' });
       }
     } catch (err) {
       console.error('Reject user error:', err);
       if (err.response?.status === 404) {
         setUsers(prev => prev.filter(u => String(u._id) !== String(targetId)));
+        const msg = `Rejected registration for ${targetName || 'vendor'}.`;
         setFeedback({ 
           type: 'success', 
-          message: `Rejected registration for ${targetName || 'vendor'}.` 
+          message: msg 
         });
+        toast.success(msg, { title: 'Registration Rejected' });
         setRejectModal(null);
       } else {
         const errMsg = err.response?.data?.message || err.response?.data?.error || 'Failed to reject registration. Please try again.';
@@ -106,6 +120,7 @@ export default function UserApproval() {
           type: 'error', 
           message: errMsg 
         });
+        toast.error(errMsg, { title: 'Rejection Failed' });
       }
     } finally {
       setActionLoading(null);

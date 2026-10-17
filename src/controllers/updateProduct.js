@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import cloudinary from "../config/cloudinary.js";
 import Product from "../models/product.model.js";
+import PlatformSettings from "../models/settings.model.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -184,8 +185,58 @@ async function updateProductController(req, res) {
       }
     }
 
-    // Upload newly added images
+    // Dynamic Admin Media Controls Enforcement
+    const settings = (await PlatformSettings.findOne({}).lean()) || {};
+
     const newImageFiles = (req.files && req.files.images) || [];
+    const newVideoFiles = (req.files && req.files.videos) || [];
+
+    if (settings.allowImages === false && newImageFiles.length > 0) {
+      if (isJsonRequest) return res.status(400).json({ success: false, error: "Image uploads are currently disabled by the platform administrator" });
+      return res.redirect(`${basePath}/updateProduct?id=${productId}&error=Image%20uploads%20disabled`);
+    }
+
+    const maxImages = settings.maxImagesPerProduct || 10;
+    if (preservedImages.length + newImageFiles.length > maxImages) {
+      const errText = `Maximum ${maxImages} product images allowed. Total would be ${preservedImages.length + newImageFiles.length}.`;
+      if (isJsonRequest) return res.status(400).json({ success: false, error: errText });
+      return res.redirect(`${basePath}/updateProduct?id=${productId}&error=${encodeURIComponent(errText)}`);
+    }
+
+    const maxImageBytes = (settings.maxImageSizeMb || 10) * 1024 * 1024;
+    for (const image of newImageFiles) {
+      if (image.size > maxImageBytes) {
+        const errText = `Image "${image.originalname || 'file'}" exceeds the ${settings.maxImageSizeMb || 10}MB limit.`;
+        if (isJsonRequest) return res.status(400).json({ success: false, error: errText });
+        return res.redirect(`${basePath}/updateProduct?id=${productId}&error=${encodeURIComponent(errText)}`);
+      }
+    }
+
+    if (newVideoFiles.length > 0) {
+      if (settings.allowVideos === false) {
+        const errText = "Direct video uploads are currently disabled by the platform administrator.";
+        if (isJsonRequest) return res.status(400).json({ success: false, error: errText });
+        return res.redirect(`${basePath}/updateProduct?id=${productId}&error=${encodeURIComponent(errText)}`);
+      }
+
+      const globalMaxVideos = settings.maxVideosPerProduct !== undefined ? settings.maxVideosPerProduct : 2;
+      if (newVideoFiles.length > globalMaxVideos) {
+        const errText = `Maximum ${globalMaxVideos} videos allowed per product.`;
+        if (isJsonRequest) return res.status(400).json({ success: false, error: errText });
+        return res.redirect(`${basePath}/updateProduct?id=${productId}&error=${encodeURIComponent(errText)}`);
+      }
+
+      const maxVideoBytes = (settings.maxVideoSizeMb || 15) * 1024 * 1024;
+      for (const video of newVideoFiles) {
+        if (video.size > maxVideoBytes) {
+          const errText = `Video "${video.originalname || 'file'}" exceeds the ${settings.maxVideoSizeMb || 15}MB limit.`;
+          if (isJsonRequest) return res.status(400).json({ success: false, error: errText });
+          return res.redirect(`${basePath}/updateProduct?id=${productId}&error=${encodeURIComponent(errText)}`);
+        }
+      }
+    }
+
+    // Upload newly added images
     const uploadedImages = [];
     for (const image of newImageFiles) {
       const result = await uploadToCloudinary(image.buffer, "image");
@@ -193,7 +244,7 @@ async function updateProductController(req, res) {
     }
 
     const finalImages = [...preservedImages, ...uploadedImages];
-    if (finalImages.length === 0) {
+    if (finalImages.length === 0 && settings.allowImages !== false) {
       if (isJsonRequest) {
         return res.status(400).json({ success: false, error: "At least one product image is required." });
       }
@@ -219,7 +270,6 @@ async function updateProductController(req, res) {
       }
     }
 
-    const newVideoFiles = (req.files && req.files.videos) || [];
     const uploadedVideos = [];
     for (const video of newVideoFiles) {
       const result = await uploadToCloudinary(video.buffer, "video");

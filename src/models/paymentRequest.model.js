@@ -31,18 +31,35 @@ const paymentRequestSchema = new mongoose.Schema(
     },
     selectedPlan: {
       type: String,
-      enum: ['yearly_1200', 'yearly_2400'],
       required: true
+    },
+    planName: {
+      type: String,
+      default: '',
+      trim: true
+    },
+    originalPrice: {
+      type: Number,
+      default: 0
+    },
+    discountedPrice: {
+      type: Number,
+      default: 0
     },
     amount: {
       type: Number,
-      required: true // 1200 or 2400
+      default: 0
     },
+    vendorNote: {
+      type: String,
+      default: '',
+      trim: true
+    },
+    // Optional legacy fields for backward compatibility
     utrNumber: {
       type: String,
-      required: true,
-      trim: true,
-      index: true
+      default: '',
+      trim: true
     },
     screenshot: {
       url: { type: String, default: '' },
@@ -57,7 +74,6 @@ const paymentRequestSchema = new mongoose.Schema(
     // Set by Admin upon approval
     approvedPlan: {
       type: String,
-      enum: ['yearly_1200', 'yearly_2400', null],
       default: null
     },
     paymentReceivedDate: {

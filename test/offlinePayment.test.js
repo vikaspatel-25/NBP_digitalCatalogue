@@ -2,66 +2,94 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import PlatformSettings from '../src/models/settings.model.js';
 import PaymentRequest from '../src/models/paymentRequest.model.js';
+import SubscriptionPlan from '../src/models/plan.model.js';
 import { PLANS_CONFIG } from '../src/controllers/vendorPayment.js';
 import { checkProductUploadQuota, checkArticleUploadQuota } from '../src/services/quotaService.js';
 
 describe('Corporate B2B Offline UPI/QR Accounting & Payment Modules', () => {
   describe('PlatformSettings Model Schema', () => {
-    it('initializes with default UPI, QR and contact values', () => {
+    it('initializes with default UPI, QR, contact and media control values', () => {
       const settings = new PlatformSettings({});
       assert.strictEqual(settings.upiId, '');
       assert.strictEqual(settings.upiName, '');
       assert.strictEqual(typeof settings.notes, 'string');
+      assert.strictEqual(settings.allowImages, true);
+      assert.strictEqual(settings.allowVideos, true);
+      assert.strictEqual(settings.maxImagesPerProduct, 10);
+      assert.strictEqual(settings.maxVideoSizeMb, 15);
     });
 
-    it('accepts custom UPI ID and Payee Name', () => {
+    it('accepts custom media limits and B2B sales contact info', () => {
       const settings = new PlatformSettings({
-        upiId: 'corporate@icici',
-        upiName: 'NetZeroMart Enterprise',
-        contactEmail: 'finance@netzeromart.com',
+        contactEmail: 'sales@netzeromart.com',
         contactPhone: '+91 99999 88888',
-        notes: 'Pay using IMPS/NEFT or UPI'
+        customPlanNote: 'Bespoke corporate plans available on request',
+        allowImages: true,
+        allowVideos: false,
+        maxImagesPerProduct: 15,
+        maxImageSizeMb: 8,
+        maxVideoSizeMb: 20
       });
-      assert.strictEqual(settings.upiId, 'corporate@icici');
-      assert.strictEqual(settings.upiName, 'NetZeroMart Enterprise');
-      assert.strictEqual(settings.contactEmail, 'finance@netzeromart.com');
+      assert.strictEqual(settings.contactEmail, 'sales@netzeromart.com');
+      assert.strictEqual(settings.allowVideos, false);
+      assert.strictEqual(settings.maxImagesPerProduct, 15);
+      assert.strictEqual(settings.maxImageSizeMb, 8);
     });
   });
 
-  describe('PaymentRequest Model Schema', () => {
-    it('validates a proper payment request with pending status', () => {
+  describe('SubscriptionPlan Dynamic Pricing Model Schema', () => {
+    it('validates a plan and calculates discount percentage correctly', () => {
+      const plan = new SubscriptionPlan({
+        planId: 'yearly_1200',
+        name: 'Standard Annual Plan',
+        originalPrice: 1800,
+        discountedPrice: 1200,
+        productMonthlyLimit: 25,
+        articleMonthlyLimit: 50
+      });
+
+      // trigger pre-save hook calculation
+      const err = plan.validateSync();
+      assert.strictEqual(err, undefined);
+      // Pre-save calculation logic: ((1800 - 1200) / 1800) * 100 = 33%
+      assert.strictEqual(Math.round(((plan.originalPrice - plan.discountedPrice) / plan.originalPrice) * 100), 33);
+    });
+  });
+
+  describe('PaymentRequest (Subscription Request) Model Schema', () => {
+    it('validates a proper subscription request with pending status without requiring UTR', () => {
       const req = new PaymentRequest({
         userId: '507f1f77bcf86cd799439011',
         companyName: 'GreenTech Innovations',
         userName: 'Aarav Sharma',
         email: 'aarav@greentech.com',
         selectedPlan: 'yearly_1200',
-        amount: 1200,
-        utrNumber: '423409182341',
+        planName: 'Standard Annual Plan',
+        originalPrice: 1800,
+        discountedPrice: 1200,
+        vendorNote: 'Looking forward to listing sustainable packaging products',
         status: 'pending'
       });
 
       const err = req.validateSync();
       assert.strictEqual(err, undefined);
       assert.strictEqual(req.status, 'pending');
-      assert.strictEqual(req.amount, 1200);
+      assert.strictEqual(req.discountedPrice, 1200);
       assert.strictEqual(req.selectedPlan, 'yearly_1200');
     });
 
-    it('rejects invalid plan or missing UTR reference', () => {
+    it('rejects when required fields are missing', () => {
       const req = new PaymentRequest({
-        userId: '507f1f77bcf86cd799439011',
-        companyName: 'GreenTech Innovations',
-        email: 'aarav@greentech.com',
-        selectedPlan: 'monthly_invalid',
-        amount: 1200
-        // missing utrNumber
+        // missing userId, companyName, email, selectedPlan
+        vendorNote: 'No fields'
       });
 
       const err = req.validateSync();
       assert.ok(err, 'Validation should fail');
-      assert.ok(err.errors.utrNumber, 'Missing utrNumber should trigger error');
-      assert.ok(err.errors.selectedPlan, 'Invalid selectedPlan should trigger error');
+      assert.ok(err.errors.userId, 'Missing userId should trigger error');
+      assert.ok(err.errors.companyName, 'Missing companyName should trigger error');
+      assert.ok(err.errors.email, 'Missing email should trigger error');
+      assert.ok(err.errors.selectedPlan, 'Missing selectedPlan should trigger error');
     });
 
     it('accepts approval fields including paymentReceivedDate and activatedExpiresAt', () => {
@@ -75,7 +103,6 @@ describe('Corporate B2B Offline UPI/QR Accounting & Payment Modules', () => {
         email: 'aarav@greentech.com',
         selectedPlan: 'yearly_2400',
         amount: 2400,
-        utrNumber: 'UTR987654321012',
         status: 'approved',
         approvedPlan: 'yearly_2400',
         paymentReceivedDate: now,
@@ -121,6 +148,38 @@ describe('Corporate B2B Offline UPI/QR Accounting & Payment Modules', () => {
 
       const artQuota = await checkArticleUploadQuota(null);
       assert.strictEqual(artQuota.allowed, true);
+    });
+
+    it('calculates 50% discount for custom plan with originalPrice 2000 and discountedPrice 1000', () => {
+      const plan = new SubscriptionPlan({
+        planId: 'custom_half',
+        name: 'Half Price Custom Plan',
+        originalPrice: 2000,
+        discountedPrice: 1000,
+        productMonthlyLimit: 50,
+        articleMonthlyLimit: 100
+      });
+
+      const err = plan.validateSync();
+      assert.strictEqual(err, undefined);
+      const discountPct = Math.round(((plan.originalPrice - plan.discountedPrice) / plan.originalPrice) * 100);
+      assert.strictEqual(discountPct, 50);
+    });
+
+    it('enforces media format toggles and constraints correctly', () => {
+      const settings = new PlatformSettings({
+        allowImages: true,
+        allowVideos: false,
+        allowYoutube: false,
+        maxImagesPerProduct: 12,
+        maxImageSizeMb: 8,
+        maxVideosPerProduct: 0
+      });
+
+      assert.strictEqual(settings.allowVideos, false);
+      assert.strictEqual(settings.allowYoutube, false);
+      assert.strictEqual(settings.maxImagesPerProduct, 12);
+      assert.strictEqual(settings.maxImageSizeMb, 8);
     });
   });
 });

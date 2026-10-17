@@ -23,8 +23,10 @@ import {
   Send,
   CreditCard
 } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 export default function UserManagement() {
+  const { toast } = useToast();
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState({ totalVendors: 0, active: 0, expiringSoon: 0, pendingPayment: 0, expired: 0 });
   const [subscriptionFilter, setSubscriptionFilter] = useState('all');
@@ -53,7 +55,9 @@ export default function UserManagement() {
       }
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || 'Failed to load active users. Please refresh the page.');
+      const msg = err.response?.data?.error || err.response?.data?.message || 'Failed to load active users. Please refresh the page.';
+      setError(msg);
+      toast.error(msg, { title: 'Network Notice' });
     } finally {
       setLoading(false);
     }
@@ -66,6 +70,7 @@ export default function UserManagement() {
   const handleCopy = (text, id) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
+    toast.info('Copied to clipboard: ' + text);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -74,14 +79,18 @@ export default function UserManagement() {
     try {
       const res = await axios.post('/api/admin/send-reminder', { userId: user._id });
       if (res.data?.success) {
-        setSuccessToast(`Renewal reminder email successfully sent to ${user.email}!`);
+        const msg = `Renewal reminder email successfully sent to ${user.email}!`;
+        setSuccessToast(msg);
+        toast.success(msg, { title: 'Reminder Dispatched' });
         setTimeout(() => setSuccessToast(''), 4000);
       } else {
-        alert(res.data?.error || 'Failed to send reminder email');
+        const errText = res.data?.error || 'Failed to send reminder email';
+        toast.error(errText, { title: 'Email Notice Failed' });
       }
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.error || 'Network error sending reminder email');
+      const errText = err.response?.data?.error || 'Network error sending reminder email';
+      toast.error(errText, { title: 'Network Failure' });
     } finally {
       setSendingReminderId(null);
     }
@@ -95,14 +104,20 @@ export default function UserManagement() {
       const res = await axios.post('/api/admin/userManagement', { userId: deletingUser._id });
       if (res.data && res.data.success) {
         setUsers(prev => prev.filter(u => u._id !== deletingUser._id));
-        setSuccessToast(`Vendor "${deletingUser.companyName}" successfully removed.`);
+        const msg = `Vendor "${deletingUser.companyName}" successfully removed.`;
+        setSuccessToast(msg);
+        toast.success(msg, { title: 'Vendor Removed' });
         setTimeout(() => setSuccessToast(''), 4000);
         setDeletingUser(null);
       } else {
-        setDeleteError(res.data?.error || 'Failed to remove vendor. Please try again.');
+        const errText = res.data?.error || 'Failed to remove vendor. Please try again.';
+        setDeleteError(errText);
+        toast.error(errText, { title: 'Removal Failed' });
       }
     } catch (err) {
-      setDeleteError(err.response?.data?.error || 'Network error occurred while removing vendor.');
+      const errText = err.response?.data?.error || 'Network error occurred while removing vendor.';
+      setDeleteError(errText);
+      toast.error(errText, { title: 'Removal Failed' });
     } finally {
       setIsDeleting(false);
     }

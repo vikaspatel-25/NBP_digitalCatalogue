@@ -6,7 +6,6 @@ import {
   XCircle,
   Clock,
   Search,
-  ExternalLink,
   Copy,
   Check,
   RefreshCw,
@@ -15,16 +14,18 @@ import {
   Phone,
   Calendar,
   AlertCircle,
-  Eye,
   X,
   FileText,
-  Sparkles,
   ShieldCheck,
-  ArrowRight
+  ArrowRight,
+  Layers
 } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 export default function AdminPaymentRequests() {
+  const { toast: appToast } = useToast();
   const [requests, setRequests] = useState([]);
+  const [plans, setPlans] = useState([]);
   const [counts, setCounts] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
   const [filter, setFilter] = useState('pending');
   const [search, setSearch] = useState('');
@@ -32,26 +33,33 @@ export default function AdminPaymentRequests() {
   const [copiedId, setCopiedId] = useState(null);
 
   // Approval modal state
-  const [activeModal, setActiveModal] = useState(null); // { type: 'approve' | 'reject' | 'screenshot', request }
+  const [activeModal, setActiveModal] = useState(null); // { type: 'approve' | 'reject', request }
   const [approvalPlan, setApprovalPlan] = useState('yearly_1200');
-  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [durationDays, setDurationDays] = useState(365);
   const [adminNotes, setAdminNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [submittingAction, setSubmittingAction] = useState(false);
-
-  const [toast, setToast] = useState({ type: '', message: '' });
+  const [modalError, setModalError] = useState('');
 
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('/api/admin/payment-requests');
-      if (res.data?.success) {
-        setRequests(res.data.requests || []);
-        if (res.data.counts) setCounts(res.data.counts);
+      const [reqRes, planRes] = await Promise.all([
+        axios.get('/api/admin/payment-requests'),
+        axios.get('/api/admin/plans').catch(() => ({ data: { plans: [] } }))
+      ]);
+
+      if (reqRes.data?.success) {
+        setRequests(reqRes.data.requests || []);
+        if (reqRes.data.counts) setCounts(reqRes.data.counts);
+      }
+      if (planRes.data?.plans) {
+        setPlans(planRes.data.plans);
       }
     } catch (err) {
       console.error(err);
-      setToast({ type: 'error', message: 'Failed to fetch payment submissions.' });
+      const errMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to fetch subscription requests.';
+      appToast.error(errMsg, { title: 'Network Notice' });
     } finally {
       setLoading(false);
     }
@@ -64,29 +72,29 @@ export default function AdminPaymentRequests() {
   const handleCopy = (text, id) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
+    appToast.info('Copied to clipboard: ' + text);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
   const openApproveModal = (req) => {
     setApprovalPlan(req.selectedPlan || 'yearly_1200');
-    setPaymentDate(new Date().toISOString().split('T')[0]);
+    setDurationDays(365);
     setAdminNotes('');
+    setModalError('');
     setActiveModal({ type: 'approve', request: req });
   };
 
   const openRejectModal = (req) => {
-    setRejectionReason('Transaction ID could not be matched with our corporate bank statement.');
+    setRejectionReason('Subscription request could not be approved at this time.');
     setAdminNotes('');
+    setModalError('');
     setActiveModal({ type: 'reject', request: req });
-  };
-
-  const openScreenshotModal = (req) => {
-    setActiveModal({ type: 'screenshot', request: req });
   };
 
   const handleConfirmAction = async () => {
     if (!activeModal || !activeModal.request) return;
     setSubmittingAction(true);
+    setModalError('');
 
     try {
       const reqId = activeModal.request._id;
@@ -96,29 +104,30 @@ export default function AdminPaymentRequests() {
         requestId: reqId,
         action: isApprove ? 'approve' : 'reject',
         plan: isApprove ? approvalPlan : undefined,
-        paymentReceivedDate: isApprove ? paymentDate : undefined,
-        adminNotes,
+        durationDays: isApprove ? durationDays : undefined,
+        adminNotes: isApprove ? adminNotes : undefined,
         rejectionReason: !isApprove ? rejectionReason : undefined
       };
 
       const res = await axios.post('/api/admin/payment-requests/verify', payload);
 
       if (res.data?.success) {
-        setToast({
-          type: 'success',
-          message: isApprove
-            ? `Payment approved! ${activeModal.request.companyName} subscription activated for 1 year.`
-            : `Payment reference rejected. Notice sent to vendor.`
-        });
+        const successMsg = isApprove
+          ? `Subscription approved! ${activeModal.request.companyName} is active for ${durationDays} days.`
+          : `Subscription request rejected. Notice dispatched to vendor.`;
+        appToast.success(successMsg, { title: isApprove ? 'Subscription Activated' : 'Request Rejected' });
         setActiveModal(null);
         fetchRequests();
-        setTimeout(() => setToast({ type: '', message: '' }), 5000);
       } else {
-        setToast({ type: 'error', message: res.data?.error || 'Verification failed.' });
+        const errText = res.data?.error || 'Verification failed.';
+        setModalError(errText);
+        appToast.error(errText, { title: 'Action Error' });
       }
     } catch (err) {
       console.error(err);
-      setToast({ type: 'error', message: err.response?.data?.error || 'Network error processing verification.' });
+      const errText = err.response?.data?.error || err.response?.data?.message || 'Network error processing verification.';
+      setModalError(errText);
+      appToast.error(errText, { title: 'Network Failure' });
     } finally {
       setSubmittingAction(false);
     }
@@ -126,369 +135,372 @@ export default function AdminPaymentRequests() {
 
   const filteredRequests = requests.filter((r) => {
     if (filter !== 'all' && r.status !== filter) return false;
-    const q = search.toLowerCase();
-    return (
-      (r.companyName && r.companyName.toLowerCase().includes(q)) ||
-      (r.userName && r.userName.toLowerCase().includes(q)) ||
-      (r.email && r.email.toLowerCase().includes(q)) ||
-      (r.utrNumber && r.utrNumber.toLowerCase().includes(q))
-    );
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      const matchComp = (r.companyName || '').toLowerCase().includes(q);
+      const matchEmail = (r.email || '').toLowerCase().includes(q);
+      const matchUser = (r.userName || '').toLowerCase().includes(q);
+      const matchPlan = (r.planName || r.selectedPlan || '').toLowerCase().includes(q);
+      return matchComp || matchEmail || matchUser || matchPlan;
+    }
+    return true;
   });
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      {/* Toast Alert */}
-      {toast.message && (
-        <div
-          className={`p-4 rounded-xl border text-sm flex items-center justify-between shadow-sm animate-fade-in ${
-            toast.type === 'success'
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-              : 'bg-rose-50 border-rose-200 text-rose-800'
-          }`}
-        >
-          <div className="flex items-center gap-2 font-medium">
-            {toast.type === 'success' ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-            ) : (
-              <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
-            )}
-            <span>{toast.message}</span>
-          </div>
-          <button onClick={() => setToast({ type: '', message: '' })} className="hover:opacity-75">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
+    <div className="space-y-6 max-w-7xl mx-auto">
+      
       {/* Header Banner */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold tracking-wide uppercase mb-1.5">
-            <CreditCard className="w-3.5 h-3.5" />
-            <span>Accounts & Settlement Desk</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold tracking-wide uppercase mb-3 border border-blue-200/60">
+            <Layers size={14} />
+            <span>Commercial Accounts & Subscriptions</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-            Vendor Payment Approvals
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Subscription Requests
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Verify manual UPI / bank transfers, confirm payment receipt dates, and activate 365-day digital catalogues.
+          <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-xl">
+            Review incoming vendor plan requests, activate 365-day supplier catalogue access, and assign dynamic monthly product and article quotas.
           </p>
         </div>
 
         <button
           onClick={fetchRequests}
           disabled={loading}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition shadow-2xs active:scale-95 disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition active:scale-95 disabled:opacity-50 cursor-pointer self-start md:self-auto"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-blue-600' : ''}`} />
-          <span>Refresh Desk</span>
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+          <span>Refresh List</span>
         </button>
       </div>
 
-      {/* Filter Tabs & Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 bg-slate-200/60 p-1 rounded-xl">
-          <button
-            onClick={() => setFilter('pending')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
-              filter === 'pending'
-                ? 'bg-white text-slate-900 shadow-2xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
+      {/* Counts KPI Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <button
+          onClick={() => setFilter('pending')}
+          className={`p-5 rounded-2xl border text-left transition cursor-pointer ${
+            filter === 'pending'
+              ? 'bg-amber-500/10 border-amber-300 ring-2 ring-amber-500/20 shadow-xs'
+              : 'bg-white border-slate-200/80 hover:border-slate-300'
+          }`}
+        >
+          <div className="text-[11px] font-bold uppercase tracking-wider text-amber-700 mb-1 flex items-center gap-1.5">
+            <Clock size={13} />
             <span>Pending Review</span>
-            {counts.pending > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-slate-950">
-                {counts.pending}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setFilter('approved')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
-              filter === 'approved'
-                ? 'bg-white text-slate-900 shadow-2xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <span>Approved ({counts.approved})</span>
-          </button>
-          <button
-            onClick={() => setFilter('rejected')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
-              filter === 'rejected'
-                ? 'bg-white text-slate-900 shadow-2xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <span>Rejected ({counts.rejected})</span>
-          </button>
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
-              filter === 'all'
-                ? 'bg-white text-slate-900 shadow-2xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <span>All ({counts.total})</span>
-          </button>
-        </div>
+          </div>
+          <div className="text-2xl font-black text-slate-900">{counts.pending}</div>
+        </button>
 
-        <div className="relative min-w-[260px]">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search company, UTR, email..."
-            className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          />
-        </div>
+        <button
+          onClick={() => setFilter('approved')}
+          className={`p-5 rounded-2xl border text-left transition cursor-pointer ${
+            filter === 'approved'
+              ? 'bg-emerald-500/10 border-emerald-300 ring-2 ring-emerald-500/20 shadow-xs'
+              : 'bg-white border-slate-200/80 hover:border-slate-300'
+          }`}
+        >
+          <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 mb-1 flex items-center gap-1.5">
+            <CheckCircle2 size={13} />
+            <span>Activated</span>
+          </div>
+          <div className="text-2xl font-black text-slate-900">{counts.approved}</div>
+        </button>
+
+        <button
+          onClick={() => setFilter('rejected')}
+          className={`p-5 rounded-2xl border text-left transition cursor-pointer ${
+            filter === 'rejected'
+              ? 'bg-rose-500/10 border-rose-300 ring-2 ring-rose-500/20 shadow-xs'
+              : 'bg-white border-slate-200/80 hover:border-slate-300'
+          }`}
+        >
+          <div className="text-[11px] font-bold uppercase tracking-wider text-rose-700 mb-1 flex items-center gap-1.5">
+            <XCircle size={13} />
+            <span>Rejected</span>
+          </div>
+          <div className="text-2xl font-black text-slate-900">{counts.rejected}</div>
+        </button>
+
+        <button
+          onClick={() => setFilter('all')}
+          className={`p-5 rounded-2xl border text-left transition cursor-pointer ${
+            filter === 'all'
+              ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+              : 'bg-white border-slate-200/80 hover:border-slate-300'
+          }`}
+        >
+          <div className={`text-[11px] font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5 ${filter === 'all' ? 'text-slate-300' : 'text-slate-500'}`}>
+            <Layers size={13} />
+            <span>Total Requests</span>
+          </div>
+          <div className={`text-2xl font-black ${filter === 'all' ? 'text-white' : 'text-slate-900'}`}>{counts.total}</div>
+        </button>
       </div>
 
-      {/* Submissions List */}
-      {loading ? (
-        <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center">
-          <RefreshCw className="w-8 h-8 animate-spin text-slate-400 mx-auto mb-2" />
-          <p className="text-xs text-slate-500 font-medium">Loading payment verification requests...</p>
-        </div>
-      ) : filteredRequests.length === 0 ? (
-        <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center">
-          <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
-          <h3 className="text-sm font-bold text-slate-800">No payment requests found</h3>
-          <p className="text-xs text-slate-400 mt-1">
-            {filter === 'pending'
-              ? 'All vendor payment submissions have been reviewed and verified!'
-              : 'No matching payment records for the current filter.'}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredRequests.map((req) => {
-            const isPending = req.status === 'pending';
-            const isApproved = req.status === 'approved';
-            const isRejected = req.status === 'rejected';
+      {/* Search Input Bar */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs flex items-center gap-3">
+        <Search size={18} className="text-slate-400 flex-shrink-0" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by company name, contact person, email, or plan title..."
+          className="w-full text-xs text-slate-800 placeholder-slate-400 focus:outline-none"
+        />
+        {search && (
+          <button onClick={() => setSearch('')} className="text-slate-400 hover:text-slate-600 text-xs font-semibold cursor-pointer">
+            Clear
+          </button>
+        )}
+      </div>
 
-            const planName = req.selectedPlan === 'yearly_2400'
-              ? 'Enterprise Plan (₹2,400 / yr)'
-              : 'Standard Plan (₹1,200 / yr)';
+      {/* Requests Table */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-xs">
+        {loading ? (
+          <div className="p-16 text-center text-slate-400">
+            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2 text-slate-400" />
+            <p className="text-xs">Loading subscription requests...</p>
+          </div>
+        ) : filteredRequests.length === 0 ? (
+          <div className="p-16 text-center text-slate-400">
+            <Clock className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+            <p className="text-sm font-bold text-slate-700">No subscription requests found</p>
+            <p className="text-xs text-slate-400 mt-1">
+              {filter === 'pending' ? 'All incoming requests have been reviewed!' : 'No entries matching current filter.'}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <th className="py-4 px-4">Vendor & Company</th>
+                  <th className="py-4 px-4">Contact Details</th>
+                  <th className="py-4 px-4">Requested Plan</th>
+                  <th className="py-4 px-4">Vendor Notes</th>
+                  <th className="py-4 px-4">Requested Date</th>
+                  <th className="py-4 px-4">Status</th>
+                  <th className="py-4 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-slate-700">
+                {filteredRequests.map((req) => {
+                  const isPending = req.status === 'pending';
+                  const isApproved = req.status === 'approved';
 
-            return (
-              <div
-                key={req._id}
-                className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs hover:border-slate-300 transition flex flex-col lg:flex-row lg:items-center justify-between gap-4"
-              >
-                {/* Vendor & Payment Details */}
-                <div className="space-y-2 flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-bold text-slate-900 text-sm truncate">
-                      {req.companyName || 'Vendor Company'}
-                    </span>
-                    <span className="text-xs text-slate-400">({req.userName})</span>
+                  return (
+                    <tr key={req._id} className="hover:bg-slate-50/70 transition">
+                      
+                      {/* Vendor & Company */}
+                      <td className="py-4 px-4">
+                        <div className="font-extrabold text-slate-900 text-sm">
+                          {req.companyName}
+                        </div>
+                        {req.userName && (
+                          <div className="text-xs text-slate-500 mt-0.5">
+                            {req.userName}
+                          </div>
+                        )}
+                      </td>
 
-                    {/* Status Badge */}
-                    {isPending && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
-                        <Clock size={11} />
-                        <span>Pending Approval</span>
-                      </span>
-                    )}
-                    {isApproved && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                        <CheckCircle2 size={11} />
-                        <span>Approved & Active</span>
-                      </span>
-                    )}
-                    {isRejected && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
-                        <XCircle size={11} />
-                        <span>Rejected</span>
-                      </span>
-                    )}
+                      {/* Contact Details */}
+                      <td className="py-4 px-4 space-y-1">
+                        <div className="flex items-center gap-1.5 text-slate-700">
+                          <Mail size={12} className="text-slate-400" />
+                          <span>{req.email}</span>
+                          <button
+                            onClick={() => handleCopy(req.email, `email-${req._id}`)}
+                            className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                            title="Copy email"
+                          >
+                            {copiedId === `email-${req._id}` ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
+                          </button>
+                        </div>
+                        {req.mobile && (
+                          <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
+                            <Phone size={11} className="text-slate-400" />
+                            <span>{req.mobile}</span>
+                          </div>
+                        )}
+                      </td>
 
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
-                      {planName}
-                    </span>
-                  </div>
+                      {/* Requested Plan */}
+                      <td className="py-4 px-4">
+                        <div className="font-bold text-slate-900">
+                          {req.planName || req.selectedPlan}
+                        </div>
+                        <div className="text-blue-600 font-extrabold text-xs mt-0.5">
+                          ₹{(req.discountedPrice || req.amount || 0).toLocaleString('en-IN')}/yr
+                        </div>
+                      </td>
 
-                  {/* UTR & Transaction Reference */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
-                    <div className="flex items-center gap-1.5 font-mono bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
-                      <span className="text-slate-400 font-sans text-[11px]">UTR:</span>
-                      <span className="font-bold text-slate-800">{req.utrNumber}</span>
-                      <button
-                        onClick={() => handleCopy(req.utrNumber, req._id)}
-                        className="text-slate-400 hover:text-slate-600 p-0.5"
-                        title="Copy UTR Reference"
-                      >
-                        {copiedId === req._id ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
-                      </button>
-                    </div>
+                      {/* Vendor Notes */}
+                      <td className="py-4 px-4 max-w-xs">
+                        {req.vendorNote ? (
+                          <p className="text-xs text-slate-600 italic line-clamp-2">
+                            "{req.vendorNote}"
+                          </p>
+                        ) : (
+                          <span className="text-slate-400 text-[11px]">—</span>
+                        )}
+                      </td>
 
-                    <div className="flex items-center gap-1 text-slate-500 text-[11px]">
-                      <Calendar size={13} />
-                      <span>Submitted: {new Date(req.createdAt).toLocaleDateString()}</span>
-                    </div>
+                      {/* Requested Date */}
+                      <td className="py-4 px-4 text-slate-500 text-[11px]">
+                        {new Date(req.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        <div className="text-slate-400 text-[10px]">
+                          {new Date(req.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </td>
 
-                    <div className="flex items-center gap-1 text-slate-500 text-[11px]">
-                      <Mail size={13} />
-                      <span>{req.email}</span>
-                    </div>
-                  </div>
+                      {/* Status */}
+                      <td className="py-4 px-4">
+                        {isApproved ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold text-[11px] border border-emerald-200">
+                            <CheckCircle2 size={12} />
+                            <span>Active (365d)</span>
+                          </span>
+                        ) : req.status === 'rejected' ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 font-bold text-[11px] border border-rose-200">
+                            <XCircle size={12} />
+                            <span>Rejected</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-bold text-[11px] border border-amber-200">
+                            <Clock size={12} />
+                            <span>Pending</span>
+                          </span>
+                        )}
+                      </td>
 
-                  {/* Screenshot Proof Preview Link */}
-                  {req.screenshot?.url ? (
-                    <div className="pt-1">
-                      <button
-                        onClick={() => openScreenshotModal(req)}
-                        className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 font-medium"
-                      >
-                        <Eye size={13} />
-                        <span>View Payment Screenshot Proof</span>
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="text-[11px] text-slate-400 italic">No screenshot attached (UTR only)</div>
-                  )}
-
-                  {/* If Approved, show payment received date and expiry */}
-                  {isApproved && (
-                    <div className="text-xs text-emerald-800 bg-emerald-50/70 p-2 rounded-lg border border-emerald-100 flex flex-wrap gap-x-4 gap-y-1">
-                      <span>
-                        <strong>Payment Received:</strong>{' '}
-                        {req.paymentReceivedDate ? new Date(req.paymentReceivedDate).toLocaleDateString() : 'N/A'}
-                      </span>
-                      <span>
-                        <strong>Catalogue Valid Until:</strong>{' '}
-                        {req.activatedExpiresAt ? new Date(req.activatedExpiresAt).toLocaleDateString() : '365 days'}
-                      </span>
-                      {req.adminNotes && (
-                        <span>
-                          <strong>Note:</strong> {req.adminNotes}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* If Rejected, show reason */}
-                  {isRejected && (
-                    <div className="text-xs text-rose-800 bg-rose-50/70 p-2 rounded-lg border border-rose-100">
-                      <strong>Rejection Reason:</strong> {req.rejectionReason}
-                    </div>
-                  )}
-                </div>
-
-                {/* Actions Desk for Pending Request */}
-                {isPending && (
-                  <div className="flex items-center gap-2 self-start lg:self-center flex-shrink-0">
-                    <button
-                      onClick={() => openApproveModal(req)}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition shadow-2xs active:scale-95"
-                    >
-                      <CheckCircle2 size={14} />
-                      <span>Approve & Activate</span>
-                    </button>
-                    <button
-                      onClick={() => openRejectModal(req)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-600 font-semibold text-xs transition active:scale-95"
-                    >
-                      <XCircle size={14} />
-                      <span>Reject</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+                      {/* Actions */}
+                      <td className="py-4 px-4 text-right">
+                        {isPending ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => openApproveModal(req)}
+                              className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] transition shadow-xs cursor-pointer active:scale-95"
+                            >
+                              Approve (365d)
+                            </button>
+                            <button
+                              onClick={() => openRejectModal(req)}
+                              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-600 font-bold text-[11px] transition cursor-pointer"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="text-[11px] text-slate-400 italic">
+                            {isApproved ? 'Activated' : 'Resolved'}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* Approve Modal */}
-      {activeModal?.type === 'approve' && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 max-w-lg w-full p-6 shadow-2xl space-y-5 animate-scale-up">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2 text-emerald-600">
-                <CheckCircle2 size={20} />
-                <h3 className="font-bold text-slate-900 text-base">Approve & Activate Subscription</h3>
+      {activeModal && activeModal.type === 'approve' && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-slate-900 font-extrabold text-base">
+                <ShieldCheck className="text-emerald-600" size={20} />
+                <span>Approve & Activate Subscription</span>
               </div>
               <button
                 onClick={() => setActiveModal(null)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1">
-              <div>
-                <strong>Vendor:</strong> {activeModal.request.companyName} ({activeModal.request.userName})
-              </div>
-              <div>
-                <strong>UTR Reference:</strong> <span className="font-mono">{activeModal.request.utrNumber}</span>
-              </div>
-            </div>
+            <p className="text-xs text-slate-500">
+              Confirm plan activation for <strong className="text-slate-900">{activeModal.request.companyName}</strong>. This will activate their catalogue and assign monthly listing quotas for 365 days.
+            </p>
 
-            <div className="space-y-4 text-xs">
+            {modalError && (
+              <div className="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs font-semibold flex items-center gap-2">
+                <AlertCircle size={15} />
+                <span>{modalError}</span>
+              </div>
+            )}
+
+            <div className="space-y-4">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1.5">
-                  Confirm Annual Subscription Tier <span className="text-rose-500">*</span>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Assigned Subscription Plan
                 </label>
                 <select
                   value={approvalPlan}
                   onChange={(e) => setApprovalPlan(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 >
-                  <option value="yearly_1200">Standard Annual Plan — ₹1,200 (25 prod/mo, 50 art/mo)</option>
-                  <option value="yearly_2400">Enterprise Annual Plan — ₹2,400 (75 prod/mo, 150 art/mo - 3x limit)</option>
+                  {plans.length > 0 ? (
+                    plans.map((p) => (
+                      <option key={p.planId} value={p.planId}>
+                        {p.name} — ₹{p.discountedPrice}/yr ({p.productMonthlyLimit} prods / {p.articleMonthlyLimit} arts)
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="yearly_1200">Standard Annual Plan (₹1,200/yr)</option>
+                      <option value="yearly_2400">Enterprise Annual Plan (₹2,400/yr)</option>
+                    </>
+                  )}
                 </select>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1.5">
-                  Payment Received Date (Bank Credit Date) <span className="text-rose-500">*</span>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Activation Duration (Days)
                 </label>
                 <input
-                  type="date"
-                  value={paymentDate}
-                  onChange={(e) => setPaymentDate(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 font-medium"
+                  type="number"
+                  min="30"
+                  max="730"
+                  value={durationDays}
+                  onChange={(e) => setDurationDays(Number(e.target.value) || 365)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  The system will calculate the 365-day expiry date starting from this verified payment receipt date.
-                </p>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1.5">Admin Internal Notes (Optional)</label>
-                <input
-                  type="text"
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Admin Internal Notes / Feedback (Optional)
+                </label>
+                <textarea
+                  rows={2}
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
-                  placeholder="e.g. Verified via HDFC corporate bank statement ending 4012"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500"
+                  placeholder="Optional internal remark or custom agreed SLA..."
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
             </div>
 
-            <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-[11px] text-emerald-900 leading-relaxed">
-              Upon approval, the vendor will be granted 365 days of active catalogue exposure, monthly quotas will be set, and an automated activation invoice email will be sent.
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-3 pt-2">
               <button
+                type="button"
                 onClick={() => setActiveModal(null)}
-                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleConfirmAction}
                 disabled={submittingAction}
-                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm active:scale-95 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
               >
-                {submittingAction ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                {submittingAction ? <RefreshCw size={13} className="animate-spin" /> : <CheckCircle2 size={14} />}
                 <span>Confirm & Activate 365 Days</span>
               </button>
             </div>
@@ -497,53 +509,61 @@ export default function AdminPaymentRequests() {
       )}
 
       {/* Reject Modal */}
-      {activeModal?.type === 'reject' && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 max-w-lg w-full p-6 shadow-2xl space-y-5 animate-scale-up">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2 text-rose-600">
+      {activeModal && activeModal.type === 'reject' && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-rose-700 font-extrabold text-base">
                 <XCircle size={20} />
-                <h3 className="font-bold text-slate-900 text-base">Reject Payment Submission</h3>
+                <span>Reject Subscription Request</span>
               </div>
               <button
                 onClick={() => setActiveModal(null)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="text-xs space-y-4">
-              <p className="text-slate-600 leading-relaxed">
-                Rejecting this submission will notify <strong>{activeModal.request.companyName}</strong> by email so they can re-verify their bank statement or submit a corrected UTR.
-              </p>
+            <p className="text-xs text-slate-500">
+              Provide feedback for rejecting <strong className="text-slate-900">{activeModal.request.companyName}</strong>. An email notification will be dispatched to the vendor.
+            </p>
 
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1.5">
-                  Rejection Reason / Guidance for Vendor <span className="text-rose-500">*</span>
-                </label>
-                <textarea
-                  rows={3}
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-500"
-                />
+            {modalError && (
+              <div className="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs font-semibold flex items-center gap-2">
+                <AlertCircle size={15} />
+                <span>{modalError}</span>
               </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Rejection Reason (Dispatched to Vendor)
+              </label>
+              <textarea
+                rows={3}
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="State reason for rejecting request..."
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+              />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-3 pt-2">
               <button
+                type="button"
                 onClick={() => setActiveModal(null)}
-                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleConfirmAction}
                 disabled={submittingAction}
-                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm active:scale-95 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
               >
-                {submittingAction ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+                {submittingAction ? <RefreshCw size={13} className="animate-spin" /> : <XCircle size={14} />}
                 <span>Confirm Rejection</span>
               </button>
             </div>
@@ -551,42 +571,6 @@ export default function AdminPaymentRequests() {
         </div>
       )}
 
-      {/* Screenshot Viewer Modal */}
-      {activeModal?.type === 'screenshot' && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 max-w-2xl w-full p-4 shadow-2xl space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <div className="text-xs font-bold text-slate-900 truncate">
-                Payment Proof Screenshot — {activeModal.request.companyName} (UTR: {activeModal.request.utrNumber})
-              </div>
-              <button
-                onClick={() => setActiveModal(null)}
-                className="text-slate-400 hover:text-slate-600 p-1"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <div className="max-h-[70vh] overflow-y-auto flex items-center justify-center bg-slate-950 rounded-xl p-2">
-              <img
-                src={activeModal.request.screenshot?.url}
-                alt="Payment Proof"
-                className="max-h-[65vh] object-contain rounded-lg"
-              />
-            </div>
-            <div className="flex justify-end">
-              <a
-                href={activeModal.request.screenshot?.url}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline font-semibold"
-              >
-                <span>Open full image in new tab</span>
-                <ExternalLink size={12} />
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

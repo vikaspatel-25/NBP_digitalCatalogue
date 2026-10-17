@@ -316,6 +316,43 @@ Router.post("/api/admin/payment-settings", auth, upload.single("qrCode"), async 
   return updateAdminPaymentSettings(req, res);
 });
 
+// Admin Dynamic Plans Management APIs
+Router.get("/api/admin/plans", auth, async (req, res) => {
+  const { getAdminPlans } = await import("../controllers/adminPayment.js");
+  return getAdminPlans(req, res);
+});
+
+Router.post("/api/admin/plans", auth, async (req, res) => {
+  const { saveAdminPlan } = await import("../controllers/adminPayment.js");
+  return saveAdminPlan(req, res);
+});
+
+Router.delete("/api/admin/plans/:planId", auth, async (req, res) => {
+  const { deleteAdminPlan } = await import("../controllers/adminPayment.js");
+  return deleteAdminPlan(req, res);
+});
+
+// Media & Upload Limits Settings APIs
+Router.get("/api/admin/media-settings", auth, async (req, res) => {
+  const { getAdminPaymentSettings } = await import("../controllers/adminPayment.js");
+  return getAdminPaymentSettings(req, res);
+});
+
+Router.post("/api/admin/media-settings", auth, async (req, res) => {
+  const { updateAdminPaymentSettings } = await import("../controllers/adminPayment.js");
+  return updateAdminPaymentSettings(req, res);
+});
+
+Router.get("/api/platform/media-settings", async (req, res) => {
+  const { getAdminPaymentSettings } = await import("../controllers/adminPayment.js");
+  return getAdminPaymentSettings(req, res);
+});
+
+Router.get("/api/plans", async (req, res) => {
+  const { getPublicPlans } = await import("../controllers/vendorPayment.js");
+  return getPublicPlans(req, res);
+});
+
 Router.get("/api/admin/payment-requests", auth, async (req, res) => {
   const { getPaymentRequests } = await import("../controllers/adminPayment.js");
   return getPaymentRequests(req, res);

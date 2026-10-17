@@ -317,13 +317,30 @@ export { addArticlePageController, addArticleController };
 
 export async function apiAddArticleController(req, res) {
   try {
-    const { title, date, bodyText, bodyHtml, videoUrl, authorName, sourceLink } = req.body;
+    const { 
+      title, 
+      content, 
+      date, 
+      bodyText, 
+      bodyHtml, 
+      videoUrl, 
+      authorName, 
+      sourceLink,
+      productLinks 
+    } = req.body;
     const Article = (await import('../models/article.model.js')).default;
     const { v2: cloudinary } = await import('cloudinary');
     const jwt = (await import('jsonwebtoken')).default;
 
-    if (!title || !date || (!bodyText && !bodyHtml)) {
-      return res.status(400).json({ success: false, error: 'Required fields missing' });
+    // Validate title and content (support both frontend's content and legacy bodyText/bodyHtml)
+    const effectiveTitle = (title || '').trim();
+    const effectiveContent = (content || bodyText || bodyHtml || '').trim();
+
+    if (!effectiveTitle) {
+      return res.status(400).json({ success: false, error: 'Article title is required' });
+    }
+    if (!effectiveContent) {
+      return res.status(400).json({ success: false, error: 'Article content cannot be empty' });
     }
 
     const getCreatorId = (req) => {
@@ -358,11 +375,21 @@ export async function apiAddArticleController(req, res) {
       });
     }
 
+    const PlatformSettings = (await import('../models/settings.model.js')).default;
+    const settings = (await PlatformSettings.findOne({}).lean()) || {};
+
     let coverImageUrl = '';
     if (req.file) {
+      const maxCoverBytes = (settings.articleMaxCoverSizeMb || 10) * 1024 * 1024;
+      if (req.file.size > maxCoverBytes) {
+        return res.status(400).json({
+          success: false,
+          error: `Article cover image exceeds the ${settings.articleMaxCoverSizeMb || 10}MB limit set by administrator.`
+        });
+      }
       const uploadToCloudinary = (buffer) => {
         return new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream({ resource_type: "image" }, (error, result) => {
+          const stream = cloudinary.uploader.upload_stream({ resource_type: "image", folder: "nbp_articles" }, (error, result) => {
             if (error) return reject(error);
             resolve(result);
           });
@@ -370,11 +397,23 @@ export async function apiAddArticleController(req, res) {
         });
       };
       const result = await uploadToCloudinary(req.file.buffer);
-      coverImageUrl = result.secure_url;
+      coverImageUrl = result.secure_url || result.url;
+    }
+
+    let normalizedProductLinks = [];
+    if (productLinks) {
+      if (Array.isArray(productLinks)) {
+        normalizedProductLinks = productLinks.map(l => String(l).trim()).filter(Boolean);
+      } else if (typeof productLinks === 'string') {
+        normalizedProductLinks = [productLinks.trim()].filter(Boolean);
+      }
     }
 
     const newArticle = new Article({
-      title, date, bodyText, bodyHtml, videoUrl, authorName, sourceLink, coverImageUrl,
+      title: effectiveTitle,
+      content: effectiveContent,
+      coverImage: coverImageUrl || null,
+      productLinks: normalizedProductLinks,
       creatorId: creator ? creator.id : null,
       companyName: creator ? creator.companyName : null,
       userName: creator ? creator.userName : null,
@@ -383,8 +422,14 @@ export async function apiAddArticleController(req, res) {
     });
 
     await newArticle.save();
-    res.json({ success: true, message: 'Article added successfully' });
+    return res.json({ 
+      success: true, 
+      message: 'Article published successfully to the storefront catalogue!', 
+      article: newArticle,
+      articleId: newArticle._id
+    });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Internal Server Error' });
+    console.error('API Add Article Error:', error);
+    return res.status(500).json({ success: false, error: 'Internal Server Error: ' + (error?.message || '') });
   }
 }

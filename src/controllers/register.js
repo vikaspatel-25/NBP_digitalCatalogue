@@ -192,7 +192,7 @@ export const registerCompany = async (req, res) => {
       const uploadResult = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           {
-            resource_type: 'image',
+            resource_type: 'auto',
             folder: 'company_documents',
             access_mode: 'public'
           },

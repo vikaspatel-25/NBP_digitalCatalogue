@@ -18,9 +18,18 @@ async function resetPasswordPageController(req, res) {
 }
 
 async function resetPasswordController(req, res) {
+  const isJsonRequest = Boolean(
+    req.xhr || req.is("json") || (req.headers.accept && req.headers.accept.includes("application/json"))
+  );
+
   try {
     const newPwd = req.body.confirmPassword;
-    if (!newPwd) return res.status(400).send("Password is required");
+    if (!newPwd || newPwd.length < 6) {
+      if (isJsonRequest) {
+        return res.status(400).json({ success: false, error: "Password must be at least 6 characters" });
+      }
+      return res.status(400).send("Password must be at least 6 characters");
+    }
 
     const hashedPwd = await bcrypt.hash(newPwd, 12);
 
@@ -34,9 +43,16 @@ async function resetPasswordController(req, res) {
       }
     );
 
+    if (isJsonRequest) {
+      return res.json({ success: true, message: "Admin password updated successfully" });
+    }
+
     res.redirect("/admin");
   } catch (error) {
     console.error("Reset password error:", error);
+    if (isJsonRequest) {
+      return res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
     res.status(500).send("Internal Server Error");
   }
 }
