@@ -374,6 +374,11 @@ Router.post("/api/admin/renew-vendor", auth, async (req, res) => {
   return directRenewVendor(req, res);
 });
 
+Router.post("/api/admin/discontinue-subscription", auth, async (req, res) => {
+  const { discontinueSubscription } = await import("../controllers/adminPayment.js");
+  return discontinueSubscription(req, res);
+});
+
 Router.post("/api/admin/send-reminder", auth, async (req, res) => {
   const { apiSendReminderController } = await import("../controllers/userManagement.js");
   return apiSendReminderController(req, res);

@@ -18,7 +18,8 @@ import {
   FileText,
   ShieldCheck,
   ArrowRight,
-  Layers
+  Layers,
+  Ban
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
@@ -59,14 +60,26 @@ export default function AdminPaymentRequests() {
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null);
 
-  // Approval modal state
-  const [activeModal, setActiveModal] = useState(null); // { type: 'approve' | 'reject', request }
+  // Approval / Renew / Discontinue modal state
+  const [activeModal, setActiveModal] = useState(null); // { type: 'approve' | 'renew' | 'reject' | 'discontinue', request }
   const [approvalPlan, setApprovalPlan] = useState('yearly_1200');
   const [durationDays, setDurationDays] = useState(365);
   const [adminNotes, setAdminNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [submittingAction, setSubmittingAction] = useState(false);
   const [modalError, setModalError] = useState('');
+
+  // Direct renew vendor search state
+  const [vendorList, setVendorList] = useState([]);
+  const [loadingVendors, setLoadingVendors] = useState(false);
+  const [directRenewModal, setDirectRenewModal] = useState(false);
+  const [vendorSearch, setVendorSearch] = useState('');
+  const [selectedVendor, setSelectedVendor] = useState(null);
+  const [directRenewPlan, setDirectRenewPlan] = useState('yearly_1200');
+  const [directRenewDuration, setDirectRenewDuration] = useState(365);
+  const [directRenewNotes, setDirectRenewNotes] = useState('');
+  const [directRenewError, setDirectRenewError] = useState('');
+  const [submittingDirectRenew, setSubmittingDirectRenew] = useState(false);
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -119,6 +132,71 @@ export default function AdminPaymentRequests() {
     setActiveModal({ type: 'reject', request: req });
   };
 
+  const openDiscontinueModal = (req) => {
+    setAdminNotes('');
+    setModalError('');
+    setActiveModal({ type: 'discontinue', request: req });
+  };
+
+  const openDirectRenewModal = async () => {
+    setDirectRenewModal(true);
+    setSelectedVendor(null);
+    setVendorSearch('');
+    setDirectRenewPlan('yearly_1200');
+    setDirectRenewDuration(365);
+    setDirectRenewNotes('');
+    setDirectRenewError('');
+    if (vendorList.length === 0) {
+      setLoadingVendors(true);
+      try {
+        const res = await axios.get('/api/admin/userManagement');
+        if (res.data?.users) {
+          setVendorList(res.data.users);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingVendors(false);
+      }
+    }
+  };
+
+  const handleConfirmDirectRenew = async () => {
+    if (!selectedVendor?._id) {
+      setDirectRenewError('Please select a vendor first.');
+      return;
+    }
+    setSubmittingDirectRenew(true);
+    setDirectRenewError('');
+    try {
+      const res = await axios.post('/api/admin/renew-vendor', {
+        userId: selectedVendor._id,
+        plan: directRenewPlan,
+        durationDays: Number(directRenewDuration) || 365,
+        adminNotes: directRenewNotes || undefined
+      });
+      if (res.data?.success) {
+        appToast.success(
+          `Subscription renewed! "${selectedVendor.companyName}" is active for ${directRenewDuration} days under ${directRenewPlan}.`,
+          { title: 'Subscription Renewed' }
+        );
+        setDirectRenewModal(false);
+        fetchRequests();
+      } else {
+        const err = res.data?.error || 'Failed to renew subscription.';
+        setDirectRenewError(err);
+        appToast.error(err, { title: 'Renewal Error' });
+      }
+    } catch (err) {
+      console.error(err);
+      const errMsg = err.response?.data?.error || err.response?.data?.message || 'Network error renewing subscription.';
+      setDirectRenewError(errMsg);
+      appToast.error(errMsg, { title: 'Network Failure' });
+    } finally {
+      setSubmittingDirectRenew(false);
+    }
+  };
+
   const handleConfirmAction = async () => {
     if (!activeModal || !activeModal.request) return;
     setSubmittingAction(true);
@@ -127,6 +205,7 @@ export default function AdminPaymentRequests() {
     try {
       const isReject = activeModal.type === 'reject';
       const isRenew = activeModal.type === 'renew';
+      const isDiscontinue = activeModal.type === 'discontinue';
 
       let res;
       if (isReject) {
@@ -142,6 +221,11 @@ export default function AdminPaymentRequests() {
           durationDays: Number(durationDays) || 365,
           adminNotes: adminNotes || undefined
         });
+      } else if (isDiscontinue) {
+        res = await axios.post('/api/admin/discontinue-subscription', {
+          userId: activeModal.request.userId,
+          reason: adminNotes || undefined
+        });
       } else {
         res = await axios.post('/api/admin/payment-requests/verify', {
           requestId: activeModal.request._id,
@@ -155,8 +239,16 @@ export default function AdminPaymentRequests() {
       if (res.data?.success) {
         const successMsg = isReject
           ? `Subscription request rejected. Notice dispatched to vendor.`
+          : isDiscontinue
+          ? `Subscription discontinued for ${activeModal.request.companyName}. Catalogue access revoked.`
           : `Subscription ${isRenew ? 'renewed' : 'activated'}! ${activeModal.request.companyName} is active for ${durationDays} days.`;
-        appToast.success(successMsg, { title: isReject ? 'Request Rejected' : 'Plan Assigned & Activated' });
+        appToast.success(successMsg, {
+          title: isReject
+            ? 'Request Rejected'
+            : isDiscontinue
+            ? 'Subscription Discontinued'
+            : 'Plan Assigned & Activated'
+        });
         setActiveModal(null);
         fetchRequests();
       } else {
@@ -205,14 +297,25 @@ export default function AdminPaymentRequests() {
           </p>
         </div>
 
-        <button
-          onClick={fetchRequests}
-          disabled={loading}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition active:scale-95 disabled:opacity-50 cursor-pointer self-start md:self-auto"
-        >
-          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-          <span>Refresh List</span>
-        </button>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={openDirectRenewModal}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white transition active:scale-95 shadow-xs cursor-pointer"
+            title="Search and renew subscription for any vendor"
+          >
+            <ShieldCheck size={14} />
+            <span>Renew Any Vendor</span>
+          </button>
+
+          <button
+            onClick={fetchRequests}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition active:scale-95 disabled:opacity-50 cursor-pointer"
+          >
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            <span>Refresh List</span>
+          </button>
+        </div>
       </div>
 
       {/* Counts KPI Cards */}
@@ -436,11 +539,19 @@ export default function AdminPaymentRequests() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => openApproveModal(req, true)}
-                              className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-bold text-[11px] transition cursor-pointer inline-flex items-center gap-1.5 border border-slate-200"
+                              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-bold text-[11px] transition cursor-pointer inline-flex items-center gap-1.5 border border-slate-200"
                               title="Renew vendor or switch to a different subscription plan"
                             >
                               <RefreshCw size={12} className="text-blue-600" />
-                              <span>Renew / Switch Plan</span>
+                              <span>Renew / Switch</span>
+                            </button>
+                            <button
+                              onClick={() => openDiscontinueModal(req)}
+                              className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold text-[11px] transition cursor-pointer inline-flex items-center gap-1.5 border border-amber-200"
+                              title="Discontinue and revoke active subscription"
+                            >
+                              <Ban size={12} className="text-amber-600" />
+                              <span>Discontinue</span>
                             </button>
                           </div>
                         ) : (
@@ -699,6 +810,331 @@ export default function AdminPaymentRequests() {
               >
                 {submittingAction ? <RefreshCw size={13} className="animate-spin" /> : <XCircle size={14} />}
                 <span>Confirm Rejection</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Discontinue Modal */}
+      {activeModal && activeModal.type === 'discontinue' && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+              <Ban className="w-6 h-6" />
+            </div>
+
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-slate-900">
+                Discontinue Subscription?
+              </h3>
+              <p className="text-xs text-slate-600 mt-1">
+                Revoke active subscription for{' '}
+                <strong className="text-slate-900">{activeModal.request.companyName}</strong> ({activeModal.request.email}).
+              </p>
+            </div>
+
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+              <p className="font-bold mb-1">Impact of discontinuation:</p>
+              <ul className="list-disc list-inside space-y-0.5 text-amber-700">
+                <li>Subscription status will be marked <strong>Expired</strong> immediately.</li>
+                <li>Vendor's published products and articles will be hidden from the public catalogue.</li>
+                <li>Vendor will be prompted to renew upon logging in.</li>
+              </ul>
+            </div>
+
+            {modalError && (
+              <div className="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs font-semibold flex items-center gap-2">
+                <AlertCircle size={15} />
+                <span>{modalError}</span>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Reason / Note (Optional)
+              </label>
+              <textarea
+                rows={2}
+                value={adminNotes}
+                onChange={(e) => setAdminNotes(e.target.value)}
+                placeholder="State reason for discontinuation..."
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmAction}
+                disabled={submittingAction}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
+              >
+                {submittingAction ? <RefreshCw size={13} className="animate-spin" /> : <Ban size={14} />}
+                <span>Confirm Discontinue</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Direct Renew by User Search Modal */}
+      {directRenewModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-slate-900 font-extrabold text-base">
+                <ShieldCheck className="text-blue-600" size={20} />
+                <span>Direct Subscription Renewal & Plan Assignment</span>
+              </div>
+              <button
+                onClick={() => setDirectRenewModal(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Vendor Selector */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Step 1: Select Vendor to Renew
+              </label>
+
+              {selectedVendor ? (
+                <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 flex items-center justify-between gap-3 text-xs">
+                  <div>
+                    <div className="font-extrabold text-slate-900">{selectedVendor.companyName}</div>
+                    <div className="text-slate-500 mt-0.5">{selectedVendor.email} • ID: {selectedVendor.userId}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-blue-700 capitalize text-[11px] px-2.5 py-0.5 rounded-full bg-blue-100">
+                      {selectedVendor.subscription?.computedStatus || 'pending'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedVendor(null)}
+                      className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-slate-900 font-bold text-[11px] cursor-pointer shadow-2xs"
+                    >
+                      Change
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={vendorSearch}
+                      onChange={(e) => setVendorSearch(e.target.value)}
+                      placeholder="Search vendor by company name, email, or user ID..."
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800"
+                      autoFocus
+                    />
+                  </div>
+
+                  {loadingVendors ? (
+                    <div className="p-4 text-center text-slate-400 text-xs">
+                      <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-1 text-slate-400" />
+                      Loading vendor list...
+                    </div>
+                  ) : (
+                    <div className="max-h-40 overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-xl bg-white shadow-2xs">
+                      {vendorList
+                        .filter((u) => {
+                          if (!vendorSearch.trim()) return true;
+                          const q = vendorSearch.toLowerCase();
+                          return (
+                            (u.companyName || '').toLowerCase().includes(q) ||
+                            (u.email || '').toLowerCase().includes(q) ||
+                            (u.userName || '').toLowerCase().includes(q) ||
+                            (u.userId || '').toLowerCase().includes(q)
+                          );
+                        })
+                        .slice(0, 8)
+                        .map((u) => (
+                          <div
+                            key={u._id}
+                            onClick={() => {
+                              setSelectedVendor(u);
+                              setDirectRenewPlan(u.subscription?.planId || 'yearly_1200');
+                            }}
+                            className="p-2.5 px-3 flex items-center justify-between hover:bg-blue-50/70 cursor-pointer transition text-xs"
+                          >
+                            <div>
+                              <div className="font-bold text-slate-900">{u.companyName}</div>
+                              <div className="text-slate-400 text-[11px]">{u.email} • ID: {u.userId}</div>
+                            </div>
+                            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                              u.subscription?.computedStatus === 'active'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : u.subscription?.computedStatus === 'expired'
+                                ? 'bg-rose-100 text-rose-800'
+                                : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              {u.subscription?.computedStatus || 'pending'}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {directRenewError && (
+              <div className="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs font-semibold flex items-center gap-2">
+                <AlertCircle size={15} />
+                <span>{directRenewError}</span>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {/* Plan Cards */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  Step 2: Choose Subscription Plan
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-56 overflow-y-auto pr-1">
+                  {(plans.length > 0 ? plans : FALLBACK_PLANS).map((p) => {
+                    const isSelected = directRenewPlan === p.planId;
+                    return (
+                      <div
+                        key={p.planId}
+                        onClick={() => setDirectRenewPlan(p.planId)}
+                        className={`p-3.5 rounded-2xl border transition cursor-pointer relative text-left ${
+                          isSelected
+                            ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-500/20 shadow-xs'
+                            : 'border-slate-200 hover:border-slate-300 bg-white'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="font-extrabold text-slate-900 text-xs">
+                            {p.name}
+                          </div>
+                          <div
+                            className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
+                              isSelected
+                                ? 'border-blue-600 bg-blue-600 text-white'
+                                : 'border-slate-300'
+                            }`}
+                          >
+                            {isSelected && <Check size={10} />}
+                          </div>
+                        </div>
+
+                        <div className="flex items-baseline gap-1.5 mt-1.5">
+                          <span className="text-sm font-black text-blue-600">
+                            ₹{(p.discountedPrice || 0).toLocaleString('en-IN')}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-semibold">/year</span>
+                          {p.originalPrice > p.discountedPrice && (
+                            <span className="text-[10px] text-slate-400 line-through ml-1">
+                              ₹{p.originalPrice?.toLocaleString('en-IN')}
+                            </span>
+                          )}
+                          {p.discountPercentage > 0 && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">
+                              {p.discountPercentage}% OFF
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-2 pt-2 border-t border-slate-100 space-y-1 text-[11px] text-slate-600">
+                          <div className="flex items-center gap-1">
+                            <CheckCircle2 size={11} className="text-emerald-600 flex-shrink-0" />
+                            <span><strong>{p.productMonthlyLimit}</strong> Products / mo</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <CheckCircle2 size={11} className="text-emerald-600 flex-shrink-0" />
+                            <span><strong>{p.articleMonthlyLimit}</strong> Articles / mo</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Duration Presets & Input */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Step 3: Duration
+                  </label>
+                  <span className="text-xs font-extrabold text-blue-600 font-mono">{directRenewDuration} Days</span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap mb-2">
+                  {[
+                    { label: '30 Days', days: 30 },
+                    { label: '90 Days', days: 90 },
+                    { label: '180 Days (6 Mo)', days: 180 },
+                    { label: '365 Days (1 Yr)', days: 365 },
+                    { label: '730 Days (2 Yrs)', days: 730 }
+                  ].map((chip) => (
+                    <button
+                      key={chip.days}
+                      type="button"
+                      onClick={() => setDirectRenewDuration(chip.days)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        directRenewDuration === chip.days
+                          ? 'bg-slate-900 text-white'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="number"
+                  min="1"
+                  max="1825"
+                  value={directRenewDuration}
+                  onChange={(e) => setDirectRenewDuration(Math.max(1, Number(e.target.value) || 1))}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="Custom number of days..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Admin Internal Notes (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  value={directRenewNotes}
+                  onChange={(e) => setDirectRenewNotes(e.target.value)}
+                  placeholder="Optional internal remark or custom terms..."
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setDirectRenewModal(false)}
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDirectRenew}
+                disabled={submittingDirectRenew || !selectedVendor}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
+              >
+                {submittingDirectRenew ? <RefreshCw size={13} className="animate-spin" /> : <ShieldCheck size={14} />}
+                <span>Confirm & Renew ({directRenewDuration} Days)</span>
               </button>
             </div>
           </div>

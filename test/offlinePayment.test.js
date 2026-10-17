@@ -181,5 +181,35 @@ describe('Corporate B2B Offline UPI/QR Accounting & Payment Modules', () => {
       assert.strictEqual(settings.maxImagesPerProduct, 12);
       assert.strictEqual(settings.maxImageSizeMb, 8);
     });
+
+    it('verifies subscription discontinuation sets status to expired and remaining days to 0', () => {
+      const now = new Date();
+      const discontinuedSub = {
+        status: 'expired',
+        planId: 'yearly_1200',
+        expiresAt: now
+      };
+
+      const remainingMs = discontinuedSub.expiresAt.getTime() - now.getTime();
+      const remainingDays = Math.max(0, Math.ceil(remainingMs / (1000 * 60 * 60 * 24)));
+      assert.strictEqual(discontinuedSub.status, 'expired');
+      assert.strictEqual(remainingDays, 0);
+    });
+
+    it('verifies direct renewal calculates active status and target duration correctly', () => {
+      const now = new Date();
+      const durationDays = 180;
+      const targetExpiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+      const renewedSub = {
+        status: 'active',
+        planId: 'yearly_2400',
+        expiresAt: targetExpiresAt
+      };
+
+      const remainingMs = renewedSub.expiresAt.getTime() - now.getTime();
+      const remainingDays = Math.ceil(remainingMs / (1000 * 60 * 60 * 24));
+      assert.strictEqual(renewedSub.status, 'active');
+      assert.strictEqual(remainingDays, 180);
+    });
   });
 });

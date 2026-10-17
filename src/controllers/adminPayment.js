@@ -534,3 +534,66 @@ export async function directRenewVendor(req, res) {
   }
 }
 
+/**
+ * POST /api/admin/discontinue-subscription
+ * Immediately revokes/discontinues a vendor's subscription,
+ * sets status to expired, and expiresAt to now.
+ */
+export async function discontinueSubscription(req, res) {
+  try {
+    const { userId, reason } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'Vendor ID is required' });
+    }
+
+    const vendor = await findVendor(userId);
+    if (!vendor) {
+      return res.status(404).json({ success: false, error: 'Vendor account not found' });
+    }
+
+    const now = new Date();
+    const currentSub = vendor.subscription?.toObject ? vendor.subscription.toObject() : (vendor.subscription || {});
+    vendor.subscription = {
+      ...currentSub,
+      status: 'expired',
+      expiresAt: now
+    };
+    await vendor.save();
+
+    // Audit record in PaymentRequest
+    await PaymentRequest.create({
+      userId: vendor._id.toString(),
+      companyName: vendor.companyName || 'Vendor',
+      userName: vendor.userName || '',
+      email: vendor.email,
+      mobile: vendor.mobile || '',
+      selectedPlan: currentSub.plan || 'none',
+      planName: 'Subscription Discontinued',
+      originalPrice: 0,
+      discountedPrice: 0,
+      amount: 0,
+      vendorNote: 'Admin manually discontinued subscription',
+      status: 'rejected',
+      adminNotes: reason || 'Subscription discontinued by administrator',
+      verifiedBy: 'admin',
+      verifiedAt: now
+    });
+
+    return res.json({
+      success: true,
+      message: `Subscription for "${vendor.companyName}" has been discontinued. Catalogue access revoked.`,
+      subscription: {
+        ...vendor.subscription,
+        computedStatus: 'expired',
+        remainingDays: 0,
+        isExpiringSoon: false
+      }
+    });
+  } catch (error) {
+    console.error('Error discontinuing subscription:', error);
+    return res.status(500).json({ success: false, error: error?.message || 'Failed to discontinue subscription' });
+  }
+}
+
+

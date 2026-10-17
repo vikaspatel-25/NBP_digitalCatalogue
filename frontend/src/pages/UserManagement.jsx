@@ -21,7 +21,8 @@ import {
   BellRing,
   Clock,
   Send,
-  CreditCard
+  CreditCard,
+  Ban
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
@@ -72,11 +73,19 @@ export default function UserManagement() {
 
   // Renewal / Plan Choice modal state
   const [renewingUser, setRenewingUser] = useState(null);
+  const [selectedManualUser, setSelectedManualUser] = useState(null);
+  const [manualSearchVendor, setManualSearchVendor] = useState('');
   const [renewPlan, setRenewPlan] = useState('yearly_1200');
   const [renewDurationDays, setRenewDurationDays] = useState(365);
   const [renewNotes, setRenewNotes] = useState('');
   const [isRenewing, setIsRenewing] = useState(false);
   const [renewError, setRenewError] = useState('');
+
+  // Discontinue subscription modal state
+  const [discontinuingUser, setDiscontinuingUser] = useState(null);
+  const [discontinueReason, setDiscontinueReason] = useState('');
+  const [isDiscontinuing, setIsDiscontinuing] = useState(false);
+  const [discontinueError, setDiscontinueError] = useState('');
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -179,21 +188,34 @@ export default function UserManagement() {
     return planId;
   };
 
-  const openRenewModal = (user) => {
-    setRenewingUser(user);
-    setRenewPlan(user.subscription?.plan || 'yearly_1200');
+  const openRenewModal = (user = null) => {
+    if (user) {
+      setRenewingUser(user);
+      setSelectedManualUser(user);
+      setRenewPlan(user.subscription?.plan || 'yearly_1200');
+    } else {
+      setRenewingUser({ isManualPick: true });
+      setSelectedManualUser(null);
+      setManualSearchVendor('');
+      setRenewPlan('yearly_1200');
+    }
     setRenewDurationDays(365);
     setRenewNotes('');
     setRenewError('');
   };
 
   const handleConfirmRenew = async () => {
-    if (!renewingUser) return;
+    const target = renewingUser?.isManualPick ? selectedManualUser : renewingUser;
+    if (!target) {
+      setRenewError('Please search and select a vendor first.');
+      return;
+    }
+
     setIsRenewing(true);
     setRenewError('');
     try {
       const res = await axios.post('/api/admin/renew-vendor', {
-        userId: renewingUser._id,
+        userId: target._id,
         plan: renewPlan,
         durationDays: Number(renewDurationDays) || 365,
         adminNotes: renewNotes || undefined
@@ -201,7 +223,7 @@ export default function UserManagement() {
 
       if (res.data?.success) {
         setUsers(prev => prev.map(u => {
-          if (u._id === renewingUser._id) {
+          if (u._id === target._id) {
             return {
               ...u,
               subscription: {
@@ -217,11 +239,12 @@ export default function UserManagement() {
           return u;
         }));
 
-        const successMsg = `Subscription renewed! "${renewingUser.companyName}" is active for ${renewDurationDays} days under ${renewPlan} plan.`;
+        const successMsg = `Subscription renewed! "${target.companyName}" is active for ${renewDurationDays} days under ${renewPlan} plan.`;
         setSuccessToast(successMsg);
         toast.success(successMsg, { title: 'Subscription Renewed' });
         setTimeout(() => setSuccessToast(''), 4000);
         setRenewingUser(null);
+        setSelectedManualUser(null);
       } else {
         const errText = res.data?.error || 'Renewal failed.';
         setRenewError(errText);
@@ -234,6 +257,53 @@ export default function UserManagement() {
       toast.error(errText, { title: 'Network Failure' });
     } finally {
       setIsRenewing(false);
+    }
+  };
+
+  const handleConfirmDiscontinue = async () => {
+    if (!discontinuingUser) return;
+    setIsDiscontinuing(true);
+    setDiscontinueError('');
+    try {
+      const res = await axios.post('/api/admin/discontinue-subscription', {
+        userId: discontinuingUser._id,
+        reason: discontinueReason || undefined
+      });
+
+      if (res.data?.success) {
+        setUsers(prev => prev.map(u => {
+          if (u._id === discontinuingUser._id) {
+            return {
+              ...u,
+              subscription: {
+                ...u.subscription,
+                ...res.data.subscription,
+                computedStatus: 'expired',
+                remainingDays: 0,
+                isExpiringSoon: false
+              }
+            };
+          }
+          return u;
+        }));
+
+        const msg = `Subscription for "${discontinuingUser.companyName}" has been discontinued. Catalogue access revoked.`;
+        setSuccessToast(msg);
+        toast.success(msg, { title: 'Subscription Discontinued' });
+        setTimeout(() => setSuccessToast(''), 4000);
+        setDiscontinuingUser(null);
+      } else {
+        const errText = res.data?.error || 'Failed to discontinue subscription.';
+        setDiscontinueError(errText);
+        toast.error(errText, { title: 'Action Failed' });
+      }
+    } catch (err) {
+      console.error(err);
+      const errText = err.response?.data?.error || err.response?.data?.message || 'Network error discontinuing subscription.';
+      setDiscontinueError(errText);
+      toast.error(errText, { title: 'Network Failure' });
+    } finally {
+      setIsDiscontinuing(false);
     }
   };
 
@@ -290,14 +360,25 @@ export default function UserManagement() {
           </p>
         </div>
 
-        <button
-          onClick={fetchUsers}
-          disabled={loading}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition shadow-2xs active:scale-95 disabled:opacity-50"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-blue-600' : ''}`} />
-          <span>Refresh Directory</span>
-        </button>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={() => openRenewModal(null)}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition shadow-2xs active:scale-95 cursor-pointer"
+            title="Search and renew subscription for any vendor"
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Renew Any Vendor</span>
+          </button>
+
+          <button
+            onClick={fetchUsers}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition shadow-2xs active:scale-95 disabled:opacity-50 cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-blue-600' : ''}`} />
+            <span>Refresh Directory</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Summary - B2B Annual Subscriptions Breakdown */}
@@ -581,6 +662,20 @@ export default function UserManagement() {
                       )}
                       <span>Send Reminder</span>
                     </button>
+                    {compStatus === 'active' && (
+                      <button
+                        onClick={() => {
+                          setDiscontinuingUser(user);
+                          setDiscontinueReason('');
+                          setDiscontinueError('');
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50/60 text-amber-700 hover:bg-amber-100 text-xs font-semibold transition active:scale-95 cursor-pointer"
+                        title="Immediately discontinue and revoke active subscription"
+                      >
+                        <Ban className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Discontinue Sub</span>
+                      </button>
+                    )}
                   </div>
 
                   <button
@@ -614,18 +709,98 @@ export default function UserManagement() {
               </button>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3 text-xs">
-              <div>
-                <div className="font-extrabold text-slate-900">{renewingUser.companyName}</div>
-                <div className="text-slate-500 mt-0.5">{renewingUser.email} • ID: {renewingUser.userId}</div>
+            {renewingUser.isManualPick ? (
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Step 1: Search & Select Vendor to Renew
+                </label>
+                {selectedManualUser ? (
+                  <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 flex items-center justify-between gap-3 text-xs">
+                    <div>
+                      <div className="font-extrabold text-slate-900">{selectedManualUser.companyName}</div>
+                      <div className="text-slate-500 mt-0.5">{selectedManualUser.email} • ID: {selectedManualUser.userId}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-blue-700 capitalize text-[11px] px-2 py-0.5 rounded-full bg-blue-100">
+                        {selectedManualUser.subscription?.computedStatus || 'pending'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedManualUser(null)}
+                        className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-slate-900 font-bold text-[11px] cursor-pointer shadow-2xs"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={manualSearchVendor}
+                        onChange={(e) => setManualSearchVendor(e.target.value)}
+                        placeholder="Search vendor by company name, email, or user ID..."
+                        className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="max-h-44 overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-xl bg-white shadow-2xs">
+                      {users
+                        .filter(u => {
+                          if (!manualSearchVendor.trim()) return true;
+                          const q = manualSearchVendor.toLowerCase();
+                          return (
+                            (u.companyName || '').toLowerCase().includes(q) ||
+                            (u.email || '').toLowerCase().includes(q) ||
+                            (u.userName || '').toLowerCase().includes(q) ||
+                            (u.userId || '').toLowerCase().includes(q)
+                          );
+                        })
+                        .slice(0, 8)
+                        .map(u => (
+                          <div
+                            key={u._id}
+                            onClick={() => {
+                              setSelectedManualUser(u);
+                              setRenewPlan(u.subscription?.planId || 'starter');
+                            }}
+                            className="p-2.5 px-3 flex items-center justify-between hover:bg-blue-50/70 cursor-pointer transition text-xs"
+                          >
+                            <div>
+                              <div className="font-bold text-slate-900">{u.companyName}</div>
+                              <div className="text-slate-400 text-[11px]">{u.email} • ID: {u.userId}</div>
+                            </div>
+                            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                              u.subscription?.computedStatus === 'active'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : u.subscription?.computedStatus === 'expired'
+                                ? 'bg-rose-100 text-rose-800'
+                                : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              {u.subscription?.computedStatus || 'pending'}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="text-right">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">Current Status</span>
-                <span className="font-extrabold text-blue-600 capitalize">
-                  {renewingUser.subscription?.computedStatus || 'pending_payment'}
-                </span>
+            ) : (
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3 text-xs">
+                <div>
+                  <div className="font-extrabold text-slate-900">{renewingUser.companyName}</div>
+                  <div className="text-slate-500 mt-0.5">{renewingUser.email} • ID: {renewingUser.userId}</div>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Current Status</span>
+                  <span className="font-extrabold text-blue-600 capitalize">
+                    {renewingUser.subscription?.computedStatus || 'pending_payment'}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
 
             {renewError && (
               <div className="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs font-semibold flex items-center gap-2">
@@ -770,7 +945,7 @@ export default function UserManagement() {
               <button
                 type="button"
                 onClick={handleConfirmRenew}
-                disabled={isRenewing}
+                disabled={isRenewing || (renewingUser?.isManualPick && !selectedManualUser)}
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
               >
                 {isRenewing ? <RefreshCw size={13} className="animate-spin" /> : <ShieldCheck size={14} />}
@@ -840,6 +1015,87 @@ export default function UserManagement() {
                   <>
                     <Trash2 className="w-4 h-4" />
                     <span>Confirm Removal</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Discontinue Subscription Confirmation Modal */}
+      {discontinuingUser && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+              <Ban className="w-6 h-6" />
+            </div>
+
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-slate-900">
+                Discontinue Subscription?
+              </h3>
+              <p className="text-xs text-slate-600 mt-1">
+                Revoke active subscription for{' '}
+                <span className="font-bold text-slate-900">{discontinuingUser.companyName}</span> ({discontinuingUser.email}).
+              </p>
+            </div>
+
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+              <p className="font-bold mb-1">Impact of discontinuation:</p>
+              <ul className="list-disc list-inside space-y-0.5 text-amber-700">
+                <li>Subscription status will be marked <strong>Expired</strong> immediately.</li>
+                <li>Vendor's published products and articles will be hidden from the public catalogue.</li>
+                <li>Vendor will be prompted to renew upon logging in.</li>
+              </ul>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Reason / Note (Optional)
+              </label>
+              <input
+                type="text"
+                value={discontinueReason}
+                onChange={(e) => setDiscontinueReason(e.target.value)}
+                placeholder="e.g. Terms violation, requested refund, SLA breach..."
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+              />
+            </div>
+
+            {discontinueError && (
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+                {discontinueError}
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setDiscontinuingUser(null);
+                  setDiscontinueError('');
+                }}
+                disabled={isDiscontinuing}
+                className="flex-1 py-2.5 px-4 border border-slate-200 rounded-xl text-slate-700 font-semibold text-xs hover:bg-slate-50 transition cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDiscontinue}
+                disabled={isDiscontinuing}
+                className="flex-1 py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-xs transition shadow-xs disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {isDiscontinuing ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Discontinuing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Ban className="w-3.5 h-3.5" />
+                    <span>Confirm Discontinue</span>
                   </>
                 )}
               </button>
