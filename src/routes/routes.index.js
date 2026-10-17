@@ -138,6 +138,12 @@ Router.route("/admin/paymentSettings")
 Router.route("/admin/paymentRequests")
   .get(auth, adminPageController);
 
+Router.route("/admin/plans")
+  .get(auth, adminPageController);
+
+Router.route("/admin/mediaSettings")
+  .get(auth, adminPageController);
+
 
 // User Routes
 Router.route(["/userPanel", "/userPanel/*"])
@@ -361,6 +367,11 @@ Router.get("/api/admin/payment-requests", auth, async (req, res) => {
 Router.post("/api/admin/payment-requests/verify", auth, async (req, res) => {
   const { verifyPaymentRequest } = await import("../controllers/adminPayment.js");
   return verifyPaymentRequest(req, res);
+});
+
+Router.post("/api/admin/renew-vendor", auth, async (req, res) => {
+  const { directRenewVendor } = await import("../controllers/adminPayment.js");
+  return directRenewVendor(req, res);
 });
 
 Router.post("/api/admin/send-reminder", auth, async (req, res) => {

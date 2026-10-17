@@ -436,9 +436,14 @@ async function addApiProductController(req, res) {
       creatorRole: creator ? creator.role : null,
     };
 
-    await Product.create(productData);
+    const newProduct = await Product.create(productData);
 
-    return res.json({ success: true, message: "Product added successfully" });
+    return res.json({ 
+      success: true, 
+      message: "Product added successfully",
+      productId: newProduct._id.toString(),
+      product: newProduct
+    });
   } catch (error) {
     console.error("Error adding product via API:", error);
     res.status(500).json({ success: false, error: "Internal Server Error" });

@@ -432,3 +432,105 @@ export async function verifyPaymentRequest(req, res) {
     return res.status(500).json({ success: false, error: error?.message || 'Verification failed' });
   }
 }
+
+/**
+ * POST /api/admin/renew-vendor
+ * Directly renews a vendor's subscription for a chosen plan and duration,
+ * whether they have an open request or not.
+ */
+export async function directRenewVendor(req, res) {
+  try {
+    const { userId, plan, durationDays = 365, adminNotes } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'Vendor ID is required' });
+    }
+
+    const vendor = await findVendor(userId);
+    if (!vendor) {
+      return res.status(404).json({ success: false, error: 'Vendor account not found' });
+    }
+
+    const chosenPlanId = String(plan || 'yearly_1200').trim();
+    const planDoc = await SubscriptionPlan.findOne({ planId: chosenPlanId }).lean();
+
+    const activationDate = new Date();
+    const days = Number(durationDays) > 0 ? Number(durationDays) : 365;
+
+    // Calculate expiry: extending if current expiry is in the future
+    const now = new Date();
+    const currentExpiry = vendor.subscription?.expiresAt ? new Date(vendor.subscription.expiresAt) : null;
+    const baseDate = (currentExpiry && currentExpiry > now) ? currentExpiry : activationDate;
+    const newExpiresAt = new Date(baseDate.getTime() + days * 24 * 60 * 60 * 1000);
+
+    const productMonthlyLimit = planDoc?.productMonthlyLimit || (chosenPlanId === 'yearly_2400' ? 75 : 25);
+    const articleMonthlyLimit = planDoc?.articleMonthlyLimit || (chosenPlanId === 'yearly_2400' ? 150 : 50);
+    const maxVideoSizeMb = planDoc?.maxVideoSizeMb || 15;
+    const planAmount = planDoc?.discountedPrice || (chosenPlanId === 'yearly_2400' ? 2400 : 1200);
+
+    // Create an audit PaymentRequest record
+    const auditRecord = await PaymentRequest.create({
+      userId: vendor._id.toString(),
+      companyName: vendor.companyName || 'Vendor',
+      userName: vendor.userName || '',
+      email: vendor.email,
+      mobile: vendor.mobile || '',
+      selectedPlan: chosenPlanId,
+      planName: planDoc?.name || chosenPlanId,
+      originalPrice: planDoc?.originalPrice || planAmount,
+      discountedPrice: planAmount,
+      amount: planAmount,
+      vendorNote: 'Admin direct renewal / plan assignment',
+      status: 'approved',
+      approvedPlan: chosenPlanId,
+      paymentReceivedDate: activationDate,
+      durationDays: days,
+      activatedExpiresAt: newExpiresAt,
+      adminNotes: adminNotes || 'Renewed directly by administrator',
+      verifiedBy: 'admin',
+      verifiedAt: activationDate
+    });
+
+    // Update Vendor subscription and limits
+    vendor.subscription = {
+      plan: chosenPlanId,
+      status: 'active',
+      startDate: vendor.subscription?.startDate || activationDate,
+      expiresAt: newExpiresAt,
+      lastPaymentReceivedDate: activationDate,
+      lastPaymentRequestId: auditRecord._id.toString()
+    };
+    vendor.limits = {
+      productMonthlyLimit,
+      articleMonthlyLimit,
+      maxVideoLengthSeconds: 30,
+      maxVideoSizeMb
+    };
+    await vendor.save();
+
+    // Send confirmation email
+    sendManualPaymentApprovedEmail({
+      to: vendor.email,
+      companyName: vendor.companyName,
+      userName: vendor.userName,
+      plan: chosenPlanId,
+      amount: planAmount,
+      utrNumber: 'DIRECT_ADMIN_RENEWAL',
+      paymentDate: activationDate,
+      expiresAt: newExpiresAt,
+      productMonthlyLimit,
+      articleMonthlyLimit
+    }).catch(err => console.error('Error sending renewal email:', err));
+
+    return res.json({
+      success: true,
+      message: `Subscription successfully renewed! ${vendor.companyName} is active for ${days} days until ${newExpiresAt.toLocaleDateString('en-IN')}.`,
+      subscription: vendor.subscription,
+      limits: vendor.limits
+    });
+  } catch (error) {
+    console.error('Error in directRenewVendor:', error);
+    return res.status(500).json({ success: false, error: error?.message || 'Failed to renew vendor subscription' });
+  }
+}
+

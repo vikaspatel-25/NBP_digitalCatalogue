@@ -22,6 +22,33 @@ import {
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
+const FALLBACK_PLANS = [
+  {
+    planId: 'yearly_1200',
+    name: 'Standard Annual Plan',
+    discountedPrice: 1200,
+    originalPrice: 1999,
+    discountPercentage: 40,
+    productMonthlyLimit: 25,
+    articleMonthlyLimit: 50,
+    maxVideosPerProduct: 1,
+    maxVideoSizeMb: 15,
+    isActive: true
+  },
+  {
+    planId: 'yearly_2400',
+    name: 'Enterprise Annual Plan',
+    discountedPrice: 2400,
+    originalPrice: 3999,
+    discountPercentage: 40,
+    productMonthlyLimit: 75,
+    articleMonthlyLimit: 150,
+    maxVideosPerProduct: 2,
+    maxVideoSizeMb: 25,
+    isActive: true
+  }
+];
+
 export default function AdminPaymentRequests() {
   const { toast: appToast } = useToast();
   const [requests, setRequests] = useState([]);
@@ -76,12 +103,13 @@ export default function AdminPaymentRequests() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const openApproveModal = (req) => {
-    setApprovalPlan(req.selectedPlan || 'yearly_1200');
+  const openApproveModal = (req, isDirectRenewal = false) => {
+    const preselectedPlan = req.approvedPlan || req.selectedPlan || 'yearly_1200';
+    setApprovalPlan(preselectedPlan);
     setDurationDays(365);
     setAdminNotes('');
     setModalError('');
-    setActiveModal({ type: 'approve', request: req });
+    setActiveModal({ type: isDirectRenewal ? 'renew' : 'approve', request: req });
   };
 
   const openRejectModal = (req) => {
@@ -97,35 +125,48 @@ export default function AdminPaymentRequests() {
     setModalError('');
 
     try {
-      const reqId = activeModal.request._id;
-      const isApprove = activeModal.type === 'approve';
+      const isReject = activeModal.type === 'reject';
+      const isRenew = activeModal.type === 'renew';
 
-      const payload = {
-        requestId: reqId,
-        action: isApprove ? 'approve' : 'reject',
-        plan: isApprove ? approvalPlan : undefined,
-        durationDays: isApprove ? durationDays : undefined,
-        adminNotes: isApprove ? adminNotes : undefined,
-        rejectionReason: !isApprove ? rejectionReason : undefined
-      };
-
-      const res = await axios.post('/api/admin/payment-requests/verify', payload);
+      let res;
+      if (isReject) {
+        res = await axios.post('/api/admin/payment-requests/verify', {
+          requestId: activeModal.request._id,
+          action: 'reject',
+          rejectionReason: rejectionReason || adminNotes
+        });
+      } else if (isRenew) {
+        res = await axios.post('/api/admin/renew-vendor', {
+          userId: activeModal.request.userId,
+          plan: approvalPlan,
+          durationDays: Number(durationDays) || 365,
+          adminNotes: adminNotes || undefined
+        });
+      } else {
+        res = await axios.post('/api/admin/payment-requests/verify', {
+          requestId: activeModal.request._id,
+          action: 'approve',
+          plan: approvalPlan,
+          durationDays: Number(durationDays) || 365,
+          adminNotes: adminNotes || undefined
+        });
+      }
 
       if (res.data?.success) {
-        const successMsg = isApprove
-          ? `Subscription approved! ${activeModal.request.companyName} is active for ${durationDays} days.`
-          : `Subscription request rejected. Notice dispatched to vendor.`;
-        appToast.success(successMsg, { title: isApprove ? 'Subscription Activated' : 'Request Rejected' });
+        const successMsg = isReject
+          ? `Subscription request rejected. Notice dispatched to vendor.`
+          : `Subscription ${isRenew ? 'renewed' : 'activated'}! ${activeModal.request.companyName} is active for ${durationDays} days.`;
+        appToast.success(successMsg, { title: isReject ? 'Request Rejected' : 'Plan Assigned & Activated' });
         setActiveModal(null);
         fetchRequests();
       } else {
-        const errText = res.data?.error || 'Verification failed.';
+        const errText = res.data?.error || 'Action failed.';
         setModalError(errText);
         appToast.error(errText, { title: 'Action Error' });
       }
     } catch (err) {
       console.error(err);
-      const errText = err.response?.data?.error || err.response?.data?.message || 'Network error processing verification.';
+      const errText = err.response?.data?.error || err.response?.data?.message || 'Network error processing action.';
       setModalError(errText);
       appToast.error(errText, { title: 'Network Failure' });
     } finally {
@@ -378,10 +419,11 @@ export default function AdminPaymentRequests() {
                         {isPending ? (
                           <div className="flex items-center justify-end gap-2">
                             <button
-                              onClick={() => openApproveModal(req)}
-                              className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] transition shadow-xs cursor-pointer active:scale-95"
+                              onClick={() => openApproveModal(req, false)}
+                              className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] transition shadow-xs cursor-pointer active:scale-95 inline-flex items-center gap-1.5"
                             >
-                              Approve (365d)
+                              <ShieldCheck size={13} />
+                              <span>Choose Plan & Approve</span>
                             </button>
                             <button
                               onClick={() => openRejectModal(req)}
@@ -390,9 +432,20 @@ export default function AdminPaymentRequests() {
                               Reject
                             </button>
                           </div>
+                        ) : isApproved ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => openApproveModal(req, true)}
+                              className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-bold text-[11px] transition cursor-pointer inline-flex items-center gap-1.5 border border-slate-200"
+                              title="Renew vendor or switch to a different subscription plan"
+                            >
+                              <RefreshCw size={12} className="text-blue-600" />
+                              <span>Renew / Switch Plan</span>
+                            </button>
+                          </div>
                         ) : (
                           <div className="text-[11px] text-slate-400 italic">
-                            {isApproved ? 'Activated' : 'Resolved'}
+                            Rejected
                           </div>
                         )}
                       </td>
@@ -405,14 +458,16 @@ export default function AdminPaymentRequests() {
         )}
       </div>
 
-      {/* Approve Modal */}
-      {activeModal && activeModal.type === 'approve' && (
+      {/* Approve / Renew Modal */}
+      {activeModal && (activeModal.type === 'approve' || activeModal.type === 'renew') && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-5">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-slate-900 font-extrabold text-base">
                 <ShieldCheck className="text-emerald-600" size={20} />
-                <span>Approve & Activate Subscription</span>
+                <span>
+                  {activeModal.type === 'renew' ? 'Renew & Switch Subscription Plan' : 'Choose Plan & Activate Subscription'}
+                </span>
               </div>
               <button
                 onClick={() => setActiveModal(null)}
@@ -423,7 +478,7 @@ export default function AdminPaymentRequests() {
             </div>
 
             <p className="text-xs text-slate-500">
-              Confirm plan activation for <strong className="text-slate-900">{activeModal.request.companyName}</strong>. This will activate their catalogue and assign monthly listing quotas for 365 days.
+              Select the subscription tier and duration for <strong className="text-slate-900">{activeModal.request.companyName}</strong>. This sets monthly product & article quotas and grants 365-day supplier catalogue access.
             </p>
 
             {modalError && (
@@ -434,41 +489,120 @@ export default function AdminPaymentRequests() {
             )}
 
             <div className="space-y-4">
+              {/* Plan Selection Cards */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Assigned Subscription Plan
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  Select Subscription Plan Tier
                 </label>
-                <select
-                  value={approvalPlan}
-                  onChange={(e) => setApprovalPlan(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                >
-                  {plans.length > 0 ? (
-                    plans.map((p) => (
-                      <option key={p.planId} value={p.planId}>
-                        {p.name} — ₹{p.discountedPrice}/yr ({p.productMonthlyLimit} prods / {p.articleMonthlyLimit} arts)
-                      </option>
-                    ))
-                  ) : (
-                    <>
-                      <option value="yearly_1200">Standard Annual Plan (₹1,200/yr)</option>
-                      <option value="yearly_2400">Enterprise Annual Plan (₹2,400/yr)</option>
-                    </>
-                  )}
-                </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-1">
+                  {(plans.length > 0 ? plans : FALLBACK_PLANS).map((p) => {
+                    const isSelected = approvalPlan === p.planId;
+                    const isRequested = activeModal.request.selectedPlan === p.planId;
+                    return (
+                      <div
+                        key={p.planId}
+                        onClick={() => setApprovalPlan(p.planId)}
+                        className={`p-3.5 rounded-2xl border transition cursor-pointer relative text-left ${
+                          isSelected
+                            ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-500/20 shadow-xs'
+                            : 'border-slate-200 hover:border-slate-300 bg-white'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="font-extrabold text-slate-900 text-xs">
+                            {p.name}
+                          </div>
+                          <div
+                            className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
+                              isSelected
+                                ? 'border-blue-600 bg-blue-600 text-white'
+                                : 'border-slate-300'
+                            }`}
+                          >
+                            {isSelected && <Check size={10} />}
+                          </div>
+                        </div>
+
+                        <div className="flex items-baseline gap-1.5 mt-1.5">
+                          <span className="text-sm font-black text-blue-600">
+                            ₹{(p.discountedPrice || 0).toLocaleString('en-IN')}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-semibold">/year</span>
+                          {p.originalPrice > p.discountedPrice && (
+                            <span className="text-[10px] text-slate-400 line-through ml-1">
+                              ₹{p.originalPrice?.toLocaleString('en-IN')}
+                            </span>
+                          )}
+                          {p.discountPercentage > 0 && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">
+                              {p.discountPercentage}% OFF
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-2 pt-2 border-t border-slate-100 space-y-1 text-[11px] text-slate-600">
+                          <div className="flex items-center gap-1">
+                            <CheckCircle2 size={11} className="text-emerald-600 flex-shrink-0" />
+                            <span><strong>{p.productMonthlyLimit}</strong> Products / mo</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <CheckCircle2 size={11} className="text-emerald-600 flex-shrink-0" />
+                            <span><strong>{p.articleMonthlyLimit}</strong> Articles / mo</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                            <span>Media: {p.maxVideosPerProduct || 1} video ({p.maxVideoSizeMb || 15}MB)</span>
+                          </div>
+                        </div>
+
+                        {isRequested && (
+                          <span className="inline-block mt-2 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-extrabold text-[9px]">
+                            Requested by Vendor
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
+              {/* Duration Presets & Input */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Activation Duration (Days)
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Activation Duration
+                  </label>
+                  <span className="text-xs font-extrabold text-blue-600 font-mono">{durationDays} Days</span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap mb-2">
+                  {[
+                    { label: '30 Days', days: 30 },
+                    { label: '90 Days', days: 90 },
+                    { label: '180 Days (6 Mo)', days: 180 },
+                    { label: '365 Days (1 Yr)', days: 365 },
+                    { label: '730 Days (2 Yrs)', days: 730 }
+                  ].map((chip) => (
+                    <button
+                      key={chip.days}
+                      type="button"
+                      onClick={() => setDurationDays(chip.days)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        durationDays === chip.days
+                          ? 'bg-slate-900 text-white'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
                 <input
                   type="number"
-                  min="30"
-                  max="730"
+                  min="1"
+                  max="1825"
                   value={durationDays}
-                  onChange={(e) => setDurationDays(Number(e.target.value) || 365)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  onChange={(e) => setDurationDays(Math.max(1, Number(e.target.value) || 1))}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="Custom number of days..."
                 />
               </div>
 
@@ -498,10 +632,10 @@ export default function AdminPaymentRequests() {
                 type="button"
                 onClick={handleConfirmAction}
                 disabled={submittingAction}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
               >
                 {submittingAction ? <RefreshCw size={13} className="animate-spin" /> : <CheckCircle2 size={14} />}
-                <span>Confirm & Activate 365 Days</span>
+                <span>Confirm & Activate ({durationDays} Days)</span>
               </button>
             </div>
           </div>

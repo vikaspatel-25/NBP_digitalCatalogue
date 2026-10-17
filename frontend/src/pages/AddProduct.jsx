@@ -34,6 +34,7 @@ export default function AddProduct({ apiEndpoint = '/api/admin/addProduct', role
   const [priceMax, setPriceMax] = useState('');
   const [priceNote, setPriceNote] = useState('');
   const [listingPlacement, setListingPlacement] = useState('top');
+  const [createdProductId, setCreatedProductId] = useState('');
 
   // Media states
   const [images, setImages] = useState([]);
@@ -144,6 +145,7 @@ export default function AddProduct({ apiEndpoint = '/api/admin/addProduct', role
     setArticleLinks(['']);
     setError(null);
     setFieldErrors({});
+    setCreatedProductId('');
     setSuccess(false);
   };
 
@@ -223,6 +225,7 @@ export default function AddProduct({ apiEndpoint = '/api/admin/addProduct', role
       });
 
       if (res.data && res.data.success) {
+        setCreatedProductId(res.data.productId || '');
         setSuccess(true);
         toast.success('Product successfully published to the digital catalogue!', { title: 'Product Published' });
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -269,13 +272,23 @@ export default function AddProduct({ apiEndpoint = '/api/admin/addProduct', role
             >
               Add Another Product
             </button>
+            {createdProductId && (
+              <a
+                href={`/home/product?id=${createdProductId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition text-center shadow-sm"
+              >
+                View Live Listing ↗
+              </a>
+            )}
             <a
-              href="/product"
+              href="/home"
               target="_blank"
               rel="noreferrer"
               className="w-full sm:w-auto px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition text-center"
             >
-              View Public Catalog
+              View Public Catalogue
             </a>
           </div>
         </div>

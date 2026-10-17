@@ -25,9 +25,37 @@ import {
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
+const FALLBACK_PLANS = [
+  {
+    planId: 'yearly_1200',
+    name: 'Standard Annual Plan',
+    discountedPrice: 1200,
+    originalPrice: 1999,
+    discountPercentage: 40,
+    productMonthlyLimit: 25,
+    articleMonthlyLimit: 50,
+    maxVideosPerProduct: 1,
+    maxVideoSizeMb: 15,
+    isActive: true
+  },
+  {
+    planId: 'yearly_2400',
+    name: 'Enterprise Annual Plan',
+    discountedPrice: 2400,
+    originalPrice: 3999,
+    discountPercentage: 40,
+    productMonthlyLimit: 75,
+    articleMonthlyLimit: 150,
+    maxVideosPerProduct: 2,
+    maxVideoSizeMb: 25,
+    isActive: true
+  }
+];
+
 export default function UserManagement() {
   const { toast } = useToast();
   const [users, setUsers] = useState([]);
+  const [plans, setPlans] = useState([]);
   const [stats, setStats] = useState({ totalVendors: 0, active: 0, expiringSoon: 0, pendingPayment: 0, expired: 0 });
   const [subscriptionFilter, setSubscriptionFilter] = useState('all');
   const [loading, setLoading] = useState(true);
@@ -42,16 +70,32 @@ export default function UserManagement() {
   const [successToast, setSuccessToast] = useState('');
   const [sendingReminderId, setSendingReminderId] = useState(null);
 
+  // Renewal / Plan Choice modal state
+  const [renewingUser, setRenewingUser] = useState(null);
+  const [renewPlan, setRenewPlan] = useState('yearly_1200');
+  const [renewDurationDays, setRenewDurationDays] = useState(365);
+  const [renewNotes, setRenewNotes] = useState('');
+  const [isRenewing, setIsRenewing] = useState(false);
+  const [renewError, setRenewError] = useState('');
+
   const fetchUsers = async () => {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.get('/api/admin/userManagement');
+      const [res, plansRes] = await Promise.all([
+        axios.get('/api/admin/userManagement'),
+        axios.get('/api/admin/plans').catch(() => ({ data: { plans: [] } }))
+      ]);
+
       if (res.data && res.data.success) {
         setUsers(res.data.users || []);
         if (res.data.stats) setStats(res.data.stats);
       } else {
         setUsers(res.data.users || []);
+      }
+
+      if (plansRes.data?.plans) {
+        setPlans(plansRes.data.plans);
       }
     } catch (err) {
       console.error(err);
@@ -120,6 +164,76 @@ export default function UserManagement() {
       toast.error(errText, { title: 'Removal Failed' });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const getPlanDisplayName = (planId) => {
+    if (!planId || planId === 'none') return 'No Plan';
+    const allPlans = plans.length > 0 ? plans : FALLBACK_PLANS;
+    const found = allPlans.find(p => p.planId === planId);
+    if (found) {
+      return `${found.name} (₹${(found.discountedPrice || 0).toLocaleString('en-IN')}/yr)`;
+    }
+    if (planId === 'yearly_2400') return 'Enterprise (₹2,400/yr)';
+    if (planId === 'yearly_1200') return 'Standard (₹1,200/yr)';
+    return planId;
+  };
+
+  const openRenewModal = (user) => {
+    setRenewingUser(user);
+    setRenewPlan(user.subscription?.plan || 'yearly_1200');
+    setRenewDurationDays(365);
+    setRenewNotes('');
+    setRenewError('');
+  };
+
+  const handleConfirmRenew = async () => {
+    if (!renewingUser) return;
+    setIsRenewing(true);
+    setRenewError('');
+    try {
+      const res = await axios.post('/api/admin/renew-vendor', {
+        userId: renewingUser._id,
+        plan: renewPlan,
+        durationDays: Number(renewDurationDays) || 365,
+        adminNotes: renewNotes || undefined
+      });
+
+      if (res.data?.success) {
+        setUsers(prev => prev.map(u => {
+          if (u._id === renewingUser._id) {
+            return {
+              ...u,
+              subscription: {
+                ...u.subscription,
+                ...res.data.subscription,
+                computedStatus: 'active',
+                remainingDays: Number(renewDurationDays) || 365,
+                isExpiringSoon: false
+              },
+              limits: res.data.limits || u.limits
+            };
+          }
+          return u;
+        }));
+
+        const successMsg = `Subscription renewed! "${renewingUser.companyName}" is active for ${renewDurationDays} days under ${renewPlan} plan.`;
+        setSuccessToast(successMsg);
+        toast.success(successMsg, { title: 'Subscription Renewed' });
+        setTimeout(() => setSuccessToast(''), 4000);
+        setRenewingUser(null);
+      } else {
+        const errText = res.data?.error || 'Renewal failed.';
+        setRenewError(errText);
+        toast.error(errText, { title: 'Renewal Failed' });
+      }
+    } catch (err) {
+      console.error(err);
+      const errText = err.response?.data?.error || err.response?.data?.message || 'Network error renewing subscription.';
+      setRenewError(errText);
+      toast.error(errText, { title: 'Network Failure' });
+    } finally {
+      setIsRenewing(false);
     }
   };
 
@@ -297,7 +411,7 @@ export default function UserManagement() {
             const sub = user.subscription || {};
             const compStatus = sub.computedStatus || 'pending_payment';
             const isExpiringSoon = sub.isExpiringSoon;
-            const planDisplay = sub.plan === 'yearly_2400' ? 'Enterprise (₹2,400/yr)' : sub.plan === 'yearly_1200' ? 'Standard (₹1,200/yr)' : 'No Plan';
+            const planDisplay = getPlanDisplayName(sub.plan);
 
             return (
               <div
@@ -443,24 +557,35 @@ export default function UserManagement() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
-                  <button
-                    onClick={() => handleSendReminder(user)}
-                    disabled={sendingReminderId === user._id}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition active:scale-95 disabled:opacity-50"
-                    title="Send renewal reminder email to vendor"
-                  >
-                    {sendingReminderId === user._id ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600" />
-                    ) : (
-                      <Send className="w-3.5 h-3.5 text-blue-600" />
-                    )}
-                    <span>Send Reminder</span>
-                  </button>
+                <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => openRenewModal(user)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 text-xs font-semibold transition active:scale-95 cursor-pointer"
+                      title="Choose plan and renew subscription for this vendor"
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Renew / Set Plan</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleSendReminder(user)}
+                      disabled={sendingReminderId === user._id}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition active:scale-95 disabled:opacity-50 cursor-pointer"
+                      title="Send renewal reminder email to vendor"
+                    >
+                      {sendingReminderId === user._id ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                      ) : (
+                        <Send className="w-3.5 h-3.5 text-blue-600" />
+                      )}
+                      <span>Send Reminder</span>
+                    </button>
+                  </div>
 
                   <button
                     onClick={() => setDeletingUser(user)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold transition-all active:scale-95"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold transition-all active:scale-95 cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Remove</span>
@@ -469,6 +594,190 @@ export default function UserManagement() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Renew / Assign Plan Modal */}
+      {renewingUser && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-slate-900 font-extrabold text-base">
+                <ShieldCheck className="text-emerald-600" size={20} />
+                <span>Renew Subscription & Assign Plan</span>
+              </div>
+              <button
+                onClick={() => setRenewingUser(null)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3 text-xs">
+              <div>
+                <div className="font-extrabold text-slate-900">{renewingUser.companyName}</div>
+                <div className="text-slate-500 mt-0.5">{renewingUser.email} • ID: {renewingUser.userId}</div>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Current Status</span>
+                <span className="font-extrabold text-blue-600 capitalize">
+                  {renewingUser.subscription?.computedStatus || 'pending_payment'}
+                </span>
+              </div>
+            </div>
+
+            {renewError && (
+              <div className="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs font-semibold flex items-center gap-2">
+                <AlertCircle size={15} />
+                <span>{renewError}</span>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {/* Plan Cards */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  Select Subscription Plan Tier
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-1">
+                  {(plans.length > 0 ? plans : FALLBACK_PLANS).map((p) => {
+                    const isSelected = renewPlan === p.planId;
+                    return (
+                      <div
+                        key={p.planId}
+                        onClick={() => setRenewPlan(p.planId)}
+                        className={`p-3.5 rounded-2xl border transition cursor-pointer relative text-left ${
+                          isSelected
+                            ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-500/20 shadow-xs'
+                            : 'border-slate-200 hover:border-slate-300 bg-white'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="font-extrabold text-slate-900 text-xs">
+                            {p.name}
+                          </div>
+                          <div
+                            className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
+                              isSelected
+                                ? 'border-blue-600 bg-blue-600 text-white'
+                                : 'border-slate-300'
+                            }`}
+                          >
+                            {isSelected && <Check size={10} />}
+                          </div>
+                        </div>
+
+                        <div className="flex items-baseline gap-1.5 mt-1.5">
+                          <span className="text-sm font-black text-blue-600">
+                            ₹{(p.discountedPrice || 0).toLocaleString('en-IN')}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-semibold">/year</span>
+                          {p.originalPrice > p.discountedPrice && (
+                            <span className="text-[10px] text-slate-400 line-through ml-1">
+                              ₹{p.originalPrice?.toLocaleString('en-IN')}
+                            </span>
+                          )}
+                          {p.discountPercentage > 0 && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">
+                              {p.discountPercentage}% OFF
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-2 pt-2 border-t border-slate-100 space-y-1 text-[11px] text-slate-600">
+                          <div className="flex items-center gap-1">
+                            <CheckCircle2 size={11} className="text-emerald-600 flex-shrink-0" />
+                            <span><strong>{p.productMonthlyLimit}</strong> Products / mo</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <CheckCircle2 size={11} className="text-emerald-600 flex-shrink-0" />
+                            <span><strong>{p.articleMonthlyLimit}</strong> Articles / mo</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                            <span>Media: {p.maxVideosPerProduct || 1} video ({p.maxVideoSizeMb || 15}MB)</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Duration Presets & Input */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Renewal Duration
+                  </label>
+                  <span className="text-xs font-extrabold text-blue-600 font-mono">{renewDurationDays} Days</span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap mb-2">
+                  {[
+                    { label: '30 Days', days: 30 },
+                    { label: '90 Days', days: 90 },
+                    { label: '180 Days (6 Mo)', days: 180 },
+                    { label: '365 Days (1 Yr)', days: 365 },
+                    { label: '730 Days (2 Yrs)', days: 730 }
+                  ].map((chip) => (
+                    <button
+                      key={chip.days}
+                      type="button"
+                      onClick={() => setRenewDurationDays(chip.days)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        renewDurationDays === chip.days
+                          ? 'bg-slate-900 text-white'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="number"
+                  min="1"
+                  max="1825"
+                  value={renewDurationDays}
+                  onChange={(e) => setRenewDurationDays(Math.max(1, Number(e.target.value) || 1))}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="Custom number of days..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Admin Internal Notes / Feedback (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  value={renewNotes}
+                  onChange={(e) => setRenewNotes(e.target.value)}
+                  placeholder="Optional internal remark or custom agreed SLA..."
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setRenewingUser(null)}
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmRenew}
+                disabled={isRenewing}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
+              >
+                {isRenewing ? <RefreshCw size={13} className="animate-spin" /> : <ShieldCheck size={14} />}
+                <span>Confirm & Renew ({renewDurationDays} Days)</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
