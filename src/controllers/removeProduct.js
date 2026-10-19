@@ -330,39 +330,67 @@ export async function apiRemoveProductPageController(req, res) {
 
 export async function apiRemoveProductController(req, res) {
   try {
-    const { productId } = req.body;
     const Product = (await import('../models/product.model.js')).default;
     const { v2: cloudinary } = await import('cloudinary');
 
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ success: false, error: 'Product not found' });
+    // Extract product IDs from either productIds array or single productId
+    const rawIds = req.body.productIds || req.body.productId;
+    const ids = (Array.isArray(rawIds) ? rawIds : [rawIds])
+      .map(id => String(id || '').trim())
+      .filter(id => id && mongoose.Types.ObjectId.isValid(id));
+
+    if (ids.length === 0) {
+      return res.status(400).json({ success: false, error: 'No valid product IDs provided for removal.' });
     }
 
     const requester = getRequester(req);
-    if (requester && requester.role !== "admin" && product.creatorId !== requester.id) {
-      return res.status(403).json({ success: false, error: 'Unauthorized' });
+    const objectIds = ids.map(id => new mongoose.Types.ObjectId(id));
+
+    // Scoped query: Admins can delete any; vendors can ONLY delete their own created products
+    const query = { _id: { $in: objectIds } };
+    if (requester && requester.role !== "admin") {
+      query.creatorId = requester.id;
     }
 
-    const allMedia = [...(product.images || []), ...(product.videos || [])];
+    const products = await Product.find(query);
+    if (!products || products.length === 0) {
+      return res.status(404).json({ success: false, error: 'No matching products found or permission denied.' });
+    }
+
     const extractPublicId = (url) => {
+      if (!url || typeof url !== 'string') return null;
       const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
       return match ? match[1] : null;
     };
 
-    for (const url of allMedia) {
-      const publicId = extractPublicId(url);
-      if (publicId) {
-        try {
+    // Clean up all Cloudinary assets concurrently
+    const cleanupPromises = [];
+    for (const product of products) {
+      const allMedia = [...(product.images || []), ...(product.videos || [])];
+      for (const url of allMedia) {
+        const publicId = extractPublicId(url);
+        if (publicId) {
           const type = url.includes('/video/') ? 'video' : 'image';
-          await cloudinary.uploader.destroy(publicId, { resource_type: type });
-        } catch (cErr) {}
+          cleanupPromises.push(
+            cloudinary.uploader.destroy(publicId, { resource_type: type }).catch(() => null)
+          );
+        }
       }
     }
+    await Promise.allSettled(cleanupPromises);
 
-    await Product.findByIdAndDelete(productId);
-    res.json({ success: true, message: 'Product removed successfully' });
+    // Delete products from database
+    const productIdsToDelete = products.map(p => p._id);
+    const deleteResult = await Product.deleteMany({ _id: { $in: productIdsToDelete } });
+
+    return res.json({
+      success: true,
+      count: deleteResult.deletedCount || products.length,
+      deletedIds: productIdsToDelete.map(id => id.toString()),
+      message: `${deleteResult.deletedCount || products.length} product${(deleteResult.deletedCount || products.length) > 1 ? 's' : ''} permanently removed.`
+    });
   } catch (error) {
+    console.error('Error removing product(s):', error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 }

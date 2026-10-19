@@ -201,6 +201,18 @@ describe('Express HTTP Routes & Endpoint Integration', () => {
       assert.equal(res.status, 302);
       assert.equal(res.headers.get('location'), '/userLogin');
     });
+
+    test('GET /userPanel/removeProduct redirects unauthenticated user to /userLogin', async () => {
+      const res = await fetch(`${baseUrl}/userPanel/removeProduct`, { redirect: 'manual' });
+      assert.equal(res.status, 302);
+      assert.equal(res.headers.get('location'), '/userLogin');
+    });
+
+    test('GET /userPanel/removeArticle redirects unauthenticated user to /userLogin', async () => {
+      const res = await fetch(`${baseUrl}/userPanel/removeArticle`, { redirect: 'manual' });
+      assert.equal(res.status, 302);
+      assert.equal(res.headers.get('location'), '/userLogin');
+    });
   });
 
   describe('Security & Admin Passkey Protection', () => {
@@ -295,6 +307,64 @@ describe('Express HTTP Routes & Endpoint Integration', () => {
       assert.equal(res.status, 400);
       const json = await res.json();
       assert.equal(json.success, false);
+    });
+  });
+
+  describe('Bulk Deletion Endpoints for Products & Articles', () => {
+    test('apiRemoveProductController rejects empty productIds with 400', async () => {
+      const { apiRemoveProductController } = await import('../src/controllers/removeProduct.js');
+      let statusResult = null;
+      let jsonResult = null;
+      const req = { body: { productIds: [] }, cookies: {} };
+      const res = {
+        status: (code) => { statusResult = code; return res; },
+        json: (data) => { jsonResult = data; return res; }
+      };
+      await apiRemoveProductController(req, res);
+      assert.equal(statusResult, 400);
+      assert.equal(jsonResult.success, false);
+    });
+
+    test('apiRemoveProductController rejects invalid ObjectIds with 400', async () => {
+      const { apiRemoveProductController } = await import('../src/controllers/removeProduct.js');
+      let statusResult = null;
+      let jsonResult = null;
+      const req = { body: { productIds: ['not-a-valid-id', '123'] }, cookies: {} };
+      const res = {
+        status: (code) => { statusResult = code; return res; },
+        json: (data) => { jsonResult = data; return res; }
+      };
+      await apiRemoveProductController(req, res);
+      assert.equal(statusResult, 400);
+      assert.equal(jsonResult.success, false);
+    });
+
+    test('apiRemoveArticleController rejects empty articleIds with 400', async () => {
+      const { apiRemoveArticleController } = await import('../src/controllers/removeArticle.js');
+      let statusResult = null;
+      let jsonResult = null;
+      const req = { body: { articleIds: [] }, cookies: {} };
+      const res = {
+        status: (code) => { statusResult = code; return res; },
+        json: (data) => { jsonResult = data; return res; }
+      };
+      await apiRemoveArticleController(req, res);
+      assert.equal(statusResult, 400);
+      assert.equal(jsonResult.success, false);
+    });
+
+    test('apiRemoveArticleController rejects invalid ObjectIds with 400', async () => {
+      const { apiRemoveArticleController } = await import('../src/controllers/removeArticle.js');
+      let statusResult = null;
+      let jsonResult = null;
+      const req = { body: { articleIds: ['invalid-id'] }, cookies: {} };
+      const res = {
+        status: (code) => { statusResult = code; return res; },
+        json: (data) => { jsonResult = data; return res; }
+      };
+      await apiRemoveArticleController(req, res);
+      assert.equal(statusResult, 400);
+      assert.equal(jsonResult.success, false);
     });
   });
 

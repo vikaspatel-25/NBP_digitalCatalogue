@@ -372,28 +372,57 @@ export async function apiRemoveArticlePageController(req, res) {
 
 export async function apiRemoveArticleController(req, res) {
   try {
-    const { articleId } = req.body;
     const Article = (await import('../models/article.model.js')).default;
     const { v2: cloudinary } = await import('cloudinary');
 
-    const article = await Article.findById(articleId);
-    if (!article) return res.status(404).json({ success: false, error: 'Article not found' });
+    // Extract article IDs from either articleIds array or single articleId
+    const rawIds = req.body.articleIds || req.body.articleId;
+    const ids = (Array.isArray(rawIds) ? rawIds : [rawIds])
+      .map(id => String(id || '').trim())
+      .filter(id => id && mongoose.Types.ObjectId.isValid(id));
+
+    if (ids.length === 0) {
+      return res.status(400).json({ success: false, error: 'No valid article IDs provided for removal.' });
+    }
 
     const requester = getRequester(req);
-    if (requester && requester.role !== "admin" && article.creatorId !== requester.id) {
-      return res.status(403).json({ success: false, error: 'Unauthorized' });
+    const objectIds = ids.map(id => new mongoose.Types.ObjectId(id));
+
+    // Scoped query: Admins can delete any; vendors can ONLY delete their own created articles
+    const query = { _id: { $in: objectIds } };
+    if (requester && requester.role !== "admin") {
+      query.creatorId = requester.id;
     }
 
-    if (article.coverImageUrl) {
-      const match = article.coverImageUrl.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
-      if (match) {
-        try { await cloudinary.uploader.destroy(match[1]); } catch (e) {}
+    const articles = await Article.find(query);
+    if (!articles || articles.length === 0) {
+      return res.status(404).json({ success: false, error: 'No matching articles found or permission denied.' });
+    }
+
+    // Clean up all Cloudinary cover images concurrently
+    const cleanupPromises = [];
+    for (const article of articles) {
+      if (article.coverImageUrl) {
+        const match = article.coverImageUrl.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
+        if (match && match[1]) {
+          cleanupPromises.push(cloudinary.uploader.destroy(match[1]).catch(() => null));
+        }
       }
     }
+    await Promise.allSettled(cleanupPromises);
 
-    await Article.findByIdAndDelete(articleId);
-    res.json({ success: true, message: 'Article removed successfully' });
+    // Delete articles from database
+    const articleIdsToDelete = articles.map(a => a._id);
+    const deleteResult = await Article.deleteMany({ _id: { $in: articleIdsToDelete } });
+
+    return res.json({
+      success: true,
+      count: deleteResult.deletedCount || articles.length,
+      deletedIds: articleIdsToDelete.map(id => id.toString()),
+      message: `${deleteResult.deletedCount || articles.length} article${(deleteResult.deletedCount || articles.length) > 1 ? 's' : ''} permanently removed.`
+    });
   } catch (error) {
+    console.error('Error removing article(s):', error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 }
