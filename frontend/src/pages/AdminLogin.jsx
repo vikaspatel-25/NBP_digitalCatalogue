@@ -205,10 +205,10 @@ export default function AdminLogin() {
 
               <div>
                 <h2 className="text-2xl font-bold tracking-tight text-white leading-snug">
-                  Master Control & Governance
+                  Master Control &amp; Governance
                 </h2>
                 <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-                  Restricted access environment for NetZeroMart directory operations, vendor verification, offline UPI payment reconciliations, and catalogue moderation.
+                  Restricted access environment for NetZeroMart directory operations, vendor verification, subscription governance, and catalogue moderation.
                 </p>
               </div>
 
@@ -217,19 +217,19 @@ export default function AdminLogin() {
                   <div className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
                     ✓
                   </div>
-                  <span>Vendor compliance verification & approval</span>
+                  <span>Vendor compliance verification &amp; onboarding approval</span>
                 </div>
                 <div className="flex items-start gap-2.5 text-xs text-slate-200">
                   <div className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
                     ✓
                   </div>
-                  <span>Manual UTR transaction auditing and renewal activation</span>
+                  <span>Vendor subscription management &amp; direct renewals</span>
                 </div>
                 <div className="flex items-start gap-2.5 text-xs text-slate-200">
                   <div className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
                     ✓
                   </div>
-                  <span>Platform-wide UPI ID & QR payment settings</span>
+                  <span>Catalogue content moderation &amp; platform governance</span>
                 </div>
               </div>
             </div>

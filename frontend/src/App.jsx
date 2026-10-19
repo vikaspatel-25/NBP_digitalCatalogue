@@ -44,7 +44,6 @@ import {
   TrendingUp,
   FileText,
   CreditCard,
-  QrCode,
   AlertTriangle,
   Percent,
   Sliders
@@ -697,7 +696,7 @@ function UserDashboardOverview() {
             to="/userPanel/subscription"
             className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs transition shadow-2xs self-start sm:self-auto"
           >
-            Renew via UPI / QR →
+            Renew Subscription →
           </Link>
         </div>
       )}

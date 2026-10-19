@@ -169,7 +169,7 @@ export default function UserLogin() {
                   <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
                     ✓
                   </div>
-                  <span>Submit corporate UPI or QR renewal requests</span>
+                  <span>Publish industry articles and track direct buyer inquiries</span>
                 </div>
               </div>
             </div>
