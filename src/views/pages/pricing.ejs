@@ -16,130 +16,97 @@
     <main class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div class="text-center max-w-2xl mx-auto mb-12">
         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 mb-3">
-          Corporate B2B Accounting
+          Annual Vendor Membership
         </span>
         <h1 class="text-3xl sm:text-4xl font-black text-slate-950 tracking-tight">
           Annual Digital Catalogue Plans
         </h1>
         <p class="text-sm sm:text-base text-slate-600 mt-3">
-          List your sustainable innovations on NetZeroMart. Simple annual pricing with direct corporate UPI / QR settlement and verified invoices.
+          List your sustainable innovations on NetZeroMart. Transparent annual subscriptions with direct corporate UPI / QR settlement and verified invoices.
         </p>
       </div>
 
-      <!-- Pricing Cards Grid -->
+      <!-- Pricing Cards Grid (Rendered dynamically from active SubscriptionPlans) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
-        
-        <!-- Standard Annual Plan -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm flex flex-col justify-between hover:shadow-md transition">
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-bold text-slate-900">Standard Annual Plan</h3>
-              <span class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">Essential</span>
-            </div>
-            <p class="text-xs text-slate-500 mb-6">Designed for manufacturers and emerging sustainable suppliers.</p>
-            <div class="flex items-baseline gap-1 mb-6">
-              <span class="text-4xl font-extrabold text-slate-950">₹1,200</span>
-              <span class="text-xs font-medium text-slate-500">/ 365 days</span>
-            </div>
+        <% if (typeof plans !== 'undefined' && plans && plans.length > 0) { %>
+          <% plans.forEach(plan => { %>
+            <div class="bg-white rounded-2xl border <%= plan.isPopular ? 'border-2 border-emerald-500 shadow-md' : 'border-slate-200 shadow-sm' %> p-8 flex flex-col justify-between relative hover:shadow-lg transition">
+              <% if (plan.badge) { %>
+                <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[11px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full shadow-sm">
+                  <%= plan.badge %>
+                </div>
+              <% } %>
 
-            <ul class="space-y-3 text-xs sm:text-sm text-slate-600 mb-8">
-              <li class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <span><strong>25 Products</strong> per month upload quota</span>
-              </li>
-              <li class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <span><strong>50 Articles</strong> per month publishing quota</span>
-              </li>
-              <li class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <span>1 short demo video clip per product (≤30s / 15MB)</span>
-              </li>
-              <li class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <span>Unlimited YouTube embed links</span>
-              </li>
-              <li class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <span>Full digital catalogue visibility & buyer leads</span>
-              </li>
-              <li class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <span>Direct UPI / QR payment with emailed invoice</span>
-              </li>
-            </ul>
+              <div>
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-lg font-bold text-slate-900"><%= plan.name %></h3>
+                  <% if (plan.discountPercentage > 0) { %>
+                    <span class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700"><%= plan.discountPercentage %>% OFF</span>
+                  <% } %>
+                </div>
+
+                <div class="flex items-baseline gap-2 mb-6 flex-wrap">
+                  <% if (plan.originalPrice > plan.discountedPrice) { %>
+                    <span class="text-sm font-semibold text-slate-400 line-through">₹<%= Number(plan.originalPrice).toLocaleString('en-IN') %></span>
+                  <% } %>
+                  <span class="text-4xl font-extrabold text-slate-950">₹<%= Number(plan.discountedPrice).toLocaleString('en-IN') %></span>
+                  <span class="text-xs font-medium text-slate-500">/ <%= plan.billingCycle || '365 days' %></span>
+                </div>
+
+                <ul class="space-y-3 text-xs sm:text-sm text-slate-600 mb-8">
+                  <li class="flex items-center gap-2.5">
+                    <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span><strong><%= plan.productMonthlyLimit %> Products</strong> per month upload quota</span>
+                  </li>
+                  <li class="flex items-center gap-2.5">
+                    <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span><strong><%= plan.articleMonthlyLimit %> Articles</strong> per month publishing quota</span>
+                  </li>
+                  <% if (plan.maxVideosPerProduct > 0) { %>
+                    <li class="flex items-center gap-2.5">
+                      <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                      <span>Up to <%= plan.maxVideosPerProduct %> demo video clip(s) per product (≤<%= plan.maxVideoSizeMb || 15 %>MB)</span>
+                    </li>
+                  <% } %>
+                  <li class="flex items-center gap-2.5">
+                    <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>Unlimited YouTube embed links</span>
+                  </li>
+                  <li class="flex items-center gap-2.5">
+                    <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>Full digital catalogue visibility &amp; buyer inquiries</span>
+                  </li>
+                  <li class="flex items-center gap-2.5">
+                    <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>Direct UPI / QR payment with verified invoice</span>
+                  </li>
+                </ul>
+              </div>
+
+              <a 
+                href="<%= typeof isVendorLoggedIn !== 'undefined' && isVendorLoggedIn ? '/userPanel/subscription' : '/register' %>" 
+                class="w-full text-center py-3 px-4 rounded-xl font-bold text-xs sm:text-sm <%= plan.isPopular ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-900 hover:bg-slate-800' %> text-white transition shadow-sm"
+              >
+                <%= typeof isVendorLoggedIn !== 'undefined' && isVendorLoggedIn ? 'Choose Plan in Portal' : 'Register Vendor Profile' %>
+              </a>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="col-span-full bg-white rounded-2xl border border-slate-200 p-8 text-center">
+            <h3 class="text-base font-bold text-slate-800 mb-2">Annual Vendor Membership</h3>
+            <p class="text-xs text-slate-500 mb-4">Choose from active supplier tiers upon completing your vendor profile verification.</p>
+            <a href="/register" class="inline-block py-2.5 px-5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition">Register as Vendor</a>
           </div>
-
-          <a 
-            href="<%= typeof isVendorLoggedIn !== 'undefined' && isVendorLoggedIn ? '/userPanel/subscription' : '/register' %>" 
-            class="w-full text-center py-3 px-4 rounded-xl font-bold text-xs sm:text-sm bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm"
-          >
-            <%= typeof isVendorLoggedIn !== 'undefined' && isVendorLoggedIn ? 'Choose Plan in Portal' : 'Register Vendor Profile' %>
-          </a>
-        </div>
-
-        <!-- Enterprise Annual Plan -->
-        <div class="bg-white rounded-2xl border-2 border-emerald-500 p-8 shadow-md flex flex-col justify-between relative hover:shadow-lg transition">
-          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[11px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full shadow-sm">
-            3x Volume Quota
-          </div>
-
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-bold text-slate-900">Enterprise Annual Plan</h3>
-              <span class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700">High Volume</span>
-            </div>
-            <p class="text-xs text-slate-500 mb-6">For high-capacity manufacturers and verified corporate partners.</p>
-            <div class="flex items-baseline gap-1 mb-6">
-              <span class="text-4xl font-extrabold text-slate-950">₹2,400</span>
-              <span class="text-xs font-medium text-slate-500">/ 365 days</span>
-            </div>
-
-            <ul class="space-y-3 text-xs sm:text-sm text-slate-600 mb-8">
-              <li class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <span><strong>75 Products</strong> per month (3x Standard Quota)</span>
-              </li>
-              <li class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <span><strong>150 Articles</strong> per month (3x Standard Quota)</span>
-              </li>
-              <li class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <span>Up to 2 short demo video clips (≤30s / 15MB)</span>
-              </li>
-              <li class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <span>Priority placement in catalogue directories</span>
-              </li>
-              <li class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <span>Dedicated partner support & inquiry routing</span>
-              </li>
-              <li class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <span>Direct UPI / QR payment with emailed invoice</span>
-              </li>
-            </ul>
-          </div>
-
-          <a 
-            href="<%= typeof isVendorLoggedIn !== 'undefined' && isVendorLoggedIn ? '/userPanel/subscription' : '/register' %>" 
-            class="w-full text-center py-3 px-4 rounded-xl font-bold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm"
-          >
-            <%= typeof isVendorLoggedIn !== 'undefined' && isVendorLoggedIn ? 'Choose Enterprise Plan in Portal' : 'Register Vendor Profile' %>
-          </a>
-        </div>
-
+        <% } %>
       </div>
 
-      <!-- Corporate B2B Accounting Info -->
+      <!-- Corporate Subscriptions Info -->
       <div class="mt-12 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 text-center max-w-3xl mx-auto shadow-sm">
-        <h3 class="text-base font-bold text-slate-900 mb-2">How Corporate B2B Subscriptions Work</h3>
+        <h3 class="text-base font-bold text-slate-900 mb-2">How Annual Vendor Subscriptions Work</h3>
         <p class="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl mx-auto">
           1. Submit your vendor registration with business documentation for review.<br />
-          2. Upon verification, transfer your annual subscription fee using our official corporate UPI ID or QR code.<br />
-          3. Our accounts team confirms receipt, immediately activates 365 days of storefront exposure, and emails your verified invoice. Zero auto-debit surprises.
+          2. Upon verification, choose your annual subscription tier in your vendor portal.<br />
+          3. Complete payment via corporate UPI or QR code. Once confirmed, your 365-day digital catalogue visibility and monthly quotas are activated with official invoice receipts. Zero auto-debit surprises.
         </p>
       </div>
     </main>

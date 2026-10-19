@@ -369,15 +369,15 @@ export default function Register() {
       <div className="max-w-4xl mx-auto w-full">
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-semibold mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-semibold mb-2.5">
             <ShieldCheck size={14} />
-            <span>Verified Vendor Onboarding</span>
+            <span>Vendor Onboarding</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             Register Your Sustainable Enterprise
           </h1>
-          <p className="text-slate-500 text-sm mt-2 max-w-xl mx-auto">
-            Showcase your clean-tech innovations, industrial solar solutions, and green equipment to verified institutional buyers.
+          <p className="text-slate-500 text-xs sm:text-sm mt-1.5 max-w-md mx-auto">
+            Showcase your clean-tech innovations and eco-friendly products to verified business buyers.
           </p>
         </div>
 
@@ -393,16 +393,16 @@ export default function Register() {
                 </div>
                 <div>
                   <div className="font-bold text-sm tracking-wide">NetZeroMart</div>
-                  <div className="text-[10px] text-slate-400">Digital Catalogue & Directory</div>
+                  <div className="text-[10px] text-slate-400">Digital Catalogue &amp; Directory</div>
                 </div>
               </div>
 
-              <div className="pt-4 space-y-4">
+              <div className="pt-2 space-y-2">
                 <h3 className="text-lg font-bold leading-snug">
-                  Transform Buyer Inquiries into Direct Enterprise Contracts
+                  Showcase Your Products Directly to Buyers
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Join a network of audited manufacturers, green suppliers, and circular economy service providers.
+                  Join our curated digital directory for sustainable innovations, renewable equipment, and clean-tech solutions.
                 </p>
               </div>
 
@@ -412,7 +412,7 @@ export default function Register() {
                     ✓
                   </div>
                   <div className="text-xs text-slate-200">
-                    <span className="font-semibold text-white">Full Digital Catalogue:</span> Upload 25 to 75 products/month with spec sheets and video demos.
+                    <span className="font-semibold text-white">Digital Catalogue Listing:</span> Showcase products, specifications, and media.
                   </div>
                 </div>
 
@@ -421,7 +421,7 @@ export default function Register() {
                     ✓
                   </div>
                   <div className="text-xs text-slate-200">
-                    <span className="font-semibold text-white">Transparent Annual Plans:</span> Fixed yearly billing at ₹1,200 or ₹2,400 via corporate bank transfer or UPI.
+                    <span className="font-semibold text-white">Direct Inquiries:</span> Receive customer inquiries directly to your registered business email.
                   </div>
                 </div>
 
@@ -430,7 +430,7 @@ export default function Register() {
                     ✓
                   </div>
                   <div className="text-xs text-slate-200">
-                    <span className="font-semibold text-white">Editorial Exposure:</span> Publish case studies and articles linked directly to your products.
+                    <span className="font-semibold text-white">Industry Publications:</span> Publish thought leadership articles alongside your listings.
                   </div>
                 </div>
               </div>

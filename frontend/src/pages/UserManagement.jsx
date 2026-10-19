@@ -180,11 +180,10 @@ export default function UserManagement() {
     const allPlans = plans.length > 0 ? plans : FALLBACK_PLANS;
     const found = allPlans.find(p => p.planId === planId);
     if (found) {
-      return `${found.name} (₹${(found.discountedPrice || 0).toLocaleString('en-IN')}/yr)`;
+      const priceSuffix = found.discountedPrice != null ? ` (₹${Number(found.discountedPrice).toLocaleString('en-IN')}/yr)` : '';
+      return `${found.name}${priceSuffix}`;
     }
-    if (planId === 'yearly_2400') return 'Enterprise (₹2,400/yr)';
-    if (planId === 'yearly_1200') return 'Standard (₹1,200/yr)';
-    return planId;
+    return String(planId).replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   const openRenewModal = (user = null) => {

@@ -59,7 +59,7 @@ export async function checkProductUploadQuota(userId) {
   if (currentMonthCount >= monthlyLimit) {
     return {
       allowed: false,
-      error: `Monthly product limit reached (${currentMonthCount}/${monthlyLimit} products used this month). Your limit resets on the 1st of next month.${!isPro ? ' Upgrade to the Enterprise Plan for 75 products/month.' : ''}`
+      error: `Monthly product limit reached (${currentMonthCount}/${monthlyLimit} products used this month). Your limit resets on the 1st of next month.${!isPro ? ' Upgrade your plan for higher monthly limits.' : ''}`
     };
   }
 
@@ -109,7 +109,7 @@ export async function checkArticleUploadQuota(userId) {
   if (currentMonthCount >= monthlyLimit) {
     return {
       allowed: false,
-      error: `Monthly article limit reached (${currentMonthCount}/${monthlyLimit} articles used this month). Your quota resets on the 1st of next month.${!isPro ? ' Upgrade to the Enterprise Plan for 150 articles/month.' : ''}`
+      error: `Monthly article limit reached (${currentMonthCount}/${monthlyLimit} articles used this month). Your quota resets on the 1st of next month.${!isPro ? ' Upgrade your plan for higher monthly limits.' : ''}`
     };
   }
 

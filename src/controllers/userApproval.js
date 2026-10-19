@@ -99,7 +99,7 @@ async function approveUserController(req, res) {
                   ⚡ Next Step: Activate Your Annual Subscription
                 </p>
                 <p style="margin:4px 0 0 0;font-size:12px;color:#1e3a8a;">
-                  Log in to your vendor dashboard, select your annual supplier plan (₹1,200 Standard or ₹2,400 Enterprise), and pay directly via UPI/QR to publish your catalogue.
+                  Log in to your vendor dashboard, choose your annual subscription plan, and submit payment via UPI or QR code to activate and publish your catalogue.
                 </p>
               </div>
               <p style="font-size:14px;color:#4b5563;line-height:1.6;">

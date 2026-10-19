@@ -17,9 +17,9 @@ const storeUrl = process.env.FRONTEND_URL || 'https://www.netzeromart.com';
 /**
  * 1. Vendor submits UTR & Screenshot -> Email to Vendor (Awaiting review) + Alert to Admin
  */
-export async function sendManualPaymentSubmittedEmail({ to, userName, companyName, plan, amount, utrNumber }) {
+export async function sendManualPaymentSubmittedEmail({ to, userName, companyName, plan, planName: explicitPlanName, amount, utrNumber }) {
   try {
-    const planName = plan === 'yearly_2400' ? 'Enterprise Annual Plan (₹2,400/yr)' : 'Standard Annual Plan (₹1,200/yr)';
+    const planName = explicitPlanName || (plan ? String(plan).replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Annual Subscription');
 
     const vendorMail = {
       from: `"${appName}" <${process.env.GMAIL_USER}>`,
@@ -89,6 +89,7 @@ export async function sendManualPaymentApprovedEmail({
   companyName,
   userName,
   plan,
+  planName: explicitPlanName,
   amount,
   utrNumber,
   paymentDate,
@@ -107,7 +108,7 @@ export async function sendManualPaymentApprovedEmail({
       month: 'short',
       year: 'numeric'
     });
-    const planName = plan === 'yearly_2400' ? 'Enterprise Annual Plan (₹2,400/yr)' : 'Standard Annual Plan (₹1,200/yr)';
+    const planName = explicitPlanName || (plan ? String(plan).replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Annual Subscription');
 
     const mailOptions = {
       from: `"${appName}" <${process.env.GMAIL_USER}>`,

@@ -437,9 +437,17 @@ Router.post("/api/userPanel/complete-onboarding", userAuth, async (req, res) => 
 });
 
 // Public Compliance & Legal Pages (Required by Razorpay)
-Router.get("/pricing", (req, res) => {
+Router.get("/pricing", async (req, res) => {
   const isVendorLoggedIn = Boolean(req.cookies.userToken);
-  res.render("pages/pricing.ejs", { isVendorLoggedIn });
+  try {
+    const { getOrSeedPlans } = await import("../controllers/adminPayment.js");
+    const allPlans = await getOrSeedPlans();
+    const plans = allPlans.filter(p => p.isActive !== false);
+    res.render("pages/pricing.ejs", { isVendorLoggedIn, plans });
+  } catch (err) {
+    console.error("Error loading pricing plans:", err);
+    res.render("pages/pricing.ejs", { isVendorLoggedIn, plans: [] });
+  }
 });
 Router.get("/terms", (req, res) => {
   res.render("pages/terms.ejs");
