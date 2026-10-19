@@ -57,6 +57,14 @@ const subscriptionPlanSchema = new mongoose.Schema(
       type: Number,
       default: 15
     },
+    maxImagesPerProduct: {
+      type: Number,
+      default: 10
+    },
+    maxImageSizeMb: {
+      type: Number,
+      default: 10
+    },
     features: {
       type: [String],
       default: []
@@ -112,11 +120,13 @@ export const DEFAULT_PLANS = [
     articleMonthlyLimit: 50,
     maxVideosPerProduct: 1,
     maxVideoSizeMb: 15,
+    maxImagesPerProduct: 10,
+    maxImageSizeMb: 10,
     features: [
       '25 Products / month upload quota',
       '50 Articles / month publishing quota',
       'Full Digital Catalogue storefront exposure',
-      'Images + Short video clip (≤30s / 15MB)',
+      'Images (≤10MB) + Short video clip (≤30s / 15MB)',
       'Unlimited YouTube embed links',
       'Direct Buyer Lead Inquiries'
     ],
@@ -134,12 +144,14 @@ export const DEFAULT_PLANS = [
     productMonthlyLimit: 75,
     articleMonthlyLimit: 150,
     maxVideosPerProduct: 2,
-    maxVideoSizeMb: 15,
+    maxVideoSizeMb: 25,
+    maxImagesPerProduct: 15,
+    maxImageSizeMb: 15,
     features: [
       '75 Products / month upload quota (3x limit)',
       '150 Articles / month publishing quota (3x limit)',
       'Priority placement in catalogue directories',
-      'Images + Up to 2 Short video clips (≤30s / 15MB)',
+      'Images (≤15MB) + Up to 2 Short video clips (≤30s / 25MB)',
       'Unlimited YouTube embed links',
       'Dedicated Partner Support'
     ],

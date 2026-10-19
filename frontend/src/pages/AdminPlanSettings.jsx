@@ -17,7 +17,12 @@ import {
   Sliders,
   Store,
   FileText,
-  Video
+  Video,
+  Image as ImageIcon,
+  Film,
+  Mail,
+  Phone,
+  Building2
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
@@ -27,6 +32,19 @@ export default function AdminPlanSettings() {
   const [loading, setLoading] = useState(true);
   const [savingPlanId, setSavingPlanId] = useState(null);
   const [activePlanId, setActivePlanId] = useState('yearly_1200');
+
+  // Platform-wide Media Formats & Sales Desk State
+  const [platformSettings, setPlatformSettings] = useState({
+    allowImages: true,
+    allowVideos: true,
+    allowYoutube: true,
+    maxVideoDurationSeconds: 30,
+    articleMaxCoverSizeMb: 10,
+    contactEmail: '',
+    contactPhone: '',
+    customPlanNote: ''
+  });
+  const [savingPlatform, setSavingPlatform] = useState(false);
 
   // New Plan Modal State
   const [showNewModal, setShowNewModal] = useState(false);
@@ -39,32 +57,52 @@ export default function AdminPlanSettings() {
     discountedPrice: 1200,
     productMonthlyLimit: 25,
     articleMonthlyLimit: 50,
+    maxImagesPerProduct: 10,
+    maxImageSizeMb: 10,
     maxVideosPerProduct: 1,
     maxVideoSizeMb: 15,
     features: ['Upload products with images & short clips', 'Publish thought leadership articles', 'Direct B2B buyer inquiries'],
     isActive: true
   });
 
-  const fetchPlans = async () => {
+  const fetchPlansAndSettings = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('/api/admin/plans');
-      if (res.data?.success && res.data.plans) {
-        setPlans(res.data.plans);
-        if (res.data.plans.length > 0 && !res.data.plans.some(p => p.planId === activePlanId)) {
-          setActivePlanId(res.data.plans[0].planId);
+      const [plansRes, mediaRes] = await Promise.allSettled([
+        axios.get('/api/admin/plans'),
+        axios.get('/api/admin/media-settings')
+      ]);
+
+      if (plansRes.status === 'fulfilled' && plansRes.value.data?.success && plansRes.value.data.plans) {
+        setPlans(plansRes.value.data.plans);
+        if (plansRes.value.data.plans.length > 0 && !plansRes.value.data.plans.some(p => p.planId === activePlanId)) {
+          setActivePlanId(plansRes.value.data.plans[0].planId);
         }
+      }
+
+      if (mediaRes.status === 'fulfilled' && mediaRes.value.data?.success && mediaRes.value.data.settings) {
+        const s = mediaRes.value.data.settings;
+        setPlatformSettings({
+          allowImages: s.allowImages !== undefined ? s.allowImages : true,
+          allowVideos: s.allowVideos !== undefined ? s.allowVideos : true,
+          allowYoutube: s.allowYoutube !== undefined ? s.allowYoutube : true,
+          maxVideoDurationSeconds: s.maxVideoDurationSeconds || 30,
+          articleMaxCoverSizeMb: s.articleMaxCoverSizeMb || 10,
+          contactEmail: s.contactEmail || '',
+          contactPhone: s.contactPhone || '',
+          customPlanNote: s.customPlanNote || ''
+        });
       }
     } catch (err) {
       console.error(err);
-      toast.error('Failed to load subscription plans.', { title: 'Network Error' });
+      toast.error('Failed to load subscription plans & settings.', { title: 'Network Error' });
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPlans();
+    fetchPlansAndSettings();
   }, []);
 
   const handleUpdateField = (planId, field, value) => {
@@ -121,7 +159,7 @@ export default function AdminPlanSettings() {
       const res = await axios.post('/api/admin/plans', plan);
       if (res.data?.success) {
         toast.success(res.data.message || `Plan "${plan.name}" updated successfully!`, { title: 'Plan Saved' });
-        fetchPlans();
+        fetchPlansAndSettings();
       } else {
         toast.error(res.data?.error || 'Failed to save plan.', { title: 'Save Failed' });
       }
@@ -139,7 +177,7 @@ export default function AdminPlanSettings() {
       const res = await axios.delete(`/api/admin/plans/${plan.planId}`);
       if (res.data?.success) {
         toast.success(res.data.message, { title: 'Status Changed' });
-        fetchPlans();
+        fetchPlansAndSettings();
       }
     } catch (err) {
       toast.error('Failed to change status.', { title: 'Error' });
@@ -157,12 +195,31 @@ export default function AdminPlanSettings() {
       if (res.data?.success) {
         toast.success(`Plan "${newPlan.name}" created successfully!`, { title: 'Plan Created' });
         setShowNewModal(false);
-        fetchPlans();
+        fetchPlansAndSettings();
       } else {
         toast.error(res.data?.error || 'Failed to create plan.', { title: 'Creation Failed' });
       }
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to create plan.', { title: 'Error' });
+    }
+  };
+
+  const handleSavePlatformSettings = async (e) => {
+    e.preventDefault();
+    setSavingPlatform(true);
+    try {
+      const res = await axios.post('/api/admin/media-settings', platformSettings);
+      if (res.data?.success) {
+        toast.success('Platform media controls & direct sales desk updated successfully!', { title: 'Settings Saved' });
+        fetchPlansAndSettings();
+      } else {
+        toast.error(res.data?.error || 'Failed to save settings.', { title: 'Save Failed' });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.error || 'Error saving platform controls.', { title: 'Network Error' });
+    } finally {
+      setSavingPlatform(false);
     }
   };
 
@@ -177,26 +234,26 @@ export default function AdminPlanSettings() {
             <span>Commercial Tiers & Dynamic Pricing</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Subscription Plans & Pricing Editor
+            Subscription Plans & Quota Limits
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-xl">
-            Configure regular list prices (MRP) and discounted offer prices. The system automatically computes and displays live percentage-off badges (<strong className="text-slate-800">% OFF</strong>) across vendor and public storefronts without requiring code changes.
+            Configure regular list prices (MRP), discounted offer prices, monthly product & article quotas, per-product media limits, and platform format controls in one place.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowNewModal(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs transition shadow-xs active:scale-95 cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition shadow-xs active:scale-95 cursor-pointer"
           >
             <Plus size={15} />
             <span>Create Custom Plan</span>
           </button>
           <button
-            onClick={fetchPlans}
+            onClick={fetchPlansAndSettings}
             disabled={loading}
             className="p-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition cursor-pointer"
-            title="Refresh plans"
+            title="Refresh plans & settings"
           >
             <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -384,14 +441,19 @@ export default function AdminPlanSettings() {
               </div>
             </div>
 
-            {/* Quota Settings */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                <Store size={15} className="text-blue-600" />
-                <span>Monthly Platform Upload & Content Quotas</span>
-              </h3>
+            {/* Tier Quotas & Media Limits */}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <Store size={15} className="text-blue-600" />
+                  <span>Tier Upload Quotas & File Size Limits</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Set monthly publishing quotas and per-product media limits for vendors subscribed to this plan.
+                </p>
+              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
                   <label className="block text-xs font-bold text-slate-700 mb-1">
                     Monthly Product Upload Limit
@@ -424,17 +486,62 @@ export default function AdminPlanSettings() {
 
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
                   <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Max Images Per Product
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="30"
+                    value={plan.maxImagesPerProduct || 10}
+                    onChange={(e) => handleUpdateField(plan.planId, 'maxImagesPerProduct', e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-black text-slate-900 bg-white focus:outline-none"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1">Gallery image count (JPG, PNG, WEBP)</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Max Image File Size (MB)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={plan.maxImageSizeMb || 10}
+                    onChange={(e) => handleUpdateField(plan.planId, 'maxImageSizeMb', e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-black text-slate-900 bg-white focus:outline-none"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1">Per image file size cap</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
                     Max Direct Videos Per Product
                   </label>
                   <input
                     type="number"
                     min="0"
                     max="10"
-                    value={plan.maxVideosPerProduct || 1}
+                    value={plan.maxVideosPerProduct ?? 1}
                     onChange={(e) => handleUpdateField(plan.planId, 'maxVideosPerProduct', e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-black text-slate-900 bg-white focus:outline-none"
                   />
-                  <p className="text-[11px] text-slate-500 mt-1">Short clips (in addition to unlimited YouTube)</p>
+                  <p className="text-[11px] text-slate-500 mt-1">Direct upload clips (YouTube is unlimited)</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Max Video File Size (MB)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={plan.maxVideoSizeMb || 15}
+                    onChange={(e) => handleUpdateField(plan.planId, 'maxVideoSizeMb', e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-black text-slate-900 bg-white focus:outline-none"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1">Per video file size cap (MP4, WEBM)</p>
                 </div>
               </div>
             </div>
@@ -495,6 +602,200 @@ export default function AdminPlanSettings() {
           </div>
         );
       })}
+
+      {/* Platform Media Formats & Direct Sales Desk */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-800 text-xs font-bold tracking-wide uppercase mb-2">
+              <Sliders size={13} />
+              <span>Platform-Wide Controls</span>
+            </div>
+            <h2 className="text-xl font-black text-slate-900">
+              Platform Media Formats & Direct Sales Desk
+            </h2>
+            <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+              Enable or disable media formats globally, define platform duration ceilings, and set the B2B commercial sales desk contact information surfaced to enterprise vendors.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSavePlatformSettings} className="space-y-6">
+          {/* Format Toggles */}
+          <div>
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+              Allowed Media Formats
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              
+              {/* Product Images */}
+              <div className={`p-4 rounded-2xl border transition-all ${
+                platformSettings.allowImages ? 'bg-blue-50/30 border-blue-200' : 'bg-slate-50 border-slate-200 opacity-75'
+              }`}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+                    <ImageIcon size={16} />
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={platformSettings.allowImages}
+                      onChange={(e) => setPlatformSettings({ ...platformSettings, allowImages: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+                <h4 className="text-xs font-bold text-slate-900">Product Images</h4>
+                <p className="text-[11px] text-slate-500 mt-0.5">JPG, PNG, WEBP gallery uploads</p>
+              </div>
+
+              {/* Direct Videos */}
+              <div className={`p-4 rounded-2xl border transition-all ${
+                platformSettings.allowVideos ? 'bg-indigo-50/30 border-indigo-200' : 'bg-slate-50 border-slate-200 opacity-75'
+              }`}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                    <Video size={16} />
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={platformSettings.allowVideos}
+                      onChange={(e) => setPlatformSettings({ ...platformSettings, allowVideos: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
+                </div>
+                <h4 className="text-xs font-bold text-slate-900">Direct Video Uploads</h4>
+                <p className="text-[11px] text-slate-500 mt-0.5">Short MP4, WEBM video clips</p>
+              </div>
+
+              {/* YouTube Links */}
+              <div className={`p-4 rounded-2xl border transition-all ${
+                platformSettings.allowYoutube ? 'bg-rose-50/30 border-rose-200' : 'bg-slate-50 border-slate-200 opacity-75'
+              }`}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center">
+                    <Film size={16} />
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={platformSettings.allowYoutube}
+                      onChange={(e) => setPlatformSettings({ ...platformSettings, allowYoutube: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-600"></div>
+                  </label>
+                </div>
+                <h4 className="text-xs font-bold text-slate-900">YouTube Embed Links</h4>
+                <p className="text-[11px] text-slate-500 mt-0.5">Unlimited external video embeds</p>
+              </div>
+
+            </div>
+          </div>
+
+          {/* Platform Ceilings */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Max Video Clip Duration (Seconds)
+              </label>
+              <input
+                type="number"
+                min="5"
+                max="300"
+                value={platformSettings.maxVideoDurationSeconds}
+                onChange={(e) => setPlatformSettings({ ...platformSettings, maxVideoDurationSeconds: Number(e.target.value) })}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 bg-white focus:outline-none"
+              />
+              <p className="text-[11px] text-slate-500 mt-1">Recommended: 30 seconds for quick product demos</p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Article Cover Image Max Size (MB)
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="50"
+                value={platformSettings.articleMaxCoverSizeMb}
+                onChange={(e) => setPlatformSettings({ ...platformSettings, articleMaxCoverSizeMb: Number(e.target.value) })}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 bg-white focus:outline-none"
+              />
+              <p className="text-[11px] text-slate-500 mt-1">Applies to article banner images</p>
+            </div>
+          </div>
+
+          {/* B2B Commercial Sales Desk Contact */}
+          <div>
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <Building2 size={14} className="text-emerald-600" />
+              <span>B2B Commercial Contact Information</span>
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Sales Email
+                </label>
+                <div className="relative">
+                  <Mail size={14} className="absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="email"
+                    value={platformSettings.contactEmail}
+                    onChange={(e) => setPlatformSettings({ ...platformSettings, contactEmail: e.target.value })}
+                    placeholder="sales@netzeromart.com"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Commercial Phone / WhatsApp
+                </label>
+                <div className="relative">
+                  <Phone size={14} className="absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={platformSettings.contactPhone}
+                    onChange={(e) => setPlatformSettings({ ...platformSettings, contactPhone: e.target.value })}
+                    placeholder="+91 99999 00000"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Custom Enterprise Inquiries Note
+                </label>
+                <textarea
+                  rows={2}
+                  value={platformSettings.customPlanNote}
+                  onChange={(e) => setPlatformSettings({ ...platformSettings, customPlanNote: e.target.value })}
+                  placeholder="Need custom enterprise upload quotas or multi-brand management? Contact our commercial sales desk..."
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 flex items-center justify-end">
+            <button
+              type="submit"
+              disabled={savingPlatform}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wide transition shadow-sm active:scale-95 disabled:opacity-50 cursor-pointer"
+            >
+              {savingPlatform ? <RefreshCw size={13} className="animate-spin" /> : <Save size={13} />}
+              <span>Save Platform Controls & Limits</span>
+            </button>
+          </div>
+        </form>
+      </div>
 
       {/* New Plan Modal */}
       {showNewModal && (
@@ -585,6 +886,56 @@ export default function AdminPlanSettings() {
                     type="number"
                     value={newPlan.articleMonthlyLimit}
                     onChange={(e) => setNewPlan({ ...newPlan, articleMonthlyLimit: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Max Images / Product
+                  </label>
+                  <input
+                    type="number"
+                    value={newPlan.maxImagesPerProduct}
+                    onChange={(e) => setNewPlan({ ...newPlan, maxImagesPerProduct: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Max Image Size (MB)
+                  </label>
+                  <input
+                    type="number"
+                    value={newPlan.maxImageSizeMb}
+                    onChange={(e) => setNewPlan({ ...newPlan, maxImageSizeMb: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Max Videos / Product
+                  </label>
+                  <input
+                    type="number"
+                    value={newPlan.maxVideosPerProduct}
+                    onChange={(e) => setNewPlan({ ...newPlan, maxVideosPerProduct: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Max Video Size (MB)
+                  </label>
+                  <input
+                    type="number"
+                    value={newPlan.maxVideoSizeMb}
+                    onChange={(e) => setNewPlan({ ...newPlan, maxVideoSizeMb: Number(e.target.value) })}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
                   />
                 </div>

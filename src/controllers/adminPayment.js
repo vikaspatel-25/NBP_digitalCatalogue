@@ -179,6 +179,8 @@ export async function saveAdminPlan(req, res) {
       articleMonthlyLimit,
       maxVideosPerProduct,
       maxVideoSizeMb,
+      maxImagesPerProduct,
+      maxImageSizeMb,
       features,
       isActive,
       sortOrder
@@ -208,6 +210,8 @@ export async function saveAdminPlan(req, res) {
         articleMonthlyLimit: Number(articleMonthlyLimit) || 50,
         maxVideosPerProduct: Number(maxVideosPerProduct) || 1,
         maxVideoSizeMb: Number(maxVideoSizeMb) || 15,
+        maxImagesPerProduct: Number(maxImagesPerProduct) || 10,
+        maxImageSizeMb: Number(maxImageSizeMb) || 10,
         features: Array.isArray(features) ? features : [],
         isActive: isActive !== undefined ? Boolean(isActive) : true,
         sortOrder: Number(sortOrder) || 0
@@ -223,6 +227,8 @@ export async function saveAdminPlan(req, res) {
       if (articleMonthlyLimit !== undefined) plan.articleMonthlyLimit = Number(articleMonthlyLimit);
       if (maxVideosPerProduct !== undefined) plan.maxVideosPerProduct = Number(maxVideosPerProduct);
       if (maxVideoSizeMb !== undefined) plan.maxVideoSizeMb = Number(maxVideoSizeMb);
+      if (maxImagesPerProduct !== undefined) plan.maxImagesPerProduct = Number(maxImagesPerProduct);
+      if (maxImageSizeMb !== undefined) plan.maxImageSizeMb = Number(maxImageSizeMb);
       if (features !== undefined) plan.features = Array.isArray(features) ? features : [];
       if (isActive !== undefined) plan.isActive = Boolean(isActive);
       if (sortOrder !== undefined) plan.sortOrder = Number(sortOrder);

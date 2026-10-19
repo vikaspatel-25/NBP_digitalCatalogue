@@ -14,10 +14,8 @@ import UserLogin from './pages/UserLogin';
 import ResetPassword from './pages/ResetPassword';
 import SubscriptionManager from './pages/SubscriptionManager';
 import Onboarding from './pages/Onboarding';
-import AdminPaymentSettings from './pages/AdminPaymentSettings';
 import AdminPaymentRequests from './pages/AdminPaymentRequests';
 import AdminPlanSettings from './pages/AdminPlanSettings';
-import AdminMediaSettings from './pages/AdminMediaSettings';
 import { ToastProvider } from './context/ToastContext';
 import { 
   LayoutDashboard, 
@@ -62,9 +60,9 @@ function TitleUpdater() {
       '/admin/userApproval': 'Vendor Approvals | NetZeroMart',
       '/admin/userManagement': 'Vendor Directory | NetZeroMart',
       '/admin/paymentRequests': 'Subscription Requests | NetZeroMart Admin',
-      '/admin/plans': 'Subscription Plans & Pricing | NetZeroMart Admin',
-      '/admin/mediaSettings': 'Media & Upload Limits | NetZeroMart Admin',
-      '/admin/paymentSettings': 'Media & Upload Limits | NetZeroMart Admin',
+      '/admin/plans': 'Plans & Quota Limits | NetZeroMart Admin',
+      '/admin/mediaSettings': 'Plans & Quota Limits | NetZeroMart Admin',
+      '/admin/paymentSettings': 'Plans & Quota Limits | NetZeroMart Admin',
       '/admin/addProduct': 'Add Product | NetZeroMart Admin',
       '/admin/updateProduct': 'Update Product | NetZeroMart Admin',
       '/admin/removeProduct': 'Remove Products | NetZeroMart Admin',
@@ -126,11 +124,11 @@ function AdminLayout({ children }) {
   const adminTitles = {
     '/admin': 'Dashboard Overview',
     '/admin/userApproval': 'Pending Approvals',
-    '/admin/userManagement': 'Active Vendor Directory',
+    '/admin/userManagement': 'Vendor Directory',
     '/admin/paymentRequests': 'Subscription Requests',
-    '/admin/plans': 'Subscription Plans & Pricing',
-    '/admin/mediaSettings': 'Media & Upload Limits',
-    '/admin/paymentSettings': 'Media & Upload Limits',
+    '/admin/plans': 'Plans & Quota Limits',
+    '/admin/mediaSettings': 'Plans & Quota Limits',
+    '/admin/paymentSettings': 'Plans & Quota Limits',
     '/admin/removeProduct': 'Remove Products',
     '/admin/removeArticle': 'Remove Articles',
     '/admin/resetPassword': 'Change Password',
@@ -199,16 +197,15 @@ function AdminLayout({ children }) {
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mb-1.5">Overview</p>
           <NavItem to="/admin" icon={LayoutDashboard} label="Dashboard" />
 
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Subscriptions & Limits</p>
-          <NavItem to="/admin/paymentRequests" icon={Layers} label="Subscription Requests" badge={pendingPaymentsCount} />
-          <NavItem to="/admin/plans" icon={Percent} label="Subscription Plans" />
-          <NavItem to="/admin/mediaSettings" icon={Sliders} label="Media & Upload Limits" />
-
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Vendor Relations</p>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Vendor Management</p>
+          <NavItem to="/admin/userManagement" icon={Users} label="Vendor Directory" />
           <NavItem to="/admin/userApproval" icon={UserCheck} label="Pending Approvals" badge={pendingCount} />
-          <NavItem to="/admin/userManagement" icon={Users} label="Active Vendors" />
 
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Content Moderation</p>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Subscriptions & Plans</p>
+          <NavItem to="/admin/paymentRequests" icon={Layers} label="Subscription Requests" badge={pendingPaymentsCount} />
+          <NavItem to="/admin/plans" icon={Percent} label="Plans & Quota Limits" />
+
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2.5 mt-4 mb-1.5">Catalogue Moderation</p>
           <NavItem to="/admin/removeProduct" icon={Trash2} label="Remove Products" />
           <NavItem to="/admin/removeArticle" icon={FileMinus} label="Remove Articles" />
 
@@ -867,8 +864,8 @@ function App() {
           <Route path="/admin/userManagement" element={<AdminLayout><UserManagement /></AdminLayout>} />
           <Route path="/admin/paymentRequests" element={<AdminLayout><AdminPaymentRequests /></AdminLayout>} />
           <Route path="/admin/plans" element={<AdminLayout><AdminPlanSettings /></AdminLayout>} />
-          <Route path="/admin/mediaSettings" element={<AdminLayout><AdminMediaSettings /></AdminLayout>} />
-          <Route path="/admin/paymentSettings" element={<Navigate to="/admin/mediaSettings" replace />} />
+          <Route path="/admin/mediaSettings" element={<Navigate to="/admin/plans" replace />} />
+          <Route path="/admin/paymentSettings" element={<Navigate to="/admin/plans" replace />} />
           <Route path="/admin/addProduct" element={<Navigate to="/admin/removeProduct" replace />} />
           <Route path="/admin/updateProduct" element={<Navigate to="/admin/removeProduct" replace />} />
           <Route path="/admin/removeProduct" element={<AdminLayout><RemoveProduct basePath="/api/admin" /></AdminLayout>} />
