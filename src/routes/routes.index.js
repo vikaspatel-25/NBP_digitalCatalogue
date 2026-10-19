@@ -1,5 +1,5 @@
 import express from "express";
-import { loginPageController, loginController, userLoginPageController, userLoginController } from "../controllers/login.js";
+import { loginPageController, loginController, adminVerifyOtpController, adminResendOtpController, userLoginPageController, userLoginController } from "../controllers/login.js";
 import { resetPasswordPageController, resetPasswordController } from "../controllers/resetPwd.js";
 import { adminPageController } from "../controllers/admin.js";
 import { addProductPageController, addProductController, addApiProductController } from "../controllers/addProduct.js";
@@ -7,7 +7,7 @@ import { removeProductPageController, removeProductController } from "../control
 import { homePageController } from "../controllers/home.js";
 import { productPageController } from "../controllers/product.js";
 import { articlePageController } from "../controllers/article.js";
-import { registerPageController, registerCompany, checkEmailAvailability } from "../controllers/register.js";
+import { registerPageController, registerCompany, checkEmailAvailability, sendRegistrationOtp, verifyRegistrationOtp } from "../controllers/register.js";
 import { userApprovalPageController, approveUserController, rejectUserController } from "../controllers/userApproval.js";
 
 import auth from "../middlewares/auth.js";
@@ -217,7 +217,15 @@ Router.post(
 
 // Public API Routes for React Registration & Sign In
 Router.get("/api/register/check-email", checkEmailAvailability);
+Router.post("/api/register/send-otp", sendRegistrationOtp);
+Router.post("/api/register/verify-otp", verifyRegistrationOtp);
 Router.post("/api/register", upload.single("document"), registerCompany);
+
+Router.post("/adminLogin/verify-otp", adminVerifyOtpController);
+Router.post("/api/adminLogin/verify-otp", adminVerifyOtpController);
+Router.post("/adminLogin/resend-otp", adminResendOtpController);
+Router.post("/api/adminLogin/resend-otp", adminResendOtpController);
+
 Router.post("/api/adminLogin", loginController);
 Router.post("/api/login", loginController);
 Router.post("/api/userLogin", userLoginController);

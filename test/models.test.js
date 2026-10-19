@@ -5,6 +5,7 @@ import Article from '../src/models/article.model.js';
 import Company from '../src/models/company.model.js';
 import Admin from '../src/models/admin.model.js';
 import User from '../src/models/user.model.js';
+import OtpVerification from '../src/models/otp.model.js';
 
 describe('Mongoose Models & Schema Validation', () => {
 
@@ -154,6 +155,40 @@ describe('Mongoose Models & Schema Validation', () => {
       assert.equal(user.role, 'user');
       assert.equal(user.status, 'active');
       assert.equal(user.email, 'user@solarcorp.com');
+    });
+  });
+
+  describe('OtpVerification Model & 2FA Tokens', () => {
+    test('generateCode produces a 6-digit numeric string', () => {
+      for (let i = 0; i < 20; i++) {
+        const code = OtpVerification.generateCode();
+        assert.equal(typeof code, 'string');
+        assert.equal(code.length, 6);
+        assert.ok(/^\d{6}$/.test(code), `Code ${code} must be strictly 6 digits`);
+      }
+    });
+
+    test('validates successfully with required fields', () => {
+      const otpDoc = new OtpVerification({
+        email: 'TEST@Vendor.com',
+        purpose: 'vendor_registration',
+        otp: '123456',
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+      });
+      const err = otpDoc.validateSync();
+      assert.equal(err, undefined, 'Valid OTP doc should pass validation');
+      assert.equal(otpDoc.email, 'test@vendor.com', 'email should be lowercased');
+      assert.equal(otpDoc.verified, false, 'verified flag should default to false');
+    });
+
+    test('fails validation when required fields are missing or invalid purpose', () => {
+      const invalidDoc = new OtpVerification({ purpose: 'unknown_purpose' });
+      const err = invalidDoc.validateSync();
+      assert.ok(err, 'Validation should fail on empty fields');
+      assert.ok(err.errors.email, 'email is required');
+      assert.ok(err.errors.otp, 'otp is required');
+      assert.ok(err.errors.expiresAt, 'expiresAt is required');
+      assert.ok(err.errors.purpose, 'purpose enum must match');
     });
   });
 

@@ -22,9 +22,14 @@ import { useToast } from '../context/ToastContext';
 export default function AdminLogin() {
   const { toast } = useToast();
 
+  const [step, setStep] = useState('password'); // 'password' | 'otp'
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [maskedEmail, setMaskedEmail] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   
@@ -33,6 +38,15 @@ export default function AdminLogin() {
   const [adminEmail, setAdminEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotMessage, setForgotMessage] = useState('');
+
+  // Countdown timer for resending OTP
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendCooldown]);
 
   const clearFieldError = (name) => {
     setFieldErrors(prev => {
@@ -62,6 +76,17 @@ export default function AdminLogin() {
           'Accept': 'application/json'
         }
       });
+
+      if (res.data?.requireOtp) {
+        setStep('otp');
+        setMaskedEmail(res.data.maskedEmail || 'authorized admin email');
+        setOtp('');
+        setResendCooldown(60);
+        toast.info(res.data.message || 'Verification code sent to your email.', { title: 'Verification Code Sent' });
+        setLoading(false);
+        return;
+      }
+
       toast.success('Admin authorization verified! Redirecting to console...', { title: 'Authorized' });
       window.location.href = res.data?.redirectUrl || '/admin';
     } catch (err) {
@@ -72,6 +97,50 @@ export default function AdminLogin() {
       setFieldErrors({ password: finalMsg });
       toast.error(finalMsg, { title: 'Access Denied' });
       setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    const cleanOtp = otp.trim();
+    if (!cleanOtp || cleanOtp.length < 6) {
+      setFieldErrors({ otp: 'Please enter the complete 6-digit verification code' });
+      toast.error('Please enter the 6-digit code sent to your email.', { title: 'Code Incomplete' });
+      return;
+    }
+
+    setOtpLoading(true);
+    try {
+      const res = await axios.post('/adminLogin/verify-otp', { otp: cleanOtp }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      toast.success('Admin authorization verified! Redirecting to console...', { title: 'Authorized' });
+      window.location.href = res.data?.redirectUrl || '/admin';
+    } catch (err) {
+      console.error('OTP verification error:', err);
+      const serverMsg = err.response?.data?.error || err.response?.data?.message || 'Invalid or expired verification code.';
+      setError(serverMsg);
+      setFieldErrors({ otp: serverMsg });
+      toast.error(serverMsg, { title: 'Verification Failed' });
+      setOtpLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    try {
+      const res = await axios.post('/adminLogin/resend-otp');
+      toast.success(res.data?.message || 'A fresh verification code was sent to your email.', { title: 'Code Dispatched' });
+      setResendCooldown(60);
+      setError('');
+      setFieldErrors({});
+    } catch (err) {
+      toast.error('Failed to resend code. Please try again.', { title: 'Resend Failed' });
     }
   };
 
@@ -175,95 +244,205 @@ export default function AdminLogin() {
 
           {/* Right Form Card */}
           <div className="md:col-span-7 p-6 sm:p-10 flex flex-col justify-center">
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-slate-900 tracking-tight">Admin Authentication</h3>
-              <p className="text-xs text-slate-500 mt-1">Provide your master administrative credentials to continue.</p>
-            </div>
-
-            {error && (
-              <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm flex items-center gap-2">
-                <AlertCircle size={16} className="text-rose-600 shrink-0" />
-                <span className="flex-1">{error}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} noValidate className="space-y-5">
-              {/* Security Passkey Field */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                    Master Password / Security Passkey *
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setForgotModal(true);
-                      setForgotMessage('');
-                    }}
-                    className="text-xs text-blue-600 hover:underline font-medium cursor-pointer"
-                  >
-                    Forgot passkey?
-                  </button>
+            {step === 'password' ? (
+              <>
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold text-slate-900 tracking-tight">Admin Authentication</h3>
+                  <p className="text-xs text-slate-500 mt-1">Provide your master administrative credentials to continue.</p>
                 </div>
 
-                <div className="relative">
-                  <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      clearFieldError('password');
-                    }}
-                    placeholder="Enter security passkey"
-                    className={`w-full pl-11 pr-11 py-3 rounded-xl border text-sm focus:outline-none transition ${
-                      fieldErrors.password
-                        ? 'border-rose-400 focus:border-rose-500 ring-2 ring-rose-100 bg-rose-50/20'
-                        : 'bg-slate-50/70 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600'
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-                {fieldErrors.password && (
-                  <p className="text-xs text-rose-600 font-medium mt-1 flex items-center gap-1">
-                    <AlertCircle size={12} /> {fieldErrors.password}
-                  </p>
+                {error && (
+                  <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm flex items-center gap-2">
+                    <AlertCircle size={16} className="text-rose-600 shrink-0" />
+                    <span className="flex-1">{error}</span>
+                  </div>
                 )}
-              </div>
 
-              {/* Sign In CTA */}
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 cursor-pointer"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 size={18} className="animate-spin" />
-                      <span>Authenticating Session...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Access Administration Console</span>
-                      <ArrowRight size={16} />
-                    </>
-                  )}
-                </button>
-              </div>
+                <form onSubmit={handleSubmit} noValidate className="space-y-5">
+                  {/* Security Passkey Field */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                        Master Password / Security Passkey *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForgotModal(true);
+                          setForgotMessage('');
+                        }}
+                        className="text-xs text-blue-600 hover:underline font-medium cursor-pointer"
+                      >
+                        Forgot passkey?
+                      </button>
+                    </div>
 
-              <div className="pt-4 text-center">
-                <a href="/userLogin" className="text-xs text-slate-500 hover:text-slate-700">
-                  Are you a vendor partner? <span className="text-emerald-600 underline font-semibold">Vendor Portal Sign In</span>
-                </a>
-              </div>
-            </form>
+                    <div className="relative">
+                      <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          clearFieldError('password');
+                        }}
+                        placeholder="Enter security passkey"
+                        className={`w-full pl-11 pr-11 py-3 rounded-xl border text-sm focus:outline-none transition ${
+                          fieldErrors.password
+                            ? 'border-rose-400 focus:border-rose-500 ring-2 ring-rose-100 bg-rose-50/20'
+                            : 'bg-slate-50/70 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600'
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {fieldErrors.password && (
+                      <p className="text-xs text-rose-600 font-medium mt-1 flex items-center gap-1">
+                        <AlertCircle size={12} /> {fieldErrors.password}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Sign In CTA */}
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          <span>Verifying Credentials...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Verify Passkey & Request OTP</span>
+                          <ArrowRight size={16} />
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="pt-4 text-center">
+                    <a href="/userLogin" className="text-xs text-slate-500 hover:text-slate-700">
+                      Are you a vendor partner? <span className="text-emerald-600 underline font-semibold">Vendor Portal Sign In</span>
+                    </a>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <>
+                <div className="mb-6">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-bold uppercase tracking-wider mb-2">
+                    <ShieldCheck size={13} />
+                    <span>Two-Factor Authentication</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 tracking-tight">Enter Verification Code</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    A 6-digit one-time authorization code has been dispatched to <strong className="text-slate-800">{maskedEmail}</strong>.
+                  </p>
+                </div>
+
+                {error && (
+                  <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm flex items-center gap-2">
+                    <AlertCircle size={16} className="text-rose-600 shrink-0" />
+                    <span className="flex-1">{error}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleVerifyOtp} noValidate className="space-y-5">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2 text-center">
+                      6-Digit Security OTP Code *
+                    </label>
+
+                    <div className="relative">
+                      <KeyRound size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        maxLength={6}
+                        inputMode="numeric"
+                        autoFocus
+                        value={otp}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '');
+                          setOtp(val);
+                          clearFieldError('otp');
+                          setError('');
+                        }}
+                        placeholder="••••••"
+                        className={`w-full text-center tracking-[0.5em] text-2xl font-mono font-black py-3 px-10 rounded-xl border focus:outline-none transition ${
+                          fieldErrors.otp
+                            ? 'border-rose-400 focus:border-rose-500 ring-2 ring-rose-100 bg-rose-50/20'
+                            : 'bg-slate-50/70 border-slate-200 text-slate-900 placeholder-slate-300 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600'
+                        }`}
+                      />
+                    </div>
+                    {fieldErrors.otp && (
+                      <p className="text-xs text-rose-600 font-medium mt-1 text-center flex items-center justify-center gap-1">
+                        <AlertCircle size={12} /> {fieldErrors.otp}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-slate-500 px-1">
+                    <span>Didn't receive the email?</span>
+                    {resendCooldown > 0 ? (
+                      <span className="text-slate-400 font-medium">Resend code in {resendCooldown}s</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleResendOtp}
+                        className="text-blue-600 font-bold hover:underline cursor-pointer"
+                      >
+                        Resend Code
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Verify CTA */}
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={otpLoading || otp.length < 6}
+                      className="w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+                    >
+                      {otpLoading ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          <span>Authorizing Session...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Verify & Enter Admin Console</span>
+                          <ShieldCheck size={16} />
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="pt-2 text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStep('password');
+                        setError('');
+                        setFieldErrors({});
+                      }}
+                      className="text-xs text-slate-500 hover:text-slate-800 font-medium cursor-pointer"
+                    >
+                      ← Back to Passkey
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
 
         </div>

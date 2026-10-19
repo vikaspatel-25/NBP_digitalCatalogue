@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Building2, 
@@ -13,7 +13,10 @@ import {
   Sparkles, 
   Store, 
   Award, 
-  ArrowRight 
+  ArrowRight,
+  KeyRound,
+  X,
+  Lock
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
@@ -35,6 +38,25 @@ export default function Register() {
   const [emailWarning, setEmailWarning] = useState('');
   const [emailChecking, setEmailChecking] = useState(false);
 
+  // Email Verification OTP State
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState('');
+  const [otpModal, setOtpModal] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const [otpError, setOtpError] = useState('');
+  const [pendingSubmitAfterOtp, setPendingSubmitAfterOtp] = useState(false);
+
+  useEffect(() => {
+    if (otpCooldown <= 0) return;
+    const interval = setInterval(() => {
+      setOtpCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [otpCooldown]);
+
   const clearFieldError = (name) => {
     setFieldErrors(prev => {
       if (!prev[name]) return prev;
@@ -53,9 +75,16 @@ export default function Register() {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    clearFieldError(e.target.name);
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    clearFieldError(name);
     setError('');
+
+    if (name === 'email') {
+      if (isEmailVerified && value.trim().toLowerCase() !== verifiedEmail.toLowerCase()) {
+        setIsEmailVerified(false);
+      }
+    }
   };
 
   const checkEmail = async (emailToCheck) => {
@@ -103,6 +132,138 @@ export default function Register() {
     }
   };
 
+  const handleRequestOtp = async (isForSubmission = false) => {
+    const emailTrimmed = formData.email.trim().toLowerCase();
+    if (!emailTrimmed || !emailTrimmed.includes('@')) {
+      setFieldErrors(prev => ({ ...prev, email: 'Please enter a valid business email address' }));
+      toast.error('Please enter a valid business email address before requesting verification.', { title: 'Email Required' });
+      scrollToElement('reg-email');
+      return;
+    }
+
+    setOtpSending(true);
+    setOtpError('');
+
+    try {
+      // First verify email is not reserved or taken
+      const isAvailable = await checkEmail(emailTrimmed);
+      if (!isAvailable) {
+        toast.error(emailWarning || 'This email address is already in use.', { title: 'Email Unavailable' });
+        setOtpSending(false);
+        return;
+      }
+
+      const res = await axios.post('/api/register/send-otp', {
+        email: emailTrimmed,
+        userName: formData.userName.trim(),
+        companyName: formData.companyName.trim()
+      });
+
+      if (res.data?.success) {
+        setOtpModal(true);
+        setPendingSubmitAfterOtp(isForSubmission);
+        setOtpCooldown(60);
+        setOtp('');
+        toast.info(`A 6-digit verification code has been dispatched to ${emailTrimmed}.`, { title: 'Verification Code Dispatched' });
+      } else {
+        toast.error(res.data?.error || 'Failed to send verification code.', { title: 'Request Failed' });
+      }
+    } catch (err) {
+      console.error('Send OTP error:', err);
+      const msg = err.response?.data?.error || err.response?.data?.message || 'Error dispatching verification code.';
+      setOtpError(msg);
+      toast.error(msg, { title: 'Dispatch Error' });
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    if (e) e.preventDefault();
+    const cleanOtp = otp.trim();
+    if (!cleanOtp || cleanOtp.length < 6) {
+      setOtpError('Please enter the full 6-digit verification code.');
+      toast.error('Please enter the complete 6-digit verification code.', { title: 'Code Incomplete' });
+      return;
+    }
+
+    setOtpVerifying(true);
+    setOtpError('');
+
+    try {
+      const emailTrimmed = formData.email.trim().toLowerCase();
+      const res = await axios.post('/api/register/verify-otp', {
+        email: emailTrimmed,
+        otp: cleanOtp
+      });
+
+      if (res.data?.success) {
+        setIsEmailVerified(true);
+        setVerifiedEmail(emailTrimmed);
+        setOtpModal(false);
+        toast.success('Business email verified successfully!', { title: 'Email Confirmed' });
+
+        if (pendingSubmitAfterOtp) {
+          await doSubmitRegistration(cleanOtp);
+        }
+      } else {
+        const errText = res.data?.error || 'Invalid or expired verification code.';
+        setOtpError(errText);
+        toast.error(errText, { title: 'Verification Failed' });
+      }
+    } catch (err) {
+      console.error('Verify OTP error:', err);
+      const errText = err.response?.data?.error || err.response?.data?.message || 'Invalid or expired verification code.';
+      setOtpError(errText);
+      toast.error(errText, { title: 'Verification Failed' });
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
+
+  const doSubmitRegistration = async (optionalOtp) => {
+    setLoading(true);
+    setError('');
+    const emailTrimmed = formData.email.trim().toLowerCase();
+
+    try {
+      const data = new FormData();
+      data.append('companyName', formData.companyName.trim());
+      data.append('userName', formData.userName.trim());
+      data.append('mobile', formData.mobile.trim());
+      data.append('email', emailTrimmed);
+      if (optionalOtp || otp) {
+        data.append('otp', optionalOtp || otp);
+      }
+      if (file) {
+        data.append('document', file);
+      }
+
+      const res = await axios.post('/api/register', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      if (res.data?.success) {
+        setSubmitted(true);
+        toast.success('Your vendor application was submitted successfully! Our team will review your profile.', { title: 'Application Received' });
+      } else {
+        const errText = res.data?.error || res.data?.message || 'Failed to submit registration.';
+        setError(errText);
+        toast.error(errText, { title: 'Registration Failed' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch (err) {
+      console.error('Registration error:', err);
+      const serverError = err.response?.data?.error || err.response?.data?.message || (typeof err.response?.data === 'string' ? err.response.data : '');
+      const finalErr = serverError || 'Failed to submit registration. Please verify all fields.';
+      setError(finalErr);
+      toast.error(finalErr, { title: 'Submission Error' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -137,60 +298,17 @@ export default function Register() {
       return;
     }
 
-    setLoading(true);
     const emailTrimmed = formData.email.trim().toLowerCase();
 
-    const isEmailValid = await checkEmail(emailTrimmed);
-    if (!isEmailValid) {
-      const blockedMsg = emailWarning || 'This email address is already in use by a registered vendor or pending application.';
-      setError(blockedMsg);
-      toast.error(blockedMsg, { title: 'Email Already Registered' });
-      setLoading(false);
-      scrollToElement('reg-email');
+    // Enforce email verification before submitting
+    if (!isEmailVerified || emailTrimmed !== verifiedEmail.toLowerCase()) {
+      toast.warning('Email verification is required before submitting your application. We are sending a 6-digit code to your email.', { title: 'Verification Required' });
+      await handleRequestOtp(true);
       return;
     }
 
-    try {
-      const data = new FormData();
-      data.append('companyName', formData.companyName.trim());
-      data.append('userName', formData.userName.trim());
-      data.append('mobile', formData.mobile.trim());
-      data.append('email', emailTrimmed);
-      if (file) {
-        data.append('document', file);
-      }
-
-      const res = await axios.post('/api/register', data, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      if (res.data?.success) {
-        setSubmitted(true);
-        toast.success('Your vendor application was submitted successfully! Our team will review your profile.', { title: 'Application Received' });
-      } else {
-        const errText = res.data?.error || res.data?.message || 'Failed to submit registration.';
-        setError(errText);
-        toast.error(errText, { title: 'Registration Failed' });
-        if (errText.toLowerCase().includes('email') || errText.toLowerCase().includes('vendor') || errText.toLowerCase().includes('application')) {
-          setEmailWarning(errText);
-          setFieldErrors(prev => ({ ...prev, email: errText }));
-        }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    } catch (err) {
-      console.error('Registration error:', err);
-      const serverError = err.response?.data?.error || err.response?.data?.message || (typeof err.response?.data === 'string' ? err.response.data : '');
-      const finalErr = serverError || 'Failed to submit registration. Please verify all fields.';
-      setError(finalErr);
-      toast.error(finalErr, { title: 'Submission Error' });
-      if (finalErr.toLowerCase().includes('email') || finalErr.toLowerCase().includes('vendor') || finalErr.toLowerCase().includes('application')) {
-        setEmailWarning(finalErr);
-        setFieldErrors(prev => ({ ...prev, email: finalErr }));
-      }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } finally {
-      setLoading(false);
-    }
+    // Already verified: proceed directly with submission
+    await doSubmitRegistration();
   };
 
   if (submitted) {
@@ -408,11 +526,29 @@ export default function Register() {
                   <label htmlFor="reg-email" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Official Business Email *
                   </label>
-                  {emailChecking && (
-                    <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                      <Loader2 size={11} className="animate-spin" /> Verifying...
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {emailChecking && (
+                      <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                        <Loader2 size={11} className="animate-spin" /> Checking...
+                      </span>
+                    )}
+                    {isEmailVerified && formData.email.trim().toLowerCase() === verifiedEmail.toLowerCase() ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
+                        <CheckCircle size={12} /> Verified
+                      </span>
+                    ) : (
+                      formData.email.includes('@') && !emailWarning && (
+                        <button
+                          type="button"
+                          onClick={() => handleRequestOtp(false)}
+                          disabled={otpSending}
+                          className="text-[11px] font-bold text-blue-600 hover:text-blue-800 underline cursor-pointer"
+                        >
+                          {otpSending ? 'Dispatching OTP...' : 'Verify Email'}
+                        </button>
+                      )
+                    )}
+                  </div>
                 </div>
                 <div className="relative">
                   <Mail size={16} className="absolute left-3.5 top-3 text-slate-400" />
@@ -427,6 +563,8 @@ export default function Register() {
                     className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-xs sm:text-sm focus:outline-none transition ${
                       emailWarning || fieldErrors.email
                         ? 'border-rose-400 focus:border-rose-500 ring-2 ring-rose-100 bg-rose-50/20' 
+                        : isEmailVerified && formData.email.trim().toLowerCase() === verifiedEmail.toLowerCase()
+                        ? 'border-emerald-300 bg-emerald-50/20 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500'
                         : 'border-slate-200 focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600'
                     }`}
                   />
@@ -513,10 +651,103 @@ export default function Register() {
               </p>
             </form>
           </div>
-
         </div>
-
       </div>
+
+      {/* Email Verification OTP Modal */}
+      {otpModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative animate-in zoom-in-95">
+            <button
+              type="button"
+              onClick={() => {
+                setOtpModal(false);
+                setOtpError('');
+                setPendingSubmitAfterOtp(false);
+              }}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 cursor-pointer p-1 rounded-lg"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center mb-4">
+              <ShieldCheck size={24} />
+            </div>
+
+            <h3 className="text-lg font-bold text-slate-900 tracking-tight">Verify Your Business Email</h3>
+            <p className="text-xs text-slate-500 mt-1 mb-5">
+              Enter the 6-digit verification code sent to <strong className="text-slate-800">{formData.email.trim()}</strong> to confirm ownership and submit your vendor application.
+            </p>
+
+            {otpError && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+                <AlertCircle size={15} className="shrink-0 text-rose-600" />
+                <span>{otpError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2 text-center">
+                  6-Digit Verification Code *
+                </label>
+                <div className="relative">
+                  <KeyRound size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    maxLength={6}
+                    inputMode="numeric"
+                    autoFocus
+                    value={otp}
+                    onChange={(e) => {
+                      setOtp(e.target.value.replace(/[^0-9]/g, ''));
+                      setOtpError('');
+                    }}
+                    placeholder="••••••"
+                    className="w-full text-center tracking-[0.5em] text-2xl font-mono font-black py-3 px-10 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 focus:outline-none transition"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-xs text-slate-500 px-1">
+                <span>Didn't receive the email?</span>
+                {otpCooldown > 0 ? (
+                  <span className="text-slate-400 font-medium">Resend in {otpCooldown}s</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleRequestOtp(pendingSubmitAfterOtp)}
+                    disabled={otpSending}
+                    className="text-blue-600 font-bold hover:underline cursor-pointer"
+                  >
+                    {otpSending ? 'Sending...' : 'Resend Code'}
+                  </button>
+                )}
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={otpVerifying || otp.length < 6}
+                  className="w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99] cursor-pointer"
+                >
+                  {otpVerifying ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      <span>Verifying Email...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{pendingSubmitAfterOtp ? 'Verify & Submit Application' : 'Confirm Email Verification'}</span>
+                      <ArrowRight size={16} />
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

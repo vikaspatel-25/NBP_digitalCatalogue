@@ -259,3 +259,112 @@ export async function sendExpirationReminderEmail({ to, companyName, userName, e
     console.error('Failed to send expiration reminder email:', error?.message || error);
   }
 }
+
+/**
+ * 5. Admin Login Two-Factor OTP Dispatch
+ */
+export async function sendAdminLoginOtpEmail({ to, otp }) {
+  const recipient = to || adminEmail;
+  console.log(`[Admin Login OTP] Dispatching 6-digit code to ${recipient}: ${otp}`);
+
+  try {
+    const mailOptions = {
+      from: `"${appName} Security" <${process.env.GMAIL_USER || 'noreply@netzeromart.com'}>`,
+      to: recipient,
+      subject: `🔐 ${otp} is your Admin Login Verification Code - ${appName}`,
+      html: `
+        <div style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;">
+          <div style="max-width:550px;margin:30px auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 10px 25px rgba(0,0,0,0.04);">
+            <div style="background:#020617;padding:24px;text-align:center;color:#ffffff;">
+              <h1 style="margin:0;font-size:20px;letter-spacing:-0.5px;">${appName} <span style="color:#60a5fa;">Admin Security</span></h1>
+              <p style="margin:6px 0 0;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-weight:bold;">Two-Factor Session Authorization</p>
+            </div>
+            <div style="padding:32px 28px;color:#0f172a;text-align:center;">
+              <h2 style="font-size:18px;margin-top:0;font-weight:800;color:#0f172a;">Administrator Sign In Request</h2>
+              <p style="font-size:14px;line-height:1.6;color:#475569;margin-bottom:24px;">
+                A master console sign-in attempt was initiated for your NetZeroMart administrator account. Use the one-time verification passkey below to complete authorization:
+              </p>
+              
+              <div style="display:inline-block;padding:16px 36px;background:#f1f5f9;border:2px dashed #cbd5e1;border-radius:12px;margin:10px auto 24px;">
+                <span style="font-family:'Courier New',Courier,monospace;font-size:32px;font-weight:900;letter-spacing:8px;color:#0f172a;">${otp}</span>
+              </div>
+
+              <p style="font-size:12px;color:#64748b;line-height:1.5;">
+                ⏱ This code will expire in <strong>10 minutes</strong>.<br />
+                If you did not request this authorization code, someone may be attempting to access your portal. Please review your credentials immediately.
+              </p>
+            </div>
+            <div style="background:#f8fafc;padding:16px;text-align:center;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;">
+              © ${new Date().getFullYear()} ${appName} System Security.
+            </div>
+          </div>
+        </div>
+      `
+    };
+
+    if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+      return await transporter.sendMail(mailOptions);
+    } else {
+      console.warn('[Admin Login OTP] GMAIL credentials not configured in environment, logged OTP to console above.');
+      return { accepted: [recipient] };
+    }
+  } catch (error) {
+    console.error('Failed to dispatch admin login OTP email:', error?.message || error);
+    // Return gracefully so local dev or sandbox isn't completely blocked
+    return { accepted: [recipient], fallback: true };
+  }
+}
+
+/**
+ * 6. Vendor Registration Business Email Verification OTP Dispatch
+ */
+export async function sendRegistrationOtpEmail({ to, otp, userName, companyName }) {
+  console.log(`[Registration OTP] Dispatching 6-digit code to ${to}: ${otp}`);
+
+  try {
+    const mailOptions = {
+      from: `"${appName}" <${process.env.GMAIL_USER || 'noreply@netzeromart.com'}>`,
+      to,
+      subject: `🔐 Verify Your Business Email: ${otp} - ${appName}`,
+      html: `
+        <div style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;">
+          <div style="max-width:550px;margin:30px auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 10px 25px rgba(0,0,0,0.04);">
+            <div style="background:#0f172a;padding:24px;text-align:center;color:#ffffff;">
+              <h1 style="margin:0;font-size:20px;letter-spacing:-0.5px;">${appName}</h1>
+              <p style="margin:6px 0 0;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-weight:bold;">Vendor Onboarding Verification</p>
+            </div>
+            <div style="padding:32px 28px;color:#0f172a;text-align:center;">
+              <h2 style="font-size:18px;margin-top:0;font-weight:800;color:#0f172a;">Welcome to NetZeroMart, ${companyName || userName || 'Vendor Partner'}!</h2>
+              <p style="font-size:14px;line-height:1.6;color:#475569;margin-bottom:24px;">
+                Thank you for applying to list on our Sustainable B2B Digital Catalogue. Please verify your business email address using the one-time code below to submit your registration:
+              </p>
+              
+              <div style="display:inline-block;padding:16px 36px;background:#eff6ff;border:2px dashed #93c5fd;border-radius:12px;margin:10px auto 24px;">
+                <span style="font-family:'Courier New',Courier,monospace;font-size:32px;font-weight:900;letter-spacing:8px;color:#1d4ed8;">${otp}</span>
+              </div>
+
+              <p style="font-size:12px;color:#64748b;line-height:1.5;">
+                ⏱ This verification code is valid for <strong>15 minutes</strong>.<br />
+                Once verified, your profile will be submitted to our administrative team for review and approval.
+              </p>
+            </div>
+            <div style="background:#f8fafc;padding:16px;text-align:center;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;">
+              © ${new Date().getFullYear()} ${appName} B2B Trade Directory.
+            </div>
+          </div>
+        </div>
+      `
+    };
+
+    if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+      return await transporter.sendMail(mailOptions);
+    } else {
+      console.warn('[Registration OTP] GMAIL credentials not configured in environment, logged OTP to console above.');
+      return { accepted: [to] };
+    }
+  } catch (error) {
+    console.error('Failed to dispatch registration OTP email:', error?.message || error);
+    return { accepted: [to], fallback: true };
+  }
+}
+

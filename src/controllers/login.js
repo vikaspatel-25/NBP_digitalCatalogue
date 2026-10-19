@@ -1,9 +1,12 @@
 import path from "path";
 import { fileURLToPath } from "url";
+import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import Admin from "../models/admin.model.js";
 import Users from "../models/user.model.js";
 import bcrypt from "bcrypt";
+import OtpVerification from "../models/otp.model.js";
+import { sendAdminLoginOtpEmail } from "../services/emailService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,6 +40,20 @@ async function loginController(req, res) {
     );
 
     const pwd = req.body.password;
+    if (!pwd) {
+      if (isJsonRequest) {
+        return res.status(400).json({ success: false, error: "Password is required" });
+      }
+      return res.status(400).send("Password is required");
+    }
+
+    if (mongoose.connection.readyState !== 1 && mongoose.connection.readyState !== 2) {
+      if (isJsonRequest) {
+        return res.status(503).json({ success: false, error: "Database unavailable" });
+      }
+      return res.status(503).send("Database unavailable");
+    }
+
     const admin = await Admin.findOne({});
     if (!admin) {
       if (isJsonRequest) {
@@ -86,10 +103,129 @@ async function loginController(req, res) {
 </html>`);
     }
 
+    const authorizedAdminEmail = (process.env.ADMIN_EMAIL || process.env.ADMIN_GMAIL || process.env.GMAIL_USER || 'netzeromart@gmail.com').trim().toLowerCase();
+
+    // If OTP is supplied together with password
+    if (req.body.otp) {
+      const otpInput = String(req.body.otp).trim();
+      const record = await OtpVerification.findOne({
+        email: authorizedAdminEmail,
+        purpose: 'admin_login',
+        otp: otpInput
+      });
+
+      if (!record || record.expiresAt < new Date()) {
+        return res.status(400).json({ success: false, error: "Invalid or expired verification code." });
+      }
+
+      await OtpVerification.deleteOne({ _id: record._id });
+
+      const token = jwt.sign(
+        {
+          adminId: admin._id.toString(),
+          email: authorizedAdminEmail,
+          companyName: "NetZeroMart",
+          userName: "netzeromart",
+          pwdUpdatedAt: admin.passwordUpdatedAt ? admin.passwordUpdatedAt.getTime() : null,
+          role: "admin",
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "365d" }
+      );
+
+      res.cookie("adminToken", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+      });
+
+      if (isJsonRequest) {
+        return res.json({ success: true, redirectUrl: "/admin" });
+      }
+      return res.redirect("/admin");
+    }
+
+    // Step 1 Passed: Generate and dispatch 2FA OTP
+    const otp = OtpVerification.generateCode();
+    await OtpVerification.deleteMany({ email: authorizedAdminEmail, purpose: 'admin_login' });
+    await OtpVerification.create({
+      email: authorizedAdminEmail,
+      purpose: 'admin_login',
+      otp,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+    });
+
+    await sendAdminLoginOtpEmail({ to: authorizedAdminEmail, otp });
+
+    const maskedEmail = authorizedAdminEmail.replace(/^(.)(.*)(@.*)$/, (_, a, b, c) => a + '*'.repeat(Math.max(b.length, 3)) + c);
+
+    if (isJsonRequest) {
+      return res.json({
+        success: true,
+        requireOtp: true,
+        maskedEmail,
+        message: `A 6-digit verification code has been dispatched to ${maskedEmail}.`
+      });
+    }
+
+    return res.redirect("/adminLogin");
+  } catch (error) {
+    console.error("Login error:", error);
+    if (req.xhr || req.is("json") || (req.headers.accept && req.headers.accept.includes("application/json"))) {
+      return res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+    res.status(500).send("Internal Server Error");
+  }
+}
+
+/**
+ * POST /adminLogin/verify-otp & /api/adminLogin/verify-otp
+ * Verifies the 6-digit OTP and establishes the authorized master admin session
+ */
+async function adminVerifyOtpController(req, res) {
+  try {
+    const isJsonRequest = Boolean(
+      req.xhr ||
+      req.is("json") ||
+      (req.headers.accept && req.headers.accept.includes("application/json"))
+    );
+
+    const otpInput = String(req.body.otp || "").trim();
+    if (!otpInput || otpInput.length < 6) {
+      return res.status(400).json({ success: false, error: "Please enter the complete 6-digit verification code." });
+    }
+
+    if (mongoose.connection.readyState !== 1 && mongoose.connection.readyState !== 2) {
+      return res.status(503).json({ success: false, error: "Database unavailable" });
+    }
+
+    const authorizedAdminEmail = (process.env.ADMIN_EMAIL || process.env.ADMIN_GMAIL || process.env.GMAIL_USER || 'netzeromart@gmail.com').trim().toLowerCase();
+
+    const record = await OtpVerification.findOne({
+      email: authorizedAdminEmail,
+      purpose: 'admin_login',
+      otp: otpInput
+    });
+
+    if (!record || record.expiresAt < new Date()) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid or expired verification code. Please request a new code if needed."
+      });
+    }
+
+    // Consume OTP
+    await OtpVerification.deleteOne({ _id: record._id });
+
+    const admin = await Admin.findOne({});
+    if (!admin) {
+      return res.status(500).json({ success: false, error: "Admin configuration error." });
+    }
+
     const token = jwt.sign(
       {
         adminId: admin._id.toString(),
-        email: "netzeromart@gmail.com",
+        email: authorizedAdminEmail,
         companyName: "NetZeroMart",
         userName: "netzeromart",
         pwdUpdatedAt: admin.passwordUpdatedAt ? admin.passwordUpdatedAt.getTime() : null,
@@ -108,14 +244,44 @@ async function loginController(req, res) {
     if (isJsonRequest) {
       return res.json({ success: true, redirectUrl: "/admin" });
     }
-
-    res.redirect("/admin");
+    return res.redirect("/admin");
   } catch (error) {
-    console.error("Login error:", error);
-    if (req.xhr || req.is("json") || (req.headers.accept && req.headers.accept.includes("application/json"))) {
-      return res.status(500).json({ success: false, error: "Internal Server Error" });
+    console.error("Admin OTP verification error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error verifying code." });
+  }
+}
+
+/**
+ * POST /adminLogin/resend-otp & /api/adminLogin/resend-otp
+ * Dispatches a fresh 6-digit OTP to the registered administrator email
+ */
+async function adminResendOtpController(req, res) {
+  try {
+    if (mongoose.connection.readyState !== 1 && mongoose.connection.readyState !== 2) {
+      return res.status(503).json({ success: false, error: "Database unavailable" });
     }
-    res.status(500).send("Internal Server Error");
+
+    const authorizedAdminEmail = (process.env.ADMIN_EMAIL || process.env.ADMIN_GMAIL || process.env.GMAIL_USER || 'netzeromart@gmail.com').trim().toLowerCase();
+
+    const otp = OtpVerification.generateCode();
+    await OtpVerification.deleteMany({ email: authorizedAdminEmail, purpose: 'admin_login' });
+    await OtpVerification.create({
+      email: authorizedAdminEmail,
+      purpose: 'admin_login',
+      otp,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+    });
+
+    await sendAdminLoginOtpEmail({ to: authorizedAdminEmail, otp });
+
+    const maskedEmail = authorizedAdminEmail.replace(/^(.)(.*)(@.*)$/, (_, a, b, c) => a + '*'.repeat(Math.max(b.length, 3)) + c);
+    return res.json({
+      success: true,
+      message: `A fresh 6-digit verification code has been dispatched to ${maskedEmail}.`
+    });
+  } catch (error) {
+    console.error("Admin resend OTP error:", error);
+    return res.status(500).json({ success: false, error: "Failed to resend verification code." });
   }
 }
 
@@ -252,5 +418,7 @@ export {
   loginPageController,
   userLoginPageController,
   loginController,
+  adminVerifyOtpController,
+  adminResendOtpController,
   userLoginController,
 };

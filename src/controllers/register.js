@@ -5,6 +5,8 @@ import { v2 as cloudinary } from 'cloudinary';
 import Company from '../models/company.model.js';
 import ApprovedUser from '../models/approved.user.model.js';
 import Users from '../models/user.model.js';
+import OtpVerification from '../models/otp.model.js';
+import { sendRegistrationOtpEmail } from '../services/emailService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -137,6 +139,123 @@ export const checkEmailAvailability = async (req, res) => {
   }
 };
 
+/**
+ * POST /api/register/send-otp
+ * Dispatches a 6-digit verification code to the prospective vendor's business email
+ */
+export const sendRegistrationOtp = async (req, res) => {
+  try {
+    const { email, userName, companyName } = req.body;
+    if (!email || !String(email).trim().includes('@')) {
+      return res.status(400).json({
+        success: false,
+        error: 'A valid business email address is required to receive the verification code.'
+      });
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+
+    // Check if email already exists or is reserved
+    const existing = await findExistingAccountByEmail(normalizedEmail);
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        error: existing.message
+      });
+    }
+
+    if (mongoose.connection.readyState !== 1 && mongoose.connection.readyState !== 2) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database connection currently unavailable.'
+      });
+    }
+
+    const otp = OtpVerification.generateCode();
+    await OtpVerification.deleteMany({ email: normalizedEmail, purpose: 'vendor_registration' });
+    await OtpVerification.create({
+      email: normalizedEmail,
+      purpose: 'vendor_registration',
+      otp,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+      verified: false
+    });
+
+    await sendRegistrationOtpEmail({
+      to: normalizedEmail,
+      otp,
+      userName: userName?.trim() || '',
+      companyName: companyName?.trim() || ''
+    });
+
+    return res.json({
+      success: true,
+      message: `A 6-digit verification code has been dispatched to ${normalizedEmail}.`
+    });
+  } catch (error) {
+    console.error('Error sending registration OTP:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to send verification code. Please check the email address and try again.'
+    });
+  }
+};
+
+/**
+ * POST /api/register/verify-otp
+ * Verifies the 6-digit OTP code entered by the user
+ */
+export const verifyRegistrationOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email and 6-digit verification code are required.'
+      });
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const otpInput = String(otp).trim();
+
+    if (mongoose.connection.readyState !== 1 && mongoose.connection.readyState !== 2) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database connection currently unavailable.'
+      });
+    }
+
+    const record = await OtpVerification.findOne({
+      email: normalizedEmail,
+      purpose: 'vendor_registration',
+      otp: otpInput
+    });
+
+    if (!record || record.expiresAt < new Date()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid or expired verification code. Please request a new code.'
+      });
+    }
+
+    // Mark as verified
+    record.verified = true;
+    await record.save();
+
+    return res.json({
+      success: true,
+      verified: true,
+      message: 'Business email successfully verified! You may now submit your registration.'
+    });
+  } catch (error) {
+    console.error('Error verifying registration OTP:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to verify code. Please try again.'
+    });
+  }
+};
+
 export const registerCompany = async (req, res) => {
   const isJsonRequest = Boolean(
     req.path?.startsWith('/api') ||
@@ -148,7 +267,7 @@ export const registerCompany = async (req, res) => {
   );
 
   try {
-    const { userName, companyName, mobile, email } = req.body;
+    const { userName, companyName, mobile, email, otp } = req.body;
 
     // Ensure required fields exist
     if (!userName || !companyName || !mobile || !email) {
@@ -183,6 +302,55 @@ export const registerCompany = async (req, res) => {
         error: existing.message,
         success: null
       });
+    }
+
+    if (mongoose.connection.readyState !== 1 && mongoose.connection.readyState !== 2) {
+      const dbErr = 'Database connection currently unavailable.';
+      if (isJsonRequest) {
+        return res.status(503).json({ success: false, error: dbErr, message: dbErr });
+      }
+      return res.status(503).render('pages/register', { error: dbErr, success: null });
+    }
+
+    // Enforce email OTP verification before creating the registration request
+    const verifiedOtpRecord = await OtpVerification.findOne({
+      email: normalizedEmail,
+      purpose: 'vendor_registration',
+      verified: true
+    });
+
+    let isOtpDirectlyValid = false;
+    if (!verifiedOtpRecord && otp) {
+      const directOtp = await OtpVerification.findOne({
+        email: normalizedEmail,
+        purpose: 'vendor_registration',
+        otp: String(otp).trim()
+      });
+      if (directOtp && directOtp.expiresAt >= new Date()) {
+        isOtpDirectlyValid = true;
+        await OtpVerification.deleteOne({ _id: directOtp._id });
+      }
+    }
+
+    if (!verifiedOtpRecord && !isOtpDirectlyValid) {
+      const unverifiedMsg = 'Email verification required. Please verify your business email address with the 6-digit code before submitting your registration application.';
+      if (isJsonRequest) {
+        return res.status(400).json({
+          success: false,
+          error: unverifiedMsg,
+          requireOtp: true,
+          message: unverifiedMsg
+        });
+      }
+      return res.status(400).render('pages/register', {
+        error: unverifiedMsg,
+        success: null
+      });
+    }
+
+    // Clean up verified OTP record after consumption
+    if (verifiedOtpRecord) {
+      await OtpVerification.deleteMany({ email: normalizedEmail, purpose: 'vendor_registration' });
     }
 
     let documentData = undefined;

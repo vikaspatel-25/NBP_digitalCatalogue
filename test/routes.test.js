@@ -191,4 +191,85 @@ describe('Express HTTP Routes & Endpoint Integration', () => {
     });
   });
 
+  describe('Admin 2FA OTP & Vendor Email Verification Endpoints', () => {
+    test('POST /api/register/send-otp rejects missing email with 400', async () => {
+      const res = await fetch(`${baseUrl}/api/register/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      assert.equal(res.status, 400);
+      const json = await res.json();
+      assert.equal(json.success, false);
+    });
+
+    test('POST /api/register/send-otp rejects reserved admin email with 400', async () => {
+      const res = await fetch(`${baseUrl}/api/register/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'netzeromart@gmail.com' })
+      });
+      assert.equal(res.status, 400);
+      const json = await res.json();
+      assert.equal(json.success, false);
+      assert.ok(json.error.includes('reserved'));
+    });
+
+    test('POST /api/register/verify-otp rejects missing email or OTP with 400', async () => {
+      const res = await fetch(`${baseUrl}/api/register/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'test@example.com' })
+      });
+      assert.equal(res.status, 400);
+      const json = await res.json();
+      assert.equal(json.success, false);
+    });
+
+    test('POST /api/register/verify-otp rejects invalid 6-digit OTP with 400 or 503 offline', async () => {
+      const res = await fetch(`${baseUrl}/api/register/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'unverified-vendor@cleanenergy.com', otp: '999999' })
+      });
+      assert.ok(res.status === 400 || res.status === 503);
+      const json = await res.json();
+      assert.equal(json.success, false);
+    });
+
+    test('POST /adminLogin rejects missing password with 400', async () => {
+      const res = await fetch(`${baseUrl}/adminLogin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      assert.equal(res.status, 400);
+      const json = await res.json();
+      assert.equal(json.success, false);
+      assert.ok(json.error.includes('Password is required'));
+    });
+
+    test('POST /adminLogin rejects incorrect password with 401 or 503 offline', async () => {
+      const res = await fetch(`${baseUrl}/adminLogin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: 'wrong-admin-password' })
+      });
+      assert.ok(res.status === 401 || res.status === 503);
+      const json = await res.json();
+      assert.equal(json.success, false);
+    });
+
+    test('POST /adminLogin/verify-otp rejects missing or blank OTP with 400', async () => {
+      const res = await fetch(`${baseUrl}/adminLogin/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      assert.equal(res.status, 400);
+      const json = await res.json();
+      assert.equal(json.success, false);
+    });
+  });
+
 });
