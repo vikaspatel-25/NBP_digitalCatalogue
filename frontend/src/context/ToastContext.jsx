@@ -10,8 +10,8 @@ import {
 
 const ToastContext = createContext(null);
 
-// Default timer is 30 seconds as requested across the entire project, with interactive cross dismiss
-const DEFAULT_DURATION_MS = 30000;
+// Default timer is 3 seconds as requested across the entire project, with interactive cross dismiss
+const DEFAULT_DURATION_MS = 3000;
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);

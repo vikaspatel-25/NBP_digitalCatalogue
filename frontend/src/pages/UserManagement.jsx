@@ -134,7 +134,7 @@ export default function UserManagement() {
         const msg = `Renewal reminder email successfully sent to ${user.email}!`;
         setSuccessToast(msg);
         toast.success(msg, { title: 'Reminder Dispatched' });
-        setTimeout(() => setSuccessToast(''), 4000);
+        setTimeout(() => setSuccessToast(''), 3000);
       } else {
         const errText = res.data?.error || 'Failed to send reminder email';
         toast.error(errText, { title: 'Email Notice Failed' });
@@ -159,7 +159,7 @@ export default function UserManagement() {
         const msg = `Vendor "${deletingUser.companyName}" successfully removed.`;
         setSuccessToast(msg);
         toast.success(msg, { title: 'Vendor Removed' });
-        setTimeout(() => setSuccessToast(''), 4000);
+        setTimeout(() => setSuccessToast(''), 3000);
         setDeletingUser(null);
       } else {
         const errText = res.data?.error || 'Failed to remove vendor. Please try again.';
@@ -240,7 +240,7 @@ export default function UserManagement() {
         const successMsg = `Subscription renewed! "${target.companyName}" is active for 1 year starting ${new Date(renewStartDate).toLocaleDateString('en-IN')}.`;
         setSuccessToast(successMsg);
         toast.success(successMsg, { title: 'Subscription Renewed' });
-        setTimeout(() => setSuccessToast(''), 4000);
+        setTimeout(() => setSuccessToast(''), 3000);
         setRenewingUser(null);
         setSelectedManualUser(null);
       } else {
@@ -288,7 +288,7 @@ export default function UserManagement() {
         const msg = `Subscription for "${discontinuingUser.companyName}" has been discontinued. Catalogue access revoked.`;
         setSuccessToast(msg);
         toast.success(msg, { title: 'Subscription Discontinued' });
-        setTimeout(() => setSuccessToast(''), 4000);
+        setTimeout(() => setSuccessToast(''), 3000);
         setDiscontinuingUser(null);
       } else {
         const errText = res.data?.error || 'Failed to discontinue subscription.';

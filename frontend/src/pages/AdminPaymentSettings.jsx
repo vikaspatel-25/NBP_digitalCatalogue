@@ -121,7 +121,7 @@ export default function AdminPaymentSettings() {
           setSelectedFile(null);
           setFilePreview('');
         }
-        setTimeout(() => setSuccessToast(''), 4000);
+        setTimeout(() => setSuccessToast(''), 3000);
       } else {
         const errText = res.data?.error || 'Failed to update settings';
         setErrorToast(errText);
