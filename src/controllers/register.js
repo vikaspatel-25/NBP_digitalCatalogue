@@ -267,7 +267,7 @@ export const registerCompany = async (req, res) => {
   );
 
   try {
-    const { userName, companyName, mobile, email, otp } = req.body;
+    const { userName, companyName, mobile, email, otp, agreeTerms, termsAccepted } = req.body;
 
     // Ensure required fields exist
     if (!userName || !companyName || !mobile || !email) {
@@ -281,6 +281,23 @@ export const registerCompany = async (req, res) => {
       }
       return res.status(400).render('pages/register', {
         error: requiredMsg,
+        success: null
+      });
+    }
+
+    // Enforce Copyright Policy and Terms & Conditions acceptance
+    const isTermsAccepted = agreeTerms === true || agreeTerms === 'true' || termsAccepted === true || termsAccepted === 'true';
+    if (!isTermsAccepted) {
+      const termsMsg = 'You must review and accept the Copyright Policy and Terms & Conditions before submitting your vendor registration.';
+      if (isJsonRequest) {
+        return res.status(400).json({
+          success: false,
+          error: termsMsg,
+          message: termsMsg
+        });
+      }
+      return res.status(400).render('pages/register', {
+        error: termsMsg,
         success: null
       });
     }
@@ -383,7 +400,9 @@ export const registerCompany = async (req, res) => {
       userName: userName.trim(),
       companyName: companyName.trim(),
       mobile: mobile.trim(),
-      email: normalizedEmail
+      email: normalizedEmail,
+      termsAccepted: true,
+      termsAcceptedAt: new Date()
     };
 
     if (documentData) {

@@ -16,6 +16,7 @@ import SubscriptionManager from './pages/SubscriptionManager';
 import Onboarding from './pages/Onboarding';
 import AdminPaymentRequests from './pages/AdminPaymentRequests';
 import AdminPlanSettings from './pages/AdminPlanSettings';
+import TermsAndConditions from './pages/TermsAndConditions';
 import { ToastProvider } from './context/ToastContext';
 import { 
   LayoutDashboard, 
@@ -80,6 +81,7 @@ function TitleUpdater() {
       '/register': 'Vendor Registration & Onboarding | NetZeroMart',
       '/adminLogin': 'Administrator Sign In | NetZeroMart',
       '/userLogin': 'Vendor Portal Sign In | NetZeroMart',
+      '/terms': 'Copyright Policy & Terms & Conditions | NetZeroMart',
     };
 
     document.title = titleMap[p] || 'NetZeroMart | Sustainable Digital Catalogue';
@@ -854,6 +856,7 @@ function App() {
         <Routes>
           {/* Public Authentication & Registration (React SPA) */}
           <Route path="/register" element={<Register />} />
+          <Route path="/terms" element={<TermsAndConditions />} />
           <Route path="/adminLogin" element={<AdminLogin />} />
           <Route path="/userLogin" element={<UserLogin />} />
           <Route path="/login" element={<Navigate to="/adminLogin" replace />} />

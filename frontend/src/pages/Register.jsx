@@ -16,9 +16,13 @@ import {
   ArrowRight,
   KeyRound,
   X,
-  Lock
+  Lock,
+  FileText,
+  ExternalLink,
+  Check
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { TERMS_AND_CONDITIONS } from '../data/termsData';
 
 export default function Register() {
   const { toast } = useToast();
@@ -28,6 +32,7 @@ export default function Register() {
     userName: '',
     mobile: '',
     email: '',
+    agreeTerms: false,
   });
   const [fieldErrors, setFieldErrors] = useState({});
   const [file, setFile] = useState(null);
@@ -37,6 +42,7 @@ export default function Register() {
   const [error, setError] = useState('');
   const [emailWarning, setEmailWarning] = useState('');
   const [emailChecking, setEmailChecking] = useState(false);
+  const [termsModal, setTermsModal] = useState(false);
 
   // Email Verification OTP State
   const [isEmailVerified, setIsEmailVerified] = useState(false);
@@ -232,6 +238,8 @@ export default function Register() {
       data.append('userName', formData.userName.trim());
       data.append('mobile', formData.mobile.trim());
       data.append('email', emailTrimmed);
+      data.append('agreeTerms', formData.agreeTerms ? 'true' : 'false');
+      data.append('termsAccepted', formData.agreeTerms ? 'true' : 'false');
       if (optionalOtp || otp) {
         data.append('otp', optionalOtp || otp);
       }
@@ -282,6 +290,9 @@ export default function Register() {
     }
     if (!formData.email.trim() || !formData.email.includes('@')) {
       errors.email = 'Please enter a valid business email address';
+    }
+    if (!formData.agreeTerms) {
+      errors.agreeTerms = 'You must review and accept the Copyright Policy and Terms & Conditions before submitting your application.';
     }
 
     if (Object.keys(errors).length > 0) {
@@ -625,6 +636,72 @@ export default function Register() {
                 </div>
               </div>
 
+              {/* Terms and Conditions Acceptance Card */}
+              <div
+                id="reg-agreeTerms"
+                className={`p-4 rounded-2xl border transition-all ${
+                  fieldErrors.agreeTerms
+                    ? 'bg-rose-50/80 border-rose-300 ring-2 ring-rose-200'
+                    : formData.agreeTerms
+                    ? 'bg-blue-50/60 border-blue-200 shadow-sm'
+                    : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="checkbox-agreeTerms"
+                    name="agreeTerms"
+                    checked={formData.agreeTerms}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setFormData(prev => ({ ...prev, agreeTerms: checked }));
+                      if (checked) {
+                        clearFieldError('agreeTerms');
+                      }
+                    }}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0"
+                  />
+                  <div className="text-xs text-slate-700 leading-relaxed select-none flex-1">
+                    <label htmlFor="checkbox-agreeTerms" className="cursor-pointer font-medium">
+                      I have read, understood, and accept the{' '}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setTermsModal(true)}
+                      className="font-bold text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <span>Copyright Policy &amp; Terms &amp; Conditions</span>
+                      <ExternalLink size={12} className="inline ml-0.5" />
+                    </button>
+                    <label htmlFor="checkbox-agreeTerms" className="cursor-pointer font-medium">
+                      {' '}for third-party sellers, products, and services on NetZeroMart.
+                    </label>
+                  </div>
+                </div>
+
+                {fieldErrors.agreeTerms && (
+                  <div className="mt-2 text-[11px] text-rose-600 font-semibold flex items-center gap-1.5 pl-7 animate-in fade-in">
+                    <AlertCircle size={12} className="shrink-0" />
+                    <span>{fieldErrors.agreeTerms}</span>
+                  </div>
+                )}
+
+                <div className="mt-2.5 pt-2 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-500 pl-7">
+                  <span className="flex items-center gap-1 font-medium">
+                    <ShieldCheck size={13} className="text-blue-600" />
+                    <span>17 Compliance Clauses (Intellectual Property, Licensing, Warranties)</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setTermsModal(true)}
+                    className="text-blue-600 font-bold hover:underline cursor-pointer shrink-0"
+                  >
+                    Read Policy Details →
+                  </button>
+                </div>
+              </div>
+
               {/* Submit CTA */}
               <div className="pt-2">
                 <button
@@ -646,9 +723,10 @@ export default function Register() {
                 </button>
               </div>
 
-              <p className="text-[11px] text-center text-slate-500 pt-1">
-                By submitting, you agree to our <a href="/terms" className="text-slate-700 hover:underline">Terms</a> and <a href="/privacy" className="text-slate-700 hover:underline">Privacy Policy</a>.
-              </p>
+              <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-1">
+                <ShieldCheck size={13} className="text-emerald-600" />
+                <span>Protected by 256-bit encryption &amp; Verified Vendor Onboarding</span>
+              </div>
             </form>
           </div>
         </div>
@@ -745,6 +823,135 @@ export default function Register() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Full Terms & Conditions Modal */}
+      {termsModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl sm:max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl relative animate-in zoom-in-95">
+            {/* Modal Header */}
+            <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 rounded-t-3xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
+                  <FileText size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
+                    COPYRIGHT POLICY &amp; TERMS &amp; CONDITIONS
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    For Third-Party Sellers, Products and Services • 17 Clauses
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTermsModal(false)}
+                className="text-slate-400 hover:text-slate-700 p-2 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Scrollable Terms Body */}
+            <div className="p-6 sm:p-8 overflow-y-auto space-y-6 text-xs sm:text-sm text-slate-700 leading-relaxed max-h-[60vh]">
+              <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200/70 text-amber-900 text-xs flex items-start gap-2.5">
+                <AlertCircle size={16} className="shrink-0 text-amber-600 mt-0.5" />
+                <p>
+                  Please review all 17 clauses carefully. By clicking &quot;Accept &amp; Continue&quot;, you confirm that your enterprise holds all necessary intellectual property rights, licenses, and authority to list products and services on NetZeroMart.
+                </p>
+              </div>
+
+              {TERMS_AND_CONDITIONS.map((clause) => (
+                <div key={clause.id} className="space-y-2 border-b border-slate-100 pb-5 last:border-0 last:pb-0">
+                  <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-md bg-slate-900 text-white inline-flex items-center justify-center text-[11px] font-bold shrink-0">
+                      {clause.id}
+                    </span>
+                    <span>{clause.title.replace(/^\d+\.\s*/, '')}</span>
+                  </h4>
+
+                  {clause.paragraphs?.map((p, pIdx) => (
+                    <p key={pIdx} className="text-slate-600 text-xs sm:text-[13px] leading-relaxed">
+                      {p}
+                    </p>
+                  ))}
+
+                  {clause.bulletTitle && (
+                    <p className="font-semibold text-slate-800 text-xs pt-1">
+                      {clause.bulletTitle}
+                    </p>
+                  )}
+
+                  {clause.bullets && (
+                    <ul className="list-disc pl-5 space-y-1 text-slate-600 text-xs sm:text-[13px]">
+                      {clause.bullets.map((b, bIdx) => (
+                        <li key={bIdx} className="leading-relaxed">
+                          {b}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {clause.contactInfo && (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs space-y-1 my-2">
+                      <div className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">
+                        {clause.contactInfo.title}
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Email:</span>{' '}
+                        <a href={`mailto:${clause.contactInfo.email}`} className="text-blue-600 font-bold hover:underline">
+                          {clause.contactInfo.email}
+                        </a>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Subject:</span>{' '}
+                        <span className="font-medium text-slate-700">{clause.contactInfo.subject}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 sm:p-5 border-t border-slate-100 bg-slate-50/70 rounded-b-3xl flex flex-col sm:flex-row items-center justify-between gap-3">
+              <a
+                href="/terms"
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1 order-2 sm:order-1"
+              >
+                <span>Open in Full Page</span>
+                <ExternalLink size={12} />
+              </a>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto order-1 sm:order-2">
+                <button
+                  type="button"
+                  onClick={() => setTermsModal(false)}
+                  className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-white text-xs font-bold transition cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, agreeTerms: true }));
+                    clearFieldError('agreeTerms');
+                    setTermsModal(false);
+                    toast.success('Terms & Conditions accepted!', { title: 'Compliance Confirmed' });
+                  }}
+                  className="w-1/2 sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                >
+                  <CheckCircle size={14} />
+                  <span>Accept &amp; Continue</span>
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       )}

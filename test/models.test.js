@@ -115,7 +115,24 @@ describe('Mongoose Models & Schema Validation', () => {
       const err = company.validateSync();
       assert.equal(err, undefined);
       assert.equal(company.approved, false, 'approved must default to false');
+      assert.equal(company.termsAccepted, false, 'termsAccepted must default to false');
       assert.equal(company.email, 'info@greentech.com', 'email should be normalized to lowercase');
+    });
+
+    test('accepts termsAccepted and records termsAcceptedAt timestamp', () => {
+      const now = new Date();
+      const company = new Company({
+        companyName: 'GreenTech Solutions',
+        userName: 'John Doe',
+        mobile: '+91 9876543210',
+        email: 'info@greentech.com',
+        termsAccepted: true,
+        termsAcceptedAt: now
+      });
+      const err = company.validateSync();
+      assert.equal(err, undefined);
+      assert.equal(company.termsAccepted, true);
+      assert.equal(company.termsAcceptedAt.getTime(), now.getTime());
     });
 
     test('fails validation when required fields are missing', () => {

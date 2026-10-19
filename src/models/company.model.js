@@ -34,6 +34,13 @@ const companySchema = new mongoose.Schema(
     approved: {
       type: Boolean,
       default: false
+    },
+    termsAccepted: {
+      type: Boolean,
+      default: false
+    },
+    termsAcceptedAt: {
+      type: Date
     }
   },
   { timestamps: true }

@@ -79,6 +79,24 @@ describe('Express HTTP Routes & Endpoint Integration', () => {
       assert.ok(data.message.includes('reserved'));
     });
 
+    test('POST /api/register rejects registration without terms acceptance with 400', async () => {
+      const res = await fetch(`${baseUrl}/api/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          companyName: 'CleanPower Ltd',
+          userName: 'Alice Green',
+          mobile: '9876543210',
+          email: 'alice@cleanpower.com',
+          agreeTerms: false
+        })
+      });
+      assert.equal(res.status, 400);
+      const data = await res.json();
+      assert.equal(data.success, false);
+      assert.ok(data.error.includes('Terms & Conditions') || data.message.includes('Terms & Conditions'));
+    });
+
     test('POST /api/register rejects registration with reserved email with 400', async () => {
       const res = await fetch(`${baseUrl}/api/register`, {
         method: 'POST',
@@ -87,13 +105,21 @@ describe('Express HTTP Routes & Endpoint Integration', () => {
           companyName: 'Test Inc',
           userName: 'Tester',
           mobile: '9999999999',
-          email: 'netzeromart@gmail.com'
+          email: 'netzeromart@gmail.com',
+          agreeTerms: true
         })
       });
       assert.equal(res.status, 400);
       const data = await res.json();
       assert.equal(data.success, false);
       assert.ok(data.message.includes('reserved') || data.error.includes('reserved'));
+    });
+
+    test('GET /terms responds with 200 OK and renders Copyright Policy', async () => {
+      const res = await fetch(`${baseUrl}/terms`);
+      assert.equal(res.status, 200);
+      const text = await res.text();
+      assert.ok(text.includes('COPYRIGHT POLICY') || text.includes('Terms & Conditions'));
     });
   });
 
