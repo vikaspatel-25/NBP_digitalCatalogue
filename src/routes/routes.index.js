@@ -56,16 +56,10 @@ Router.route("/register")
   .get(registerPageController)
   .post(upload.single("document"), registerCompany);
 
-Router.route("/home/product")
+Router.route(["/home/product", "/home/product/:id", "/product", "/product/:id"])
   .get(productPageController);
 
-Router.route("/product")
-  .get(productPageController);
-
-Router.route("/home/article")
-  .get(articlePageController);
-
-Router.route("/article")
+Router.route(["/home/article", "/home/article/:id", "/article", "/article/:id"])
   .get(articlePageController);
 
 
@@ -142,6 +136,9 @@ Router.route("/admin/plans")
   .get(auth, adminPageController);
 
 Router.route("/admin/mediaSettings")
+  .get(auth, adminPageController);
+
+Router.route("/admin/*")
   .get(auth, adminPageController);
 
 

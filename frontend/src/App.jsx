@@ -17,6 +17,7 @@ import Onboarding from './pages/Onboarding';
 import AdminPaymentRequests from './pages/AdminPaymentRequests';
 import AdminPlanSettings from './pages/AdminPlanSettings';
 import TermsAndConditions from './pages/TermsAndConditions';
+import NotFound from './pages/NotFound';
 import { ToastProvider } from './context/ToastContext';
 import { 
   LayoutDashboard, 
@@ -889,6 +890,9 @@ function App() {
           {/* Beta Route compatibility */}
           <Route path="/v2/admin/*" element={<Navigate to="/admin" replace />} />
           <Route path="/v2/userPanel/*" element={<Navigate to="/userPanel" replace />} />
+
+          {/* Fallback 404 Route */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </ToastProvider>
     </BrowserRouter>

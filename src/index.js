@@ -79,7 +79,58 @@ app.get(['/v2/admin*', '/v2/userPanel*'], (req, res) => {
   res.redirect(newPath);
 });
 
-app.use('/', router)
+app.use('/', router);
+
+// Global 404 Catch-All Handler for Unmatched Routes
+app.use((req, res) => {
+  if (req.path.startsWith('/api/') || (req.accepts('json') && !req.accepts('html'))) {
+    return res.status(404).json({
+      success: false,
+      error: 'Endpoint not found',
+      path: req.originalUrl
+    });
+  }
+
+  const cleanPath = req.originalUrl ? req.originalUrl.split('?')[0] : '';
+  res.status(404).render('pages/404.ejs', {
+    status: 404,
+    title: 'Page Not Found (404) | NetZeroMart',
+    badge: '404 Not Found',
+    heading: 'Page Not Found',
+    message: `We couldn't find the page you were looking for (${cleanPath ? '"' + cleanPath + '"' : 'requested URL'}). It may have been moved, deleted, or never existed.`,
+    subMessage: 'Double-check the web address or navigate using the options below.',
+    actionUrl: '/home',
+    actionText: 'Return to Homepage',
+    secondaryUrl: '/home#products',
+    secondaryText: 'Browse Catalogue',
+    type: 'page'
+  });
+});
+
+// Global 500 Error Handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled Server Error:', err);
+  if (req.path.startsWith('/api/') || (req.accepts('json') && !req.accepts('html'))) {
+    return res.status(500).json({
+      success: false,
+      error: 'Internal Server Error'
+    });
+  }
+
+  res.status(500).render('pages/404.ejs', {
+    status: 500,
+    title: 'Server Error (500) | NetZeroMart',
+    badge: '500 Server Error',
+    heading: 'Something Went Wrong',
+    message: 'An unexpected error occurred while processing your request.',
+    subMessage: 'Our technical team has been notified. Please try returning to the home page or try again in a moment.',
+    actionUrl: '/home',
+    actionText: 'Return to Homepage',
+    secondaryUrl: '/home#products',
+    secondaryText: 'Browse Catalogue',
+    type: 'error'
+  });
+});
 
 if (!isTestMode && !process.env.VERCEL) {
   app.listen(PORT, () => {

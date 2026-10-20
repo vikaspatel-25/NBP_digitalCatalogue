@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= typeof title !== 'undefined' && title ? title : 'Page Not Found (404) | NetZeroMart' %></title>
+  
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/netZeroStickerIcon.png" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased font-sans flex flex-col min-h-screen">
+  <%- include('../components/header.ejs') %>
+
+  <%
+    const currentType = typeof type !== 'undefined' ? type : 'page';
+    const currentStatus = typeof status !== 'undefined' ? status : 404;
+    const currentBadge = typeof badge !== 'undefined' && badge ? badge : (currentStatus === 404 ? 'Not Found' : 'Error ' + currentStatus);
+    const currentHeading = typeof heading !== 'undefined' && heading ? heading : (currentType === 'product' ? 'Product Unavailable' : (currentType === 'article' ? 'Article Unavailable' : 'Page Not Found'));
+    const currentMsg = typeof message !== 'undefined' && message ? message : 'The requested item or page could not be located.';
+    const currentSubMsg = typeof subMessage !== 'undefined' && subMessage ? subMessage : 'It may have been removed, deleted, or the URL might contain a typographical error.';
+    const primaryLink = typeof actionUrl !== 'undefined' && actionUrl ? actionUrl : '/home';
+    const primaryLabel = typeof actionText !== 'undefined' && actionText ? actionText : 'Return to Homepage';
+    const secondaryLink = typeof secondaryUrl !== 'undefined' && secondaryUrl ? secondaryUrl : '/home#products';
+    const secondaryLabel = typeof secondaryText !== 'undefined' && secondaryText ? secondaryText : 'Browse Catalogue';
+  %>
+
+  <main class="flex-grow flex items-center justify-center px-4 sm:px-6 py-12 sm:py-20">
+    <div class="max-w-xl w-full text-center">
+      
+      <!-- Icon Graphic Container -->
+      <div class="relative inline-flex items-center justify-center mb-6">
+        <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-white border border-slate-200/90 shadow-xl shadow-slate-200/50 flex items-center justify-center relative overflow-hidden group">
+          <div class="absolute inset-0 bg-gradient-to-br from-slate-50 to-slate-100 opacity-60"></div>
+          
+          <% if (currentType === 'product') { %>
+            <!-- Product Box Icon -->
+            <svg class="w-12 h-12 text-rose-500 relative z-10 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+          <% } else if (currentType === 'article') { %>
+            <!-- Article Document Icon -->
+            <svg class="w-12 h-12 text-amber-500 relative z-10 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          <% } else { %>
+            <!-- Compass / Page 404 Icon -->
+            <svg class="w-12 h-12 text-blue-600 relative z-10 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          <% } %>
+        </div>
+
+        <!-- Floating Status Pill -->
+        <span class="absolute -bottom-2 px-3 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider shadow-sm border
+          <%= currentStatus === 404 ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-900 text-white border-slate-800' %>">
+          <%= currentBadge %>
+        </span>
+      </div>
+
+      <!-- Text Messaging -->
+      <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-2.5">
+        <%= currentHeading %>
+      </h1>
+
+      <p class="text-sm sm:text-base font-medium text-slate-600 max-w-md mx-auto leading-relaxed mb-2">
+        <%= currentMsg %>
+      </p>
+
+      <p class="text-xs sm:text-sm text-slate-400 max-w-sm mx-auto mb-8">
+        <%= currentSubMsg %>
+      </p>
+
+      <!-- Primary Action Buttons -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+        <a href="<%= primaryLink %>" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20 transition-all no-underline">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          <%= primaryLabel %>
+        </a>
+
+        <a href="<%= secondaryLink %>" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 shadow-xs transition-all no-underline">
+          <%= secondaryLabel %>
+        </a>
+      </div>
+
+      <!-- Quick Helpful Links -->
+      <div class="pt-6 border-t border-slate-200/80">
+        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Popular Destinations</div>
+        <div class="flex flex-wrap items-center justify-center gap-2 text-xs">
+          <a href="/home#products" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200/70 text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-colors no-underline font-medium">
+            Verified Products
+          </a>
+          <a href="/home#articles" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200/70 text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-colors no-underline font-medium">
+            Sustainable Insights
+          </a>
+          <a href="/pricing" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200/70 text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-colors no-underline font-medium">
+            Vendor Plans
+          </a>
+          <a href="/userLogin" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200/70 text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-colors no-underline font-medium">
+            Vendor Sign In
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <%- include('../components/footer.ejs') %>
+</body>
+</html>

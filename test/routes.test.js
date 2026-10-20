@@ -139,6 +139,68 @@ describe('Express HTTP Routes & Endpoint Integration', () => {
       const text = await res.text();
       assert.ok(text.includes('Invalid article ID'));
     });
+
+    test('GET /product with random/invalid ID returns 400 with UI error page', async () => {
+      const res = await fetch(`${baseUrl}/product?id=invalid-random-id-123`);
+      assert.equal(res.status, 400);
+      const text = await res.text();
+      assert.ok(text.includes('Product Unavailable') || text.includes('Invalid Product ID'));
+      assert.ok(text.includes('Return to Homepage'));
+    });
+
+    test('GET /product with deleted/non-existent ObjectId returns 404 UI page', async () => {
+      const res = await fetch(`${baseUrl}/product?id=507f1f77bcf86cd799439011`);
+      assert.equal(res.status, 404);
+      const text = await res.text();
+      assert.ok(text.includes('Product Not Found') || text.includes('no longer available'));
+      assert.ok(text.includes('Browse All Products'));
+    });
+
+    test('GET /product/:id path param route works for deleted product', async () => {
+      const res = await fetch(`${baseUrl}/product/507f1f77bcf86cd799439011`);
+      assert.equal(res.status, 404);
+      const text = await res.text();
+      assert.ok(text.includes('Product Not Found') || text.includes('no longer available'));
+    });
+
+    test('GET /article with random/invalid ID returns 400 with UI error page', async () => {
+      const res = await fetch(`${baseUrl}/article?id=invalid-random-id-456`);
+      assert.equal(res.status, 400);
+      const text = await res.text();
+      assert.ok(text.includes('Article Unavailable') || text.includes('Invalid Article ID'));
+    });
+
+    test('GET /article with deleted/non-existent ObjectId returns 404 UI page', async () => {
+      const res = await fetch(`${baseUrl}/article?id=507f1f77bcf86cd799439011`);
+      assert.equal(res.status, 404);
+      const text = await res.text();
+      assert.ok(text.includes('Article Not Found') || text.includes('no longer available'));
+      assert.ok(text.includes('Explore Articles'));
+    });
+
+    test('GET /article/:id path param route works for deleted article', async () => {
+      const res = await fetch(`${baseUrl}/article/507f1f77bcf86cd799439011`);
+      assert.equal(res.status, 404);
+      const text = await res.text();
+      assert.ok(text.includes('Article Not Found') || text.includes('no longer available'));
+    });
+
+    test('GET /unknown-random-route returns UI-handled 404 page, not Cannot GET', async () => {
+      const res = await fetch(`${baseUrl}/unknown-page-random-xyz`);
+      assert.equal(res.status, 404);
+      const text = await res.text();
+      assert.ok(!text.includes('Cannot GET /unknown-page-random-xyz'), 'Must not display raw Express Cannot GET');
+      assert.ok(text.includes('Page Not Found') || text.includes('NetZeroMart'));
+      assert.ok(text.includes('Return to Homepage'));
+    });
+
+    test('GET /api/nonexistent-endpoint returns 404 JSON error', async () => {
+      const res = await fetch(`${baseUrl}/api/nonexistent-endpoint`);
+      assert.equal(res.status, 404);
+      const json = await res.json();
+      assert.equal(json.success, false);
+      assert.equal(json.error, 'Endpoint not found');
+    });
   });
 
   describe('Session Management & Logout Endpoints', () => {
