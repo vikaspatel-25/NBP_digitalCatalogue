@@ -1,12 +1,22 @@
 import express from 'express'
 import dotenv from 'dotenv'
 import path from 'path'
+import fs from 'fs'
 import { fileURLToPath } from 'url'
 import router from './routes/routes.index.js'
-import { connectDB } from './db/connection.js'
+import { connectDB, ensureConnected } from './db/connection.js'
 import cookieParser from 'cookie-parser'
 
-dotenv.config({ path: './.env' })
+// Resilient env configuration: supports .env, env, or process environment
+if (fs.existsSync('./.env')) {
+  dotenv.config({ path: './.env' });
+}
+if (!process.env.MONGO_URI && fs.existsSync('./env')) {
+  dotenv.config({ path: './env' });
+}
+if (!process.env.MONGO_URI) {
+  dotenv.config();
+}
 
 const isTestMode =
   process.env.NODE_ENV === 'test' ||
@@ -78,4 +88,3 @@ if (!isTestMode && !process.env.VERCEL) {
 }
 
 export default app
-

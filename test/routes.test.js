@@ -20,6 +20,8 @@ describe('Express HTTP Routes & Endpoint Integration', () => {
   after(async () => {
     if (server) {
       await new Promise((resolve) => server.close(resolve));
+      const mongoose = (await import('mongoose')).default;
+      if (mongoose.connection.readyState !== 0) { await mongoose.disconnect(); }
     }
   });
 

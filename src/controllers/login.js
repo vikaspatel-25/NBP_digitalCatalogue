@@ -7,6 +7,7 @@ import Users from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import OtpVerification from "../models/otp.model.js";
 import { sendAdminLoginOtpEmail } from "../services/emailService.js";
+import { ensureConnected } from "../db/connection.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,7 +48,8 @@ async function loginController(req, res) {
       return res.status(400).send("Password is required");
     }
 
-    if (mongoose.connection.readyState !== 1 && mongoose.connection.readyState !== 2) {
+    const isDbReady = await ensureConnected();
+    if (!isDbReady) {
       if (isJsonRequest) {
         return res.status(503).json({ success: false, error: "Database unavailable" });
       }
@@ -195,7 +197,8 @@ async function adminVerifyOtpController(req, res) {
       return res.status(400).json({ success: false, error: "Please enter the complete 6-digit verification code." });
     }
 
-    if (mongoose.connection.readyState !== 1 && mongoose.connection.readyState !== 2) {
+    const isDbReady = await ensureConnected();
+    if (!isDbReady) {
       return res.status(503).json({ success: false, error: "Database unavailable" });
     }
 
@@ -257,7 +260,8 @@ async function adminVerifyOtpController(req, res) {
  */
 async function adminResendOtpController(req, res) {
   try {
-    if (mongoose.connection.readyState !== 1 && mongoose.connection.readyState !== 2) {
+    const isDbReady = await ensureConnected();
+    if (!isDbReady) {
       return res.status(503).json({ success: false, error: "Database unavailable" });
     }
 

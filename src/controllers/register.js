@@ -7,6 +7,7 @@ import ApprovedUser from '../models/approved.user.model.js';
 import Users from '../models/user.model.js';
 import OtpVerification from '../models/otp.model.js';
 import { sendRegistrationOtpEmail } from '../services/emailService.js';
+import { ensureConnected } from '../db/connection.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -164,7 +165,8 @@ export const sendRegistrationOtp = async (req, res) => {
       });
     }
 
-    if (mongoose.connection.readyState !== 1 && mongoose.connection.readyState !== 2) {
+    const isDbReady = await ensureConnected();
+    if (!isDbReady) {
       return res.status(503).json({
         success: false,
         error: 'Database connection currently unavailable.'
@@ -218,7 +220,8 @@ export const verifyRegistrationOtp = async (req, res) => {
     const normalizedEmail = String(email).trim().toLowerCase();
     const otpInput = String(otp).trim();
 
-    if (mongoose.connection.readyState !== 1 && mongoose.connection.readyState !== 2) {
+    const isDbReady = await ensureConnected();
+    if (!isDbReady) {
       return res.status(503).json({
         success: false,
         error: 'Database connection currently unavailable.'
@@ -321,7 +324,8 @@ export const registerCompany = async (req, res) => {
       });
     }
 
-    if (mongoose.connection.readyState !== 1 && mongoose.connection.readyState !== 2) {
+    const isDbReady = await ensureConnected();
+    if (!isDbReady) {
       const dbErr = 'Database connection currently unavailable.';
       if (isJsonRequest) {
         return res.status(503).json({ success: false, error: dbErr, message: dbErr });
