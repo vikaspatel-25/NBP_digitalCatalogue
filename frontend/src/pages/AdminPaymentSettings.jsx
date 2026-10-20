@@ -72,7 +72,6 @@ export default function AdminPaymentSettings() {
         return;
       }
       setSelectedFile(file);
-      toast.info(`QR image selected: ${file.name}`, { title: 'Image Selected' });
       const reader = new FileReader();
       reader.onloadend = () => {
         setFilePreview(reader.result);

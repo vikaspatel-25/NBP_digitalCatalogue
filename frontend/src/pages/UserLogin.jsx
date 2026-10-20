@@ -59,7 +59,6 @@ export default function UserLogin() {
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
-      toast.error(Object.values(errors)[0], { title: 'Required Fields' });
       return;
     }
 

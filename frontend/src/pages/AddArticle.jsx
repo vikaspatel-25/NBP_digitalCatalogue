@@ -63,7 +63,6 @@ export default function AddArticle({ basePath = '/api/admin' }) {
       }
       setCoverImage(file);
       setPreview(URL.createObjectURL(file));
-      toast.info('Cover image selected.', { title: 'Image Ready' });
     }
   };
 

@@ -27,6 +27,7 @@ export default function AdminLogin() {
   const [otp, setOtp] = useState('');
   const [maskedEmail, setMaskedEmail] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendStatus, setResendStatus] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
@@ -63,7 +64,6 @@ export default function AdminLogin() {
 
     if (!password.trim()) {
       setFieldErrors({ password: 'Administrator security passkey is required' });
-      toast.error('Please enter the administrator master passkey.', { title: 'Passkey Required' });
       return;
     }
 
@@ -82,7 +82,7 @@ export default function AdminLogin() {
         setMaskedEmail(res.data.maskedEmail || 'authorized admin email');
         setOtp('');
         setResendCooldown(60);
-        toast.info(res.data.message || 'Verification code sent to your email.', { title: 'Verification Code Sent' });
+        
         setLoading(false);
         return;
       }
@@ -107,7 +107,6 @@ export default function AdminLogin() {
     const cleanOtp = otp.trim();
     if (!cleanOtp || cleanOtp.length < 6) {
       setFieldErrors({ otp: 'Please enter the complete 6-digit verification code' });
-      toast.error('Please enter the 6-digit code sent to your email.', { title: 'Code Incomplete' });
       return;
     }
 
@@ -133,9 +132,10 @@ export default function AdminLogin() {
 
   const handleResendOtp = async () => {
     if (resendCooldown > 0) return;
+    setResendStatus('');
     try {
       const res = await axios.post('/adminLogin/resend-otp');
-      toast.success(res.data?.message || 'A fresh verification code was sent to your email.', { title: 'Code Dispatched' });
+      setResendStatus(res.data?.message || 'A fresh verification code was sent to your email.');
       setResendCooldown(60);
       setError('');
       setFieldErrors({});
@@ -405,6 +405,11 @@ export default function AdminLogin() {
                       </button>
                     )}
                   </div>
+                  {resendStatus && (
+                    <p className="text-xs text-emerald-600 font-semibold text-center mt-1 animate-in fade-in">
+                      {resendStatus}
+                    </p>
+                  )}
 
                   {/* Verify CTA */}
                   <div className="pt-2">

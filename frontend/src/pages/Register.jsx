@@ -54,6 +54,7 @@ export default function Register() {
   const [otpCooldown, setOtpCooldown] = useState(0);
   const [otpError, setOtpError] = useState('');
   const [pendingSubmitAfterOtp, setPendingSubmitAfterOtp] = useState(false);
+  const [resendStatus, setResendStatus] = useState('');
 
   useEffect(() => {
     if (otpCooldown <= 0) return;
@@ -134,7 +135,7 @@ export default function Register() {
       } else {
         setFilePreview('');
       }
-      toast.info(`Document "${selectedFile.name}" selected.`, { title: 'Document Attached' });
+
     }
   };
 
@@ -170,7 +171,7 @@ export default function Register() {
         setPendingSubmitAfterOtp(isForSubmission);
         setOtpCooldown(60);
         setOtp('');
-        toast.info(`A 6-digit verification code has been dispatched to ${emailTrimmed}.`, { title: 'Verification Code Dispatched' });
+
       } else {
         toast.error(res.data?.error || 'Failed to send verification code.', { title: 'Request Failed' });
       }
@@ -298,13 +299,11 @@ export default function Register() {
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       const firstKey = Object.keys(errors)[0];
-      toast.error(errors[firstKey], { title: 'Required Field Incomplete' });
       scrollToElement(`reg-${firstKey}`);
       return;
     }
 
     if (emailWarning) {
-      toast.error(emailWarning, { title: 'Email Unavailable' });
       scrollToElement('reg-email');
       return;
     }
@@ -313,14 +312,21 @@ export default function Register() {
 
     // Enforce email verification before submitting
     if (!isEmailVerified || emailTrimmed !== verifiedEmail.toLowerCase()) {
-      toast.warning('Email verification is required before submitting your application. We are sending a 6-digit code to your email.', { title: 'Verification Required' });
-      await handleRequestOtp(true);
+      scrollToElement('reg-email');
       return;
     }
 
     // Already verified: proceed directly with submission
     await doSubmitRegistration();
   };
+
+  const isEmailActuallyVerified = Boolean(
+    isEmailVerified && 
+    verifiedEmail && 
+    formData.email.trim().toLowerCase() === verifiedEmail.toLowerCase()
+  );
+
+  const canSubmit = !loading && isEmailActuallyVerified && formData.agreeTerms;
 
   if (submitted) {
     return (
@@ -533,36 +539,26 @@ export default function Register() {
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-1.5">
                   <label htmlFor="reg-email" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Official Business Email *
                   </label>
                   <div className="flex items-center gap-2">
                     {emailChecking && (
-                      <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                        <Loader2 size={11} className="animate-spin" /> Checking...
+                      <span className="text-[11px] text-slate-400 flex items-center gap-1 font-medium">
+                        <Loader2 size={11} className="animate-spin" /> Checking availability...
                       </span>
                     )}
-                    {isEmailVerified && formData.email.trim().toLowerCase() === verifiedEmail.toLowerCase() ? (
+                    {isEmailActuallyVerified && (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
                         <CheckCircle size={12} /> Verified
                       </span>
-                    ) : (
-                      formData.email.includes('@') && !emailWarning && (
-                        <button
-                          type="button"
-                          onClick={() => handleRequestOtp(false)}
-                          disabled={otpSending}
-                          className="text-[11px] font-bold text-blue-600 hover:text-blue-800 underline cursor-pointer"
-                        >
-                          {otpSending ? 'Dispatching OTP...' : 'Verify Email'}
-                        </button>
-                      )
                     )}
                   </div>
                 </div>
+
                 <div className="relative">
-                  <Mail size={16} className="absolute left-3.5 top-3 text-slate-400" />
+                  <Mail size={16} className="absolute left-3.5 top-3.5 text-slate-400" />
                   <input
                     id="reg-email"
                     type="email"
@@ -570,11 +566,11 @@ export default function Register() {
                     value={formData.email}
                     onChange={handleChange}
                     onBlur={(e) => checkEmail(e.target.value)}
-                    placeholder="e.g. contact@ecogrid.in"
+                    placeholder="e.g. contact@yourbusiness.com"
                     className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-xs sm:text-sm focus:outline-none transition ${
                       emailWarning || fieldErrors.email
                         ? 'border-rose-400 focus:border-rose-500 ring-2 ring-rose-100 bg-rose-50/20' 
-                        : isEmailVerified && formData.email.trim().toLowerCase() === verifiedEmail.toLowerCase()
+                        : isEmailActuallyVerified
                         ? 'border-emerald-300 bg-emerald-50/20 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500'
                         : 'border-slate-200 focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600'
                     }`}
@@ -591,6 +587,58 @@ export default function Register() {
                   <p className="text-xs text-rose-600 font-medium mt-1 flex items-center gap-1">
                     <AlertCircle size={12} /> {fieldErrors.email}
                   </p>
+                )}
+
+                {/* Prominent Verification UI Component */}
+                {!isEmailActuallyVerified ? (
+                  <div className="mt-2.5 p-3.5 rounded-2xl bg-blue-50/80 border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                        <KeyRound size={16} />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-slate-900">Email Verification Required</div>
+                        <div className="text-[11px] text-slate-500 truncate">
+                          {formData.email.trim() && formData.email.includes('@') && !emailWarning
+                            ? `Click the button to dispatch a 6-digit code to ${formData.email.trim()}`
+                            : 'Enter your business email above, then verify to unlock registration.'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRequestOtp(false)}
+                      disabled={otpSending || !formData.email.trim() || !formData.email.includes('@') || emailChecking || Boolean(emailWarning)}
+                      className="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shrink-0"
+                    >
+                      {otpSending ? (
+                        <>
+                          <Loader2 size={13} className="animate-spin" />
+                          <span>Dispatching OTP...</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShieldCheck size={14} />
+                          <span>Verify Email Now</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-2.5 p-3 rounded-2xl bg-emerald-50 border border-emerald-200/90 flex items-center justify-between gap-2 shadow-2xs animate-in fade-in">
+                    <div className="flex items-center gap-2.5 min-w-0 text-xs text-emerald-800 font-semibold">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                        <Check size={15} />
+                      </div>
+                      <span className="truncate">
+                        Email verified &amp; authorized: <strong className="text-emerald-950">{verifiedEmail}</strong>
+                      </span>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-100/90 text-emerald-800 text-[10px] font-black uppercase tracking-wider shrink-0 border border-emerald-200">
+                      Confirmed
+                    </span>
+                  </div>
                 )}
               </div>
 
@@ -706,16 +754,31 @@ export default function Register() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99] cursor-pointer"
+                  disabled={!canSubmit}
+                  className={`w-full py-3.5 px-6 rounded-xl font-bold text-sm transition shadow-sm flex items-center justify-center gap-2 ${
+                    canSubmit
+                      ? 'bg-slate-900 hover:bg-slate-800 text-white cursor-pointer active:scale-[0.99]'
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300/60'
+                  }`}
                 >
                   {loading ? (
                     <>
                       <Loader2 size={18} className="animate-spin" />
                       <span>Submitting Application...</span>
                     </>
+                  ) : !isEmailActuallyVerified ? (
+                    <>
+                      <Lock size={16} />
+                      <span>Verify Email to Enable Submission</span>
+                    </>
+                  ) : !formData.agreeTerms ? (
+                    <>
+                      <Lock size={16} />
+                      <span>Accept Terms to Enable Submission</span>
+                    </>
                   ) : (
                     <>
+                      <ShieldCheck size={16} className="text-emerald-400" />
                       <span>Submit Application for Verification</span>
                       <ArrowRight size={16} />
                     </>
@@ -723,10 +786,22 @@ export default function Register() {
                 </button>
               </div>
 
-              <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-1">
-                <ShieldCheck size={13} className="text-emerald-600" />
-                <span>Protected by 256-bit encryption &amp; Verified Vendor Onboarding</span>
-              </div>
+              {!isEmailActuallyVerified ? (
+                <div className="flex items-center justify-center gap-1.5 text-xs text-amber-700 font-medium pt-1">
+                  <AlertCircle size={13} className="shrink-0" />
+                  <span>Please verify your business email address above to unlock registration submission.</span>
+                </div>
+              ) : !formData.agreeTerms ? (
+                <div className="flex items-center justify-center gap-1.5 text-xs text-blue-700 font-medium pt-1">
+                  <AlertCircle size={13} className="shrink-0" />
+                  <span>Please review and check the Copyright Policy and Terms &amp; Conditions above to submit.</span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-1">
+                  <ShieldCheck size={13} className="text-emerald-600" />
+                  <span>Protected by 256-bit encryption &amp; Verified Vendor Onboarding</span>
+                </div>
+              )}
             </form>
           </div>
         </div>
@@ -794,7 +869,11 @@ export default function Register() {
                 ) : (
                   <button
                     type="button"
-                    onClick={() => handleRequestOtp(pendingSubmitAfterOtp)}
+                    onClick={async () => {
+                      setResendStatus('');
+                      await handleRequestOtp(pendingSubmitAfterOtp);
+                      setResendStatus('A fresh verification code was sent to your email.');
+                    }}
                     disabled={otpSending}
                     className="text-blue-600 font-bold hover:underline cursor-pointer"
                   >
@@ -802,6 +881,11 @@ export default function Register() {
                   </button>
                 )}
               </div>
+              {resendStatus && (
+                <p className="text-xs text-emerald-600 font-semibold text-center mt-1 animate-in fade-in">
+                  {resendStatus}
+                </p>
+              )}
 
               <div className="pt-2">
                 <button
@@ -942,7 +1026,7 @@ export default function Register() {
                     setFormData(prev => ({ ...prev, agreeTerms: true }));
                     clearFieldError('agreeTerms');
                     setTermsModal(false);
-                    toast.success('Terms & Conditions accepted!', { title: 'Compliance Confirmed' });
+                    
                   }}
                   className="w-1/2 sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                 >
