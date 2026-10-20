@@ -402,10 +402,11 @@ export async function apiRemoveArticleController(req, res) {
     // Clean up all Cloudinary cover images concurrently
     const cleanupPromises = [];
     for (const article of articles) {
-      if (article.coverImageUrl) {
-        const match = article.coverImageUrl.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
-        if (match && match[1]) {
-          cleanupPromises.push(cloudinary.uploader.destroy(match[1]).catch(() => null));
+      const cover = article.coverImage || article.coverImageUrl;
+      if (cover) {
+        const publicId = extractPublicId(cover);
+        if (publicId) {
+          cleanupPromises.push(cloudinary.uploader.destroy(publicId, { resource_type: 'image' }).catch(() => null));
         }
       }
     }
